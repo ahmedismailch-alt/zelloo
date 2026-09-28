@@ -10,7 +10,7 @@ export default function Home() {
         <p style={{color:'#666', marginTop:'20px'}}>منصة بيع المنتجات الرقمية الأولى في الوطن العربي</p>
         <button style={{marginTop:'30px', background:'black', color:'white', padding:'16px 32px', borderRadius:'30px', fontSize:'18px', fontWeight:'bold'}}>افتح متجرك مجاناً →</button>
       </div>
-      <div style={{background:'black', color:'white', padding:'40px', borderRadius:'40px 40px 0 0, marginTop:'60px'}}>zelloo-pi.vercel.app</div>
+      <div style={{background:'black', color:'white', padding:'40px', borderRadius:'40px 40px 0 0', marginTop:'60px'}}>zelloo-pi.vercel.app</div>
     </div>
   )
 }
