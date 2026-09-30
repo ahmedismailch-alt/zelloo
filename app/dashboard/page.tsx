@@ -1,132 +1,177 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
 
-type Restaurant = {
-  id: number
-  name: string
-  email: string
-}
+export default function DashboardPage() {
+  const router = useRouter();
 
-export default function Dashboard() {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
+  const [loading, setLoading] = useState(true);
+  const [restaurantName, setRestaurantName] = useState("");
+  const [restaurantUrl, setRestaurantUrl] = useState("");
+  const [email, setEmail] = useState("");
 
-  function addRestaurant() {
-    if (!name.trim() || !email.trim()) {
-      alert("Please enter restaurant name and e-mail.")
-      return
+  useEffect(() => {
+    async function loadUser() {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        router.push("/signup");
+        return;
+      }
+
+      setEmail(user.email || "");
+      setRestaurantName(
+        user.user_metadata?.restaurant_name || "Mein Restaurant"
+      );
+      setRestaurantUrl(
+        user.user_metadata?.restaurant_url || ""
+      );
+
+      setLoading(false);
     }
 
-    const restaurant: Restaurant = {
-      id: Date.now(),
-      name: name.trim(),
-      email: email.trim(),
-    }
+    loadUser();
+  }, [router]);
 
-    setRestaurants((current) => [...current, restaurant])
-    setName("")
-    setEmail("")
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push("/signup");
   }
 
-  function deleteRestaurant(id: number) {
-    setRestaurants((current) =>
-      current.filter((restaurant) => restaurant.id !== id)
-    )
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-gray-400">Wird geladen...</p>
+      </main>
+    );
   }
 
   return (
-    <main className="min-h-screen bg-[#f8f9fb] p-6">
-      <div className="max-w-[1200px] mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-black">Dashboard</h1>
+    <main className="min-h-screen bg-[#f8f9fb] text-black p-5">
+      <div className="max-w-5xl mx-auto">
 
-          <p className="text-gray-500 mt-1">
-            Zelloo Restaurant Management
-          </p>
-        </div>
+        <div className="flex justify-between items-start gap-4 mb-8">
+          <div>
+            <p className="text-sm font-bold text-orange-500">
+              ZELLOO
+            </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-2xl p-5 border">
-            <p className="text-gray-500 text-sm">Restaurants</p>
+            <h1 className="text-3xl font-black mt-1">
+              {restaurantName}
+            </h1>
 
-            <p className="text-3xl font-black mt-2">
-              {restaurants.length}
+            <p className="text-gray-500 mt-1">
+              {email}
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border">
-            <p className="text-gray-500 text-sm">Reservations</p>
-
-            <p className="text-3xl font-black mt-2">0</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-5 border">
-            <p className="text-gray-500 text-sm">Users</p>
-
-            <p className="text-3xl font-black mt-2">0</p>
-          </div>
+          <button
+            onClick={handleLogout}
+            className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
+          >
+            Abmelden
+          </button>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border">
-          <h2 className="text-xl font-bold mb-4">
-            Restaurants
-          </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Restaurant Name"
-              className="border rounded-xl px-4 py-3"
-            />
+          <div className="bg-white border rounded-2xl p-5">
+            <p className="text-gray-500 text-sm">
+              Bestellungen heute
+            </p>
 
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              placeholder="E-Mail"
-              className="border rounded-xl px-4 py-3"
-            />
+            <p className="text-3xl font-black mt-2">
+              0
+            </p>
           </div>
 
-          <button
-            onClick={addRestaurant}
-            className="mt-4 bg-black text-white rounded-xl px-6 py-3 font-bold"
-          >
-            Add Restaurant
-          </button>
+          <div className="bg-white border rounded-2xl p-5">
+            <p className="text-gray-500 text-sm">
+              Neue Bestellungen
+            </p>
 
-          {restaurants.length > 0 && (
-            <div className="mt-6 space-y-3">
-              {restaurants.map((restaurant) => (
-                <div
-                  key={restaurant.id}
-                  className="border rounded-xl p-4 flex items-center justify-between gap-4"
-                >
-                  <div>
-                    <p className="font-bold">
-                      {restaurant.name}
-                    </p>
+            <p className="text-3xl font-black mt-2">
+              0
+            </p>
+          </div>
 
-                    <p className="text-sm text-gray-500">
-                      {restaurant.email}
-                    </p>
-                  </div>
+          <div className="bg-white border rounded-2xl p-5">
+            <p className="text-gray-500 text-sm">
+              Umsatz heute
+            </p>
 
-                  <button
-                    onClick={() => deleteRestaurant(restaurant.id)}
-                    className="border rounded-lg px-3 py-2 text-sm"
-                  >
-                    Delete
-                  </button>
-                </div>
-              ))}
+            <p className="text-3xl font-black mt-2">
+              CHF 0
+            </p>
+          </div>
+
+        </div>
+
+        <div className="bg-white border rounded-2xl p-5 mb-6">
+          <h2 className="text-xl font-black mb-2">
+            Restaurant
+          </h2>
+
+          <p className="text-gray-500 text-sm mb-4">
+            Ihre Restaurantinformationen
+          </p>
+
+          <div className="border rounded-xl p-4">
+            <p className="text-xs text-gray-500">
+              Restaurantname
+            </p>
+
+            <p className="font-bold mt-1">
+              {restaurantName}
+            </p>
+          </div>
+
+          {restaurantUrl && (
+            <div className="border rounded-xl p-4 mt-3">
+              <p className="text-xs text-gray-500">
+                Restaurant-Link
+              </p>
+
+              <a
+                href={restaurantUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-orange-500 break-all mt-1 block"
+              >
+                {restaurantUrl}
+              </a>
             </div>
           )}
         </div>
+
+        <div className="bg-black text-white rounded-2xl p-5">
+          <p className="text-sm text-gray-400">
+            Zelloo AI
+          </p>
+
+          <h2 className="text-xl font-black mt-1">
+            Speisekarte vorbereiten
+          </h2>
+
+          <p className="text-gray-400 mt-2 text-sm">
+            Zelloo wird Ihre Restaurantinformationen
+            für die Einrichtung vorbereiten.
+          </p>
+
+          <button
+            disabled
+            className="mt-4 bg-orange-500 text-black font-bold px-5 py-3 rounded-xl opacity-60"
+          >
+            Import wird vorbereitet
+          </button>
+        </div>
+
       </div>
     </main>
-  )
+  );
 }
