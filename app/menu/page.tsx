@@ -16,6 +16,14 @@ type MenuItem = {
   is_confirmed: boolean;
 };
 
+type AIItem = {
+  name: string;
+  category: string | null;
+  description: string | null;
+  price: number | null;
+  currency: string;
+};
+
 export default function MenuPage() {
   const router = useRouter();
 
@@ -33,6 +41,9 @@ export default function MenuPage() {
   const [editPrice, setEditPrice] = useState("");
 
   const [menuImages, setMenuImages] = useState<File[]>([]);
+  const [aiItems, setAiItems] = useState<AIItem[]>([]);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -92,12 +103,148 @@ export default function MenuPage() {
     if (files.length === 0) return;
 
     setMenuImages((current) => [...current, ...files]);
+    setAiItems([]);
+    setMessage("");
   }
 
   function removeImage(index: number) {
     setMenuImages((current) =>
       current.filter((_, currentIndex) => currentIndex !== index)
     );
+  }
+
+  async function analyzeMenu() {
+    if (menuImages.length === 0) return;
+
+    setAnalyzing(true);
+    setMessage("");
+    setAiItems([]);
+
+    try {
+      const formData = new FormData();
+
+      menuImages.forEach((file) => {
+        formData.append("images", file);
+      });
+
+      const response = await fetch("/api/menu-analyze", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(
+          data?.error || "Die Speisekarte konnte nicht analysiert werden."
+        );
+        setAnalyzing(false);
+        return;
+      }
+
+      if (!Array.isArray(data.items) || data.items.length === 0) {
+        setMessage(
+          "Es konnten keine Gerichte auf den Bildern erkannt werden."
+        );
+        setAnalyzing(false);
+        return;
+      }
+
+      setAiItems(data.items);
+      setMessage(
+        `${data.items.length} Einträge erkannt. Bitte prüfen Sie die Ergebnisse.`
+      );
+    } catch (error) {
+      console.error(error);
+      setMessage("Fehler bei der KI-Analyse.");
+    }
+
+    setAnalyzing(false);
+  }
+
+  function updateAIItem(
+    index: number,
+    field: keyof AIItem,
+    value: string
+  ) {
+    setAiItems((current) =>
+      current.map((item, currentIndex) => {
+        if (currentIndex !== index) return item;
+
+        if (field === "price") {
+          const normalized = value.replace(",", ".");
+
+          return {
+            ...item,
+            price:
+              normalized.trim() === ""
+                ? null
+                : Number.isNaN(Number(normalized))
+                ? item.price
+                : Number(normalized),
+          };
+        }
+
+        return {
+          ...item,
+          [field]: value.trim() === "" ? null : value,
+        };
+      })
+    );
+  }
+
+  function removeAIItem(index: number) {
+    setAiItems((current) =>
+      current.filter((_, currentIndex) => currentIndex !== index)
+    );
+  }
+
+  async function importAIItems() {
+    if (!restaurantId || aiItems.length === 0) return;
+
+    setImporting(true);
+    setMessage("");
+
+    const rows = aiItems
+      .filter((item) => item.name.trim() !== "")
+      .map((item) => ({
+        restaurant_id: restaurantId,
+        name: item.name.trim(),
+        category: item.category?.trim() || null,
+        description: item.description?.trim() || null,
+        price: item.price,
+        currency: item.currency || "CHF",
+        is_available: true,
+        is_confirmed: false,
+      }));
+
+    if (rows.length === 0) {
+      setMessage("Keine gültigen Einträge zum Speichern.");
+      setImporting(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("menu_items")
+      .insert(rows)
+      .select();
+
+    if (error) {
+      console.error(error);
+      setMessage("Die erkannten Gerichte konnten nicht gespeichert werden.");
+      setImporting(false);
+      return;
+    }
+
+    setItems((current) => [...current, ...(data || [])]);
+    setAiItems([]);
+    setMenuImages([]);
+
+    setMessage(
+      `${data?.length || 0} Einträge wurden gespeichert. Bitte bestätigen Sie die Gerichte.`
+    );
+
+    setImporting(false);
   }
 
   async function addItem(e: React.FormEvent) {
@@ -269,20 +416,13 @@ export default function MenuPage() {
   return (
     <main className="min-h-screen bg-[#f8f9fb] text-black p-5">
       <div className="max-w-5xl mx-auto">
-
         <div className="flex justify-between items-start gap-4 mb-8">
           <div>
-            <p className="text-sm font-bold text-orange-500">
-              ZELLOO
-            </p>
+            <p className="text-sm font-bold text-orange-500">ZELLOO</p>
 
-            <h1 className="text-3xl font-black mt-1">
-              Speisekarte
-            </h1>
+            <h1 className="text-3xl font-black mt-1">Speisekarte</h1>
 
-            <p className="text-gray-500 mt-1">
-              {restaurantName}
-            </p>
+            <p className="text-gray-500 mt-1">{restaurantName}</p>
           </div>
 
           <button
@@ -293,12 +433,10 @@ export default function MenuPage() {
           </button>
         </div>
 
-        {/* MENU PHOTO UPLOAD */}
+        {/* AI PHOTO UPLOAD */}
 
         <div className="bg-black text-white rounded-2xl p-5 mb-6">
-          <p className="text-sm text-orange-500 font-bold">
-            ZELLOO AI
-          </p>
+          <p className="text-sm text-orange-500 font-bold">ZELLOO AI</p>
 
           <h2 className="text-xl font-black mt-1">
             Speisekarte fotografieren
@@ -312,9 +450,7 @@ export default function MenuPage() {
             <div className="border-2 border-dashed border-zinc-700 rounded-2xl p-8 text-center hover:border-orange-500">
               <div className="text-4xl mb-3">📸</div>
 
-              <p className="font-bold">
-                Fotos auswählen
-              </p>
+              <p className="font-bold">Fotos auswählen</p>
 
               <p className="text-sm text-gray-400 mt-1">
                 Kamera oder Fotomediathek
@@ -365,18 +501,107 @@ export default function MenuPage() {
 
               <button
                 type="button"
-                disabled
-                className="w-full bg-orange-500 text-black font-black p-3 rounded-xl mt-5 opacity-60"
+                onClick={analyzeMenu}
+                disabled={analyzing}
+                className="w-full bg-orange-500 text-black font-black p-3 rounded-xl mt-5 disabled:opacity-50"
               >
-                Mit Zelloo AI analysieren
+                {analyzing
+                  ? "Zelloo AI analysiert..."
+                  : "Mit Zelloo AI analysieren"}
               </button>
-
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                Die KI-Analyse wird im nächsten Schritt aktiviert.
-              </p>
             </div>
           )}
         </div>
+
+        {/* AI REVIEW */}
+
+        {aiItems.length > 0 && (
+          <div className="bg-white border-2 border-orange-400 rounded-2xl p-5 mb-6">
+            <div className="mb-5">
+              <p className="text-sm font-bold text-orange-500">
+                ZELLOO AI
+              </p>
+
+              <h2 className="text-xl font-black">
+                Erkannte Einträge prüfen
+              </h2>
+
+              <p className="text-sm text-gray-500 mt-1">
+                Prüfen und korrigieren Sie Namen und Preise vor dem Speichern.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {aiItems.map((item, index) => (
+                <div key={index} className="border rounded-xl p-4">
+                  <div className="space-y-3">
+                    <input
+                      value={item.name}
+                      onChange={(e) =>
+                        updateAIItem(index, "name", e.target.value)
+                      }
+                      placeholder="Name"
+                      className="w-full border rounded-xl px-4 py-3"
+                    />
+
+                    <input
+                      value={item.category || ""}
+                      onChange={(e) =>
+                        updateAIItem(index, "category", e.target.value)
+                      }
+                      placeholder="Kategorie"
+                      className="w-full border rounded-xl px-4 py-3"
+                    />
+
+                    <textarea
+                      value={item.description || ""}
+                      onChange={(e) =>
+                        updateAIItem(index, "description", e.target.value)
+                      }
+                      placeholder="Beschreibung"
+                      className="w-full border rounded-xl px-4 py-3"
+                    />
+
+                    <input
+                      value={item.price === null ? "" : String(item.price)}
+                      onChange={(e) =>
+                        updateAIItem(index, "price", e.target.value)
+                      }
+                      placeholder="Preis fehlt"
+                      inputMode="decimal"
+                      className="w-full border rounded-xl px-4 py-3"
+                    />
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold">
+                        {item.currency || "CHF"}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => removeAIItem(index)}
+                        className="text-red-600 text-sm font-bold"
+                      >
+                        Entfernen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={importAIItems}
+              disabled={importing}
+              className="w-full bg-black text-white font-black p-3 rounded-xl mt-5 disabled:opacity-50"
+            >
+              {importing
+                ? "Wird gespeichert..."
+                : `${aiItems.length} Einträge übernehmen`}
+            </button>
+          </div>
+        )}
 
         {/* MANUAL ADD */}
 
@@ -421,22 +646,20 @@ export default function MenuPage() {
               {saving ? "Wird gespeichert..." : "Gericht hinzufügen"}
             </button>
           </form>
-
-          {message && (
-            <p className="text-sm mt-4 text-gray-600">
-              {message}
-            </p>
-          )}
         </div>
 
-        {/* MENU ITEMS */}
+        {message && (
+          <div className="bg-white border rounded-xl p-4 mb-6">
+            <p className="text-sm font-semibold">{message}</p>
+          </div>
+        )}
+
+        {/* SAVED MENU */}
 
         <div className="bg-white border rounded-2xl p-5">
           <div className="flex justify-between items-center mb-5">
             <div>
-              <h2 className="text-xl font-black">
-                Ihre Speisekarte
-              </h2>
+              <h2 className="text-xl font-black">Ihre Speisekarte</h2>
 
               <p className="text-sm text-gray-500 mt-1">
                 Prüfen, bearbeiten und bestätigen Sie Ihre Gerichte.
@@ -450,9 +673,7 @@ export default function MenuPage() {
 
           {items.length === 0 ? (
             <div className="border border-dashed rounded-xl p-8 text-center">
-              <p className="font-bold">
-                Noch keine Gerichte
-              </p>
+              <p className="font-bold">Noch keine Gerichte</p>
 
               <p className="text-gray-500 text-sm mt-1">
                 Ihre Speisekarte ist noch leer.
@@ -462,7 +683,6 @@ export default function MenuPage() {
             <div className="space-y-3">
               {items.map((item) => (
                 <div key={item.id} className="border rounded-xl p-4">
-
                   {editingId === item.id ? (
                     <div className="space-y-3">
                       <input
@@ -518,6 +738,12 @@ export default function MenuPage() {
                             {item.name}
                           </p>
 
+                          {item.description && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              {item.description}
+                            </p>
+                          )}
+
                           <p className="font-semibold mt-1">
                             {item.price === null
                               ? "Preis fehlt"
@@ -569,7 +795,6 @@ export default function MenuPage() {
             </div>
           )}
         </div>
-
       </div>
     </main>
   );
