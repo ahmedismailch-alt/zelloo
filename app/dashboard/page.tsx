@@ -13,29 +13,73 @@ export default function DashboardPage() {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    async function loadUser() {
+    async function loadDashboard() {
       const {
         data: { user },
-        error,
+        error: userError,
       } = await supabase.auth.getUser();
 
-      if (error || !user) {
+      if (userError || !user) {
         router.push("/login");
         return;
       }
 
       setEmail(user.email || "");
-      setRestaurantName(
-        user.user_metadata?.restaurant_name || "Mein Restaurant"
-      );
-      setRestaurantUrl(
-        user.user_metadata?.restaurant_url || ""
-      );
 
+      const metadataName =
+        user.user_metadata?.restaurant_name || "Mein Restaurant";
+
+      const metadataUrl =
+        user.user_metadata?.restaurant_url || "";
+
+      const { data: existingRestaurant, error: readError } =
+        await supabase
+          .from("restaurants")
+          .select("*")
+          .eq("owner_id", user.id)
+          .maybeSingle();
+
+      if (readError) {
+        console.error(readError);
+        setRestaurantName(metadataName);
+        setRestaurantUrl(metadataUrl);
+        setLoading(false);
+        return;
+      }
+
+      if (existingRestaurant) {
+        setRestaurantName(existingRestaurant.name);
+        setRestaurantUrl(existingRestaurant.source_url || "");
+        setLoading(false);
+        return;
+      }
+
+      const { data: newRestaurant, error: insertError } =
+        await supabase
+          .from("restaurants")
+          .insert({
+            owner_id: user.id,
+            name: metadataName,
+            source_url: metadataUrl,
+            email: user.email || "",
+          })
+          .select()
+          .single();
+
+      if (insertError) {
+        console.error(insertError);
+        setRestaurantName(metadataName);
+        setRestaurantUrl(metadataUrl);
+        setLoading(false);
+        return;
+      }
+
+      setRestaurantName(newRestaurant.name);
+      setRestaurantUrl(newRestaurant.source_url || "");
       setLoading(false);
     }
 
-    loadUser();
+    loadDashboard();
   }, [router]);
 
   async function handleLogout() {
@@ -46,7 +90,9 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p className="text-gray-400">Wird geladen...</p>
+        <p className="text-gray-400">
+          Wird geladen...
+        </p>
       </main>
     );
   }
@@ -84,7 +130,6 @@ export default function DashboardPage() {
             <p className="text-gray-500 text-sm">
               Bestellungen heute
             </p>
-
             <p className="text-3xl font-black mt-2">
               0
             </p>
@@ -94,7 +139,6 @@ export default function DashboardPage() {
             <p className="text-gray-500 text-sm">
               Neue Bestellungen
             </p>
-
             <p className="text-3xl font-black mt-2">
               0
             </p>
@@ -104,7 +148,6 @@ export default function DashboardPage() {
             <p className="text-gray-500 text-sm">
               Umsatz heute
             </p>
-
             <p className="text-3xl font-black mt-2">
               CHF 0
             </p>
