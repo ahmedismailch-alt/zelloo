@@ -1,12 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from "../../lib/supabase";
 
 export default function SignupPage() {
   const [restaurantName, setRestaurantName] = useState("");
@@ -17,26 +12,30 @@ export default function SignupPage() {
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
+
     setLoading(true);
     setMessage("");
 
     const { error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: {
         data: {
-          restaurant_name: restaurantName,
+          restaurant_name: restaurantName.trim(),
         },
+        emailRedirectTo: `${window.location.origin}/dashboard`,
       },
     });
 
     if (error) {
       setMessage(error.message);
-    } else {
-      setMessage(
-        "Konto erstellt! Bitte bestätigen Sie Ihre E-Mail-Adresse."
-      );
+      setLoading(false);
+      return;
     }
+
+    setMessage(
+      "Konto erstellt! Bitte bestätigen Sie Ihre E-Mail-Adresse."
+    );
 
     setLoading(false);
   }
@@ -90,14 +89,16 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-500 text-black font-semibold p-3 rounded-lg"
+              className="w-full bg-orange-500 text-black font-semibold p-3 rounded-lg disabled:opacity-50"
             >
               {loading ? "Wird erstellt..." : "Konto erstellen"}
             </button>
           </form>
 
           {message && (
-            <p className="mt-4 text-sm text-gray-300">{message}</p>
+            <p className="mt-4 text-sm text-gray-300">
+              {message}
+            </p>
           )}
         </div>
       </div>
