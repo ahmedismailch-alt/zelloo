@@ -20,7 +20,7 @@ export default function DashboardPage() {
       } = await supabase.auth.getUser();
 
       if (error || !user) {
-        router.push("/signup");
+        router.push("/login");
         return;
       }
 
