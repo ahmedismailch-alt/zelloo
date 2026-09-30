@@ -112,33 +112,99 @@ export default function MenuPage() {
       current.filter((_, currentIndex) => currentIndex !== index)
     );
   }
+  async function compressImage(file: File): Promise<File> {
+    const image = await createImageBitmap(file);
+
+    const maxWidth = 1600;
+    const maxHeight = 1600;
+
+    let width = image.width;
+    let height = image.height;
+
+    if (width > maxWidth || height > maxHeight) {
+      const ratio = Math.min(
+        maxWidth / width,
+        maxHeight / height
+      );
+
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      image.close();
+      throw new Error("Bild konnte nicht verarbeitet werden.");
+    }
+
+    context.drawImage(image, 0, 0, width, height);
+    image.close();
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (result) => {
+          if (result) {
+            resolve(result);
+          } else {
+            reject(
+              new Error("Bild konnte nicht komprimiert werden.")
+            );
+          }
+        },
+        "image/jpeg",
+        0.78
+      );
+    });
+
+    return new File(
+      [blob],
+      file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+      {
+        type: "image/jpeg",
+      }
+    );
+  }
 
   async function analyzeMenu() {
     if (menuImages.length === 0) return;
 
     setAnalyzing(true);
-    setMessage("");
+    setMessage("Fotos werden für Zelloo AI vorbereitet...");
     setAiItems([]);
 
     try {
       const formData = new FormData();
 
-      menuImages.forEach((file) => {
-        formData.append("images", file);
-      });
+      for (const file of menuImages) {
+        const compressedFile = await compressImage(file);
+        formData.append("images", compressedFile);
+      }
 
       const response = await fetch("/api/menu-analyze", {
         method: "POST",
         body: formData,
       });
 
-      const data = await response.json();
+      let data;
+
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error(
+          `Serverfehler (${response.status})`
+        );
+      }
 
       if (!response.ok) {
         setMessage(
-          data?.error || "Die Speisekarte konnte nicht analysiert werden."
+          data?.error ||
+            `Die Speisekarte konnte nicht analysiert werden (${response.status}).`
         );
-        setAnalyzing(false);
         return;
       }
 
@@ -146,23 +212,27 @@ export default function MenuPage() {
         setMessage(
           "Es konnten keine Gerichte auf den Bildern erkannt werden."
         );
-        setAnalyzing(false);
         return;
       }
 
       setAiItems(data.items);
+
       setMessage(
         `${data.items.length} Einträge erkannt. Bitte prüfen Sie die Ergebnisse.`
       );
     } catch (error) {
-      console.error(error);
-      setMessage("Fehler bei der KI-Analyse.");
+      console.error("Zelloo AI Fehler:", error);
+
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Fehler bei der KI-Analyse."
+      );
+    } finally {
+      setAnalyzing(false);
     }
-
-    setAnalyzing(false);
   }
-
-  function updateAIItem(
+ function updateAIItem(
     index: number,
     field: keyof AIItem,
     value: string
