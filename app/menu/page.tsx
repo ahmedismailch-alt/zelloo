@@ -27,6 +27,11 @@ export default function MenuPage() {
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -82,9 +87,7 @@ export default function MenuPage() {
   async function addItem(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!restaurantId || !name.trim()) {
-      return;
-    }
+    if (!restaurantId || !name.trim()) return;
 
     setSaving(true);
     setMessage("");
@@ -128,6 +131,97 @@ export default function MenuPage() {
     setSaving(false);
   }
 
+  function startEditing(item: MenuItem) {
+    setEditingId(item.id);
+    setEditName(item.name);
+    setEditCategory(item.category || "");
+    setEditPrice(
+      item.price === null ? "" : String(item.price)
+    );
+    setMessage("");
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setEditName("");
+    setEditCategory("");
+    setEditPrice("");
+  }
+
+  async function saveEdit(item: MenuItem) {
+    if (!editName.trim()) {
+      setMessage("Bitte geben Sie einen Namen ein.");
+      return;
+    }
+
+    const parsedPrice =
+      editPrice.trim() === ""
+        ? null
+        : Number(editPrice.replace(",", "."));
+
+    if (parsedPrice !== null && Number.isNaN(parsedPrice)) {
+      setMessage("Bitte geben Sie einen gültigen Preis ein.");
+      return;
+    }
+
+    setSaving(true);
+    setMessage("");
+
+    const { data, error } = await supabase
+      .from("menu_items")
+      .update({
+        name: editName.trim(),
+        category: editCategory.trim() || null,
+        price: parsedPrice,
+        is_confirmed: false,
+      })
+      .eq("id", item.id)
+      .select()
+      .single();
+
+    if (error) {
+      setMessage("Änderung konnte nicht gespeichert werden.");
+      setSaving(false);
+      return;
+    }
+
+    setItems((current) =>
+      current.map((currentItem) =>
+        currentItem.id === item.id ? data : currentItem
+      )
+    );
+
+    cancelEditing();
+    setMessage("Änderung wurde gespeichert.");
+    setSaving(false);
+  }
+
+  async function deleteItem(item: MenuItem) {
+    const confirmed = window.confirm(
+      `Möchten Sie "${item.name}" wirklich löschen?`
+    );
+
+    if (!confirmed) return;
+
+    setMessage("");
+
+    const { error } = await supabase
+      .from("menu_items")
+      .delete()
+      .eq("id", item.id);
+
+    if (error) {
+      setMessage("Gericht konnte nicht gelöscht werden.");
+      return;
+    }
+
+    setItems((current) =>
+      current.filter((currentItem) => currentItem.id !== item.id)
+    );
+
+    setMessage("Gericht wurde gelöscht.");
+  }
+
   async function toggleConfirmed(item: MenuItem) {
     const { data, error } = await supabase
       .from("menu_items")
@@ -153,7 +247,9 @@ export default function MenuPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p className="text-gray-400">Wird geladen...</p>
+        <p className="text-gray-400">
+          Wird geladen...
+        </p>
       </main>
     );
   }
@@ -191,11 +287,10 @@ export default function MenuPage() {
           </h2>
 
           <p className="text-sm text-gray-500 mt-1 mb-5">
-            Neue Gerichte können hier hinzugefügt werden.
+            Fügen Sie ein Gericht manuell hinzu.
           </p>
 
           <form onSubmit={addItem} className="space-y-3">
-
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -224,9 +319,10 @@ export default function MenuPage() {
               disabled={saving}
               className="w-full bg-orange-500 text-black font-bold p-3 rounded-xl disabled:opacity-50"
             >
-              {saving ? "Wird gespeichert..." : "Gericht hinzufügen"}
+              {saving
+                ? "Wird gespeichert..."
+                : "Gericht hinzufügen"}
             </button>
-
           </form>
 
           {message && (
@@ -244,7 +340,7 @@ export default function MenuPage() {
               </h2>
 
               <p className="text-sm text-gray-500 mt-1">
-                Prüfen und bestätigen Sie Ihre Gerichte.
+                Prüfen, bearbeiten und bestätigen Sie Ihre Gerichte.
               </p>
             </div>
 
@@ -270,48 +366,115 @@ export default function MenuPage() {
                   key={item.id}
                   className="border rounded-xl p-4"
                 >
-                  <div className="flex justify-between gap-4">
-                    <div>
-                      {item.category && (
-                        <p className="text-xs text-gray-500">
-                          {item.category}
-                        </p>
-                      )}
-
-                      <p className="font-black text-lg">
-                        {item.name}
-                      </p>
-
-                      <p className="font-semibold mt-1">
-                        {item.price === null
-                          ? "Preis fehlt"
-                          : `${item.currency} ${Number(item.price).toFixed(2)}`}
-                      </p>
-                    </div>
-
-                    <div>
-                      <span
-                        className={
-                          item.is_confirmed
-                            ? "text-green-600 text-sm font-bold"
-                            : "text-orange-500 text-sm font-bold"
+                  {editingId === item.id ? (
+                    <div className="space-y-3">
+                      <input
+                        value={editName}
+                        onChange={(e) =>
+                          setEditName(e.target.value)
                         }
-                      >
-                        {item.is_confirmed
-                          ? "Bestätigt"
-                          : "Prüfen"}
-                      </span>
-                    </div>
-                  </div>
+                        placeholder="Gericht"
+                        className="w-full border rounded-xl px-4 py-3"
+                      />
 
-                  <button
-                    onClick={() => toggleConfirmed(item)}
-                    className="mt-4 border rounded-lg px-4 py-2 text-sm font-bold"
-                  >
-                    {item.is_confirmed
-                      ? "Bestätigung entfernen"
-                      : "Gericht bestätigen"}
-                  </button>
+                      <input
+                        value={editCategory}
+                        onChange={(e) =>
+                          setEditCategory(e.target.value)
+                        }
+                        placeholder="Kategorie"
+                        className="w-full border rounded-xl px-4 py-3"
+                      />
+
+                      <input
+                        value={editPrice}
+                        onChange={(e) =>
+                          setEditPrice(e.target.value)
+                        }
+                        placeholder="Preis"
+                        inputMode="decimal"
+                        className="w-full border rounded-xl px-4 py-3"
+                      />
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => saveEdit(item)}
+                          disabled={saving}
+                          className="bg-black text-white rounded-lg px-4 py-2 text-sm font-bold"
+                        >
+                          Speichern
+                        </button>
+
+                        <button
+                          onClick={cancelEditing}
+                          className="border rounded-lg px-4 py-2 text-sm font-bold"
+                        >
+                          Abbrechen
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between gap-4">
+                        <div>
+                          {item.category && (
+                            <p className="text-xs text-gray-500">
+                              {item.category}
+                            </p>
+                          )}
+
+                          <p className="font-black text-lg">
+                            {item.name}
+                          </p>
+
+                          <p className="font-semibold mt-1">
+                            {item.price === null
+                              ? "Preis fehlt"
+                              : `${item.currency} ${Number(
+                                  item.price
+                                ).toFixed(2)}`}
+                          </p>
+                        </div>
+
+                        <span
+                          className={
+                            item.is_confirmed
+                              ? "text-green-600 text-sm font-bold"
+                              : "text-orange-500 text-sm font-bold"
+                          }
+                        >
+                          {item.is_confirmed
+                            ? "Bestätigt"
+                            : "Prüfen"}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        <button
+                          onClick={() => startEditing(item)}
+                          className="border rounded-lg px-4 py-2 text-sm font-bold"
+                        >
+                          Bearbeiten
+                        </button>
+
+                        <button
+                          onClick={() => toggleConfirmed(item)}
+                          className="border rounded-lg px-4 py-2 text-sm font-bold"
+                        >
+                          {item.is_confirmed
+                            ? "Bestätigung entfernen"
+                            : "Gericht bestätigen"}
+                        </button>
+
+                        <button
+                          onClick={() => deleteItem(item)}
+                          className="border border-red-300 text-red-600 rounded-lg px-4 py-2 text-sm font-bold"
+                        >
+                          Löschen
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
