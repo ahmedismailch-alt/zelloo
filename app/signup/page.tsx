@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 
 export default function SignupPage() {
   const [restaurantName, setRestaurantName] = useState("");
+  const [restaurantUrl, setRestaurantUrl] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -22,6 +23,7 @@ export default function SignupPage() {
       options: {
         data: {
           restaurant_name: restaurantName.trim(),
+          restaurant_url: restaurantUrl.trim(),
         },
         emailRedirectTo: `${window.location.origin}/dashboard`,
       },
@@ -43,12 +45,19 @@ export default function SignupPage() {
   return (
     <main className="min-h-screen bg-black text-white flex items-center justify-center p-6">
       <div className="w-full max-w-md">
+
         <div className="mb-8">
-          <h1 className="text-4xl font-bold">ZELLOO</h1>
-          <p className="text-gray-400 mt-2">RESTAURANT · AI</p>
+          <h1 className="text-4xl font-bold">
+            ZELLOO
+          </h1>
+
+          <p className="text-gray-400 mt-2">
+            RESTAURANT · AI
+          </p>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+
           <h2 className="text-2xl font-semibold mb-2">
             Restaurant registrieren
           </h2>
@@ -57,21 +66,47 @@ export default function SignupPage() {
             Erstellen Sie Ihr Zelloo-Konto.
           </p>
 
-          <form onSubmit={handleSignup} className="space-y-4">
+          <form
+            onSubmit={handleSignup}
+            className="space-y-4"
+          >
+
             <input
               type="text"
               placeholder="Restaurantname"
               value={restaurantName}
-              onChange={(e) => setRestaurantName(e.target.value)}
+              onChange={(e) =>
+                setRestaurantName(e.target.value)
+              }
               required
               className="w-full p-3 rounded-lg bg-black border border-zinc-700"
             />
+
+            <div>
+              <input
+                type="url"
+                placeholder="Google Maps oder Instagram Link"
+                value={restaurantUrl}
+                onChange={(e) =>
+                  setRestaurantUrl(e.target.value)
+                }
+                required
+                className="w-full p-3 rounded-lg bg-black border border-zinc-700"
+              />
+
+              <p className="text-xs text-gray-500 mt-2">
+                Fügen Sie den Link zu Ihrem Restaurant
+                auf Google Maps oder Instagram ein.
+              </p>
+            </div>
 
             <input
               type="email"
               placeholder="E-Mail"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
               required
               className="w-full p-3 rounded-lg bg-black border border-zinc-700"
             />
@@ -80,7 +115,9 @@ export default function SignupPage() {
               type="password"
               placeholder="Passwort"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
               required
               minLength={6}
               className="w-full p-3 rounded-lg bg-black border border-zinc-700"
@@ -91,8 +128,11 @@ export default function SignupPage() {
               disabled={loading}
               className="w-full bg-orange-500 text-black font-semibold p-3 rounded-lg disabled:opacity-50"
             >
-              {loading ? "Wird erstellt..." : "Konto erstellen"}
+              {loading
+                ? "Wird erstellt..."
+                : "Konto erstellen"}
             </button>
+
           </form>
 
           {message && (
@@ -100,6 +140,7 @@ export default function SignupPage() {
               {message}
             </p>
           )}
+
         </div>
       </div>
     </main>
