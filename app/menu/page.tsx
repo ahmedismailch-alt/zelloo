@@ -32,6 +32,8 @@ export default function MenuPage() {
   const [editCategory, setEditCategory] = useState("");
   const [editPrice, setEditPrice] = useState("");
 
+  const [menuImages, setMenuImages] = useState<File[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -84,6 +86,20 @@ export default function MenuPage() {
     loadMenu();
   }, [router]);
 
+  function handleImages(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files || []);
+
+    if (files.length === 0) return;
+
+    setMenuImages((current) => [...current, ...files]);
+  }
+
+  function removeImage(index: number) {
+    setMenuImages((current) =>
+      current.filter((_, currentIndex) => currentIndex !== index)
+    );
+  }
+
   async function addItem(e: React.FormEvent) {
     e.preventDefault();
 
@@ -135,9 +151,7 @@ export default function MenuPage() {
     setEditingId(item.id);
     setEditName(item.name);
     setEditCategory(item.category || "");
-    setEditPrice(
-      item.price === null ? "" : String(item.price)
-    );
+    setEditPrice(item.price === null ? "" : String(item.price));
     setMessage("");
   }
 
@@ -247,9 +261,7 @@ export default function MenuPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p className="text-gray-400">
-          Wird geladen...
-        </p>
+        <p className="text-gray-400">Wird geladen...</p>
       </main>
     );
   }
@@ -281,13 +293,100 @@ export default function MenuPage() {
           </button>
         </div>
 
+        {/* MENU PHOTO UPLOAD */}
+
+        <div className="bg-black text-white rounded-2xl p-5 mb-6">
+          <p className="text-sm text-orange-500 font-bold">
+            ZELLOO AI
+          </p>
+
+          <h2 className="text-xl font-black mt-1">
+            Speisekarte fotografieren
+          </h2>
+
+          <p className="text-sm text-gray-400 mt-2 mb-5">
+            Fotografieren Sie Ihre Speisekarte oder laden Sie mehrere Bilder hoch.
+          </p>
+
+          <label className="block cursor-pointer">
+            <div className="border-2 border-dashed border-zinc-700 rounded-2xl p-8 text-center hover:border-orange-500">
+              <div className="text-4xl mb-3">📸</div>
+
+              <p className="font-bold">
+                Fotos auswählen
+              </p>
+
+              <p className="text-sm text-gray-400 mt-1">
+                Kamera oder Fotomediathek
+              </p>
+            </div>
+
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImages}
+              className="hidden"
+            />
+          </label>
+
+          {menuImages.length > 0 && (
+            <div className="mt-5">
+              <p className="font-bold mb-3">
+                {menuImages.length} Foto(s) ausgewählt
+              </p>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {menuImages.map((file, index) => (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="bg-zinc-900 rounded-xl p-3"
+                  >
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt="Speisekarte"
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+
+                    <p className="text-xs text-gray-400 truncate mt-2">
+                      {file.name}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="text-red-400 text-sm font-bold mt-2"
+                    >
+                      Entfernen
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                disabled
+                className="w-full bg-orange-500 text-black font-black p-3 rounded-xl mt-5 opacity-60"
+              >
+                Mit Zelloo AI analysieren
+              </button>
+
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                Die KI-Analyse wird im nächsten Schritt aktiviert.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* MANUAL ADD */}
+
         <div className="bg-white border rounded-2xl p-5 mb-6">
           <h2 className="text-xl font-black">
-            Gericht hinzufügen
+            Gericht manuell hinzufügen
           </h2>
 
           <p className="text-sm text-gray-500 mt-1 mb-5">
-            Fügen Sie ein Gericht manuell hinzu.
+            Sie können Gerichte auch manuell hinzufügen.
           </p>
 
           <form onSubmit={addItem} className="space-y-3">
@@ -319,9 +418,7 @@ export default function MenuPage() {
               disabled={saving}
               className="w-full bg-orange-500 text-black font-bold p-3 rounded-xl disabled:opacity-50"
             >
-              {saving
-                ? "Wird gespeichert..."
-                : "Gericht hinzufügen"}
+              {saving ? "Wird gespeichert..." : "Gericht hinzufügen"}
             </button>
           </form>
 
@@ -331,6 +428,8 @@ export default function MenuPage() {
             </p>
           )}
         </div>
+
+        {/* MENU ITEMS */}
 
         <div className="bg-white border rounded-2xl p-5">
           <div className="flex justify-between items-center mb-5">
@@ -362,35 +461,27 @@ export default function MenuPage() {
           ) : (
             <div className="space-y-3">
               {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="border rounded-xl p-4"
-                >
+                <div key={item.id} className="border rounded-xl p-4">
+
                   {editingId === item.id ? (
                     <div className="space-y-3">
                       <input
                         value={editName}
-                        onChange={(e) =>
-                          setEditName(e.target.value)
-                        }
+                        onChange={(e) => setEditName(e.target.value)}
                         placeholder="Gericht"
                         className="w-full border rounded-xl px-4 py-3"
                       />
 
                       <input
                         value={editCategory}
-                        onChange={(e) =>
-                          setEditCategory(e.target.value)
-                        }
+                        onChange={(e) => setEditCategory(e.target.value)}
                         placeholder="Kategorie"
                         className="w-full border rounded-xl px-4 py-3"
                       />
 
                       <input
                         value={editPrice}
-                        onChange={(e) =>
-                          setEditPrice(e.target.value)
-                        }
+                        onChange={(e) => setEditPrice(e.target.value)}
                         placeholder="Preis"
                         inputMode="decimal"
                         className="w-full border rounded-xl px-4 py-3"
@@ -443,9 +534,7 @@ export default function MenuPage() {
                               : "text-orange-500 text-sm font-bold"
                           }
                         >
-                          {item.is_confirmed
-                            ? "Bestätigt"
-                            : "Prüfen"}
+                          {item.is_confirmed ? "Bestätigt" : "Prüfen"}
                         </span>
                       </div>
 
