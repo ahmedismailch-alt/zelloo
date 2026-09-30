@@ -453,7 +453,7 @@ export default function MenuPage() {
     setMessage("Gericht wurde gelöscht.");
   }
 
-  async function toggleConfirmed(item: MenuItem) {
+    async function toggleConfirmed(item: MenuItem) {
     const { data, error } = await supabase
       .from("menu_items")
       .update({
@@ -473,6 +473,56 @@ export default function MenuPage() {
         currentItem.id === item.id ? data : currentItem
       )
     );
+  }
+
+  async function confirmAllItems() {
+    if (!restaurantId) return;
+
+    const unconfirmedItems = items.filter(
+      (item) => !item.is_confirmed
+    );
+
+    if (unconfirmedItems.length === 0) {
+      setMessage("Alle Gerichte sind bereits bestätigt.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Möchten Sie alle ${unconfirmedItems.length} Gerichte bestätigen?`
+    );
+
+    if (!confirmed) return;
+
+    setSaving(true);
+    setMessage("");
+
+    const { error } = await supabase
+      .from("menu_items")
+      .update({
+        is_confirmed: true,
+      })
+      .eq("restaurant_id", restaurantId)
+      .eq("is_confirmed", false);
+
+    if (error) {
+      console.error(error);
+      setMessage("Die Gerichte konnten nicht bestätigt werden.");
+      setSaving(false);
+      return;
+    }
+
+    setItems((current) =>
+      current.map((item) => ({
+        ...item,
+        is_confirmed: true,
+      }))
+    );
+
+    setMessage(
+      `${unconfirmedItems.length} Gerichte wurden bestätigt.`
+    );
+
+    setSaving(false);
   }
 
   if (loading) {
@@ -730,7 +780,16 @@ export default function MenuPage() {
           <div className="flex justify-between items-center mb-5">
             <div>
               <h2 className="text-xl font-black">Ihre Speisekarte</h2>
-
+{items.some((item) => !item.is_confirmed) && (
+  <button
+    type="button"
+    onClick={confirmAllItems}
+    disabled={saving}
+    className="mt-4 bg-green-600 text-white font-bold px-5 py-3 rounded-xl disabled:opacity-50"
+  >
+    {saving ? "Wird bestätigt..." : "✓ Alle Gerichte bestätigen"}
+  </button>
+)}
               <p className="text-sm text-gray-500 mt-1">
                 Prüfen, bearbeiten und bestätigen Sie Ihre Gerichte.
               </p>
