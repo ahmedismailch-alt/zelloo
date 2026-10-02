@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import type { OrderStrings } from "../../lib/order-i18n";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import { formatChf } from "./format";
 
@@ -16,26 +17,19 @@ type OrderStatus =
 
 const STATUS_POLL_MS = 10000;
 
-const progressSteps: { status: OrderStatus; label: string }[] = [
-  { status: "new", label: "Eingegangen" },
-  { status: "accepted", label: "Angenommen" },
-  { status: "preparing", label: "In Zubereitung" },
-  { status: "ready", label: "Bereit" },
-];
+const progressSteps = ["new", "accepted", "preparing", "ready"] as const;
 
-function statusHeadline(status: OrderStatus) {
+function statusHeadline(status: OrderStatus, t: OrderStrings) {
   switch (status) {
     case "accepted":
-      return "Ihre Bestellung wurde angenommen.";
     case "preparing":
-      return "Ihre Bestellung wird zubereitet.";
     case "ready":
-    case "completed":
-      return "Ihre Bestellung ist bereit!";
     case "cancelled":
-      return "Ihre Bestellung wurde storniert.";
+      return t.headline[status];
+    case "completed":
+      return t.headline.ready;
     default:
-      return "Danke! Ihre Bestellung ist eingegangen.";
+      return t.headline.new;
   }
 }
 
@@ -44,6 +38,8 @@ type Props = {
   table: string | null;
   cart: Record<string, CartLine>;
   menuById: Map<string, PublicMenuItem>;
+  t: OrderStrings;
+  dir: "ltr" | "rtl";
   onSetQuantity: (id: string, quantity: number) => void;
   onOrdered: () => void;
 };
@@ -53,6 +49,8 @@ export function Cart({
   table,
   cart,
   menuById,
+  t,
+  dir,
   onSetQuantity,
   onOrdered,
 }: Props) {
@@ -134,16 +132,16 @@ export function Cart({
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Fehler");
+      if (!response.ok) {
+        throw new Error(t.sendError);
+      }
 
       setOrderStatus("new");
       setConfirmed({ id: String(data.orderId), totalCents: data.totalCents });
       setNotes("");
       onOrdered();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Bestellung konnte nicht gesendet werden."
-      );
+      setError(err instanceof Error ? err.message : t.sendError);
     } finally {
       setSending(false);
     }
@@ -154,10 +152,11 @@ export function Cart({
     const isCancelled = orderStatus === "cancelled";
     const reachedIndex = isReady
       ? progressSteps.length - 1
-      : progressSteps.findIndex((step) => step.status === orderStatus);
+      : progressSteps.findIndex((step) => step === orderStatus);
 
     return (
       <div
+        dir={dir}
         className={`fixed inset-x-0 bottom-0 z-20 text-white rounded-t-3xl px-5 pt-6 pb-8 transition-colors ${
           isReady ? "bg-green-700" : isCancelled ? "bg-red-800" : "bg-black"
         }`}
@@ -168,23 +167,23 @@ export function Cart({
               isReady || isCancelled ? "text-white" : "text-orange-500"
             }`}
           >
-            {isCancelled ? "STORNIERT" : isReady ? "BEREIT" : "BESTELLUNG GESENDET"}
+            {isCancelled ? t.badgeCancelled : isReady ? t.badgeReady : t.badgeSent}
           </p>
-          <p className="text-2xl font-black text-balance">{statusHeadline(orderStatus)}</p>
+          <p className="text-2xl font-black text-balance">{statusHeadline(orderStatus, t)}</p>
 
           {!isCancelled && (
-            <ol className="flex gap-1 mt-2" aria-label="Bestellstatus">
+            <ol className="flex gap-1 mt-2" aria-label={t.statusLabel}>
               {progressSteps.map((step, index) => {
                 const done = index <= reachedIndex;
                 return (
-                  <li key={step.status} className="flex-1 flex flex-col gap-1">
+                  <li key={step} className="flex-1 flex flex-col gap-1">
                     <span
                       className={`h-1.5 rounded-full ${done ? "bg-white" : "bg-white/25"}`}
                     />
                     <span
                       className={`text-xs ${done ? "text-white font-semibold" : "text-white/50"}`}
                     >
-                      {step.label}
+                      {t.steps[step]}
                     </span>
                   </li>
                 );
@@ -193,7 +192,7 @@ export function Cart({
           )}
 
           <p className="text-sm text-white/70 mt-1">
-            {`Nr. #${confirmed.id.slice(0, 8)} · ${formatChf(confirmed.totalCents)} · Bezahlung an der Kasse`}
+            {t.orderNumber(confirmed.id.slice(0, 8), formatChf(confirmed.totalCents))}
           </p>
           <button
             type="button"
@@ -203,7 +202,7 @@ export function Cart({
             }}
             className="mt-3 min-h-11 rounded-xl bg-white text-black font-bold px-4 py-3"
           >
-            Weitere Bestellung
+            {t.anotherOrder}
           </button>
         </div>
       </div>
@@ -213,7 +212,7 @@ export function Cart({
   if (count === 0) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 bg-white border-t rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+    <div dir={dir} className="fixed inset-x-0 bottom-0 z-20 bg-white border-t rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
       <div className="max-w-xl mx-auto px-4 pt-3 pb-6 flex flex-col gap-3">
         <button
           type="button"
@@ -221,8 +220,8 @@ export function Cart({
           aria-expanded={open}
           className="min-h-12 flex items-center justify-between gap-3 rounded-xl bg-black text-white px-4 py-3 font-bold"
         >
-          <span>{open ? "Warenkorb schliessen" : `Warenkorb ansehen (${count})`}</span>
-          <span>{formatChf(estimatedCents)}</span>
+          <span>{open ? t.closeCart : t.viewCart(count)}</span>
+          <span dir="ltr">{formatChf(estimatedCents)}</span>
         </button>
 
         {open && (
@@ -231,14 +230,14 @@ export function Cart({
               {lines.map((line) => (
                 <li key={line.id} className="flex items-center justify-between gap-3 border-b pb-2">
                   <div className="min-w-0 flex flex-col">
-                    <span className="font-semibold break-words">{line.item!.name}</span>
+                    <span className="font-semibold break-words" dir="auto">{line.item!.name}</span>
                     {line.note && <span className="text-sm text-gray-500">{line.note}</span>}
                   </div>
-                  <div className="shrink-0 flex items-center gap-1">
+                  <div className="shrink-0 flex items-center gap-1" dir="ltr">
                     <button
                       type="button"
                       onClick={() => onSetQuantity(line.id, line.quantity - 1)}
-                      aria-label={`${line.item!.name} entfernen`}
+                      aria-label={t.remove(line.item!.name)}
                       className="size-11 rounded-full border text-xl font-bold"
                     >
                       {"−"}
@@ -247,7 +246,7 @@ export function Cart({
                     <button
                       type="button"
                       onClick={() => onSetQuantity(line.id, line.quantity + 1)}
-                      aria-label={`${line.item!.name} hinzufügen`}
+                      aria-label={t.add(line.item!.name)}
                       className="size-11 rounded-full border text-xl font-bold"
                     >
                       +
@@ -258,7 +257,7 @@ export function Cart({
             </ul>
 
             <label className="flex flex-col gap-1 text-sm font-semibold">
-              Ihr Name (optional)
+              {t.nameLabel}
               <input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
@@ -269,18 +268,19 @@ export function Cart({
             </label>
 
             <label className="flex flex-col gap-1 text-sm font-semibold">
-              Hinweis (optional)
+              {t.noteLabel}
               <input
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 maxLength={300}
-                placeholder="z. B. Allergien"
+                placeholder={t.notePlaceholder}
+                dir="auto"
                 className="rounded-xl border p-3 text-base font-normal"
               />
             </label>
 
             <p className="text-xs text-gray-500">
-              Der Endbetrag wird vom Restaurant anhand der aktuellen Preise berechnet.
+              {t.finalPriceInfo}
             </p>
 
             {error && (
@@ -294,7 +294,7 @@ export function Cart({
               disabled={sending}
               className="min-h-12 rounded-xl bg-orange-500 text-black font-black px-4 py-3 disabled:opacity-50"
             >
-              {sending ? "Wird gesendet..." : `Bestellen · ${formatChf(estimatedCents)}`}
+              {sending ? t.sending : t.order(formatChf(estimatedCents))}
             </button>
           </form>
         )}

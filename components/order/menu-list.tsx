@@ -1,5 +1,6 @@
 "use client";
 
+import type { OrderStrings } from "../../lib/order-i18n";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import type { CartLine } from "./cart";
 import { formatChf } from "./format";
@@ -7,21 +8,22 @@ import { formatChf } from "./format";
 type Props = {
   menu: PublicMenuItem[];
   cart: Record<string, CartLine>;
+  t: OrderStrings;
   onSetQuantity: (id: string, quantity: number) => void;
 };
 
-export function MenuList({ menu, cart, onSetQuantity }: Props) {
+export function MenuList({ menu, cart, t, onSetQuantity }: Props) {
   const groups = new Map<string, PublicMenuItem[]>();
   for (const item of menu) {
-    const key = item.category?.trim() || "Weitere";
+    const key = item.category?.trim() || "";
     groups.set(key, [...(groups.get(key) || []), item]);
   }
 
   return (
-    <section aria-label="Speisekarte" className="flex flex-col gap-6">
+    <section aria-label={t.menuLabel} className="flex flex-col gap-6">
       {[...groups.entries()].map(([category, items]) => (
-        <div key={category} className="flex flex-col gap-3">
-          <h2 className="text-lg font-black">{category}</h2>
+        <div key={category || "__other"} className="flex flex-col gap-3">
+          <h2 className="text-lg font-black">{category || t.otherCategory}</h2>
           <ul className="flex flex-col gap-2">
             {items.map((item) => {
               const quantity = cart[item.id]?.quantity ?? 0;
@@ -30,14 +32,14 @@ export function MenuList({ menu, cart, onSetQuantity }: Props) {
                   key={item.id}
                   className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-3"
                 >
-                  <div className="min-w-0 flex flex-col gap-1">
-                    <p className="font-bold break-words">{item.name}</p>
+                  <div className="min-w-0 flex flex-col gap-1" dir="auto">
+                    <p className="font-bold break-words" dir="auto">{item.name}</p>
                     {item.description && (
-                      <p className="text-sm text-gray-500 leading-relaxed">
+                      <p className="text-sm text-gray-500 leading-relaxed" dir="auto">
                         {item.description}
                       </p>
                     )}
-                    <p className="text-sm font-semibold">
+                    <p className="text-sm font-semibold" dir="ltr">
                       {formatChf(item.priceCents)}
                     </p>
                   </div>
@@ -46,18 +48,21 @@ export function MenuList({ menu, cart, onSetQuantity }: Props) {
                     <button
                       type="button"
                       onClick={() => onSetQuantity(item.id, 1)}
-                      aria-label={`${item.name} hinzufügen`}
+                      aria-label={t.add(item.name)}
                       className="shrink-0 size-11 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center"
                     >
                       +
                     </button>
                   ) : (
-                    <div className="shrink-0 flex items-center gap-1 bg-orange-500 rounded-full p-1">
+                    <div
+                      dir="ltr"
+                      className="shrink-0 flex items-center gap-1 bg-orange-500 rounded-full p-1"
+                    >
                       <button
                         type="button"
                         onClick={() => onSetQuantity(item.id, quantity - 1)}
-                        aria-label={`${item.name} entfernen`}
-                        className="size-10 rounded-full bg-black/10 text-xl font-bold flex items-center justify-center"
+                        aria-label={t.remove(item.name)}
+                        className="size-11 rounded-full bg-black/10 text-xl font-bold flex items-center justify-center"
                       >
                         {"−"}
                       </button>
@@ -67,8 +72,8 @@ export function MenuList({ menu, cart, onSetQuantity }: Props) {
                       <button
                         type="button"
                         onClick={() => onSetQuantity(item.id, quantity + 1)}
-                        aria-label={`${item.name} hinzufügen`}
-                        className="size-10 rounded-full bg-black/10 text-xl font-bold flex items-center justify-center"
+                        aria-label={t.add(item.name)}
+                        className="size-11 rounded-full bg-black/10 text-xl font-bold flex items-center justify-center"
                       >
                         +
                       </button>
