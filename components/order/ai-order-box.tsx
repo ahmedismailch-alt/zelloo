@@ -1,7 +1,56 @@
 "use client";
 
-import { useState, type FormEvent, type KeyboardEvent } from "react";
-import type { OrderStrings } from "../../lib/order-i18n";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
+import type { OrderLang, OrderStrings } from "../../lib/order-i18n";
+
+const MAX_RECORDING_SECONDS = 30;
+const RECORDING_TYPES = [
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/mp4",
+  "audio/ogg",
+];
+
+type MicState = "idle" | "recording" | "transcribing";
+
+function pickRecordingType(): string | undefined {
+  if (typeof MediaRecorder === "undefined") return undefined;
+  return RECORDING_TYPES.find((type) => MediaRecorder.isTypeSupported(type));
+}
+
+function MicIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="9" y="2" width="6" height="12" rx="3" />
+      <path d="M5 10a7 7 0 0 0 14 0" />
+      <path d="M12 17v5" />
+    </svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="6" y="6" width="12" height="12" rx="2" />
+    </svg>
+  );
+}
 
 export type ParsedItem = {
   menuItemId: string;
@@ -26,6 +75,7 @@ type Suggestion = {
 type Props = {
   restaurantId: string;
   t: OrderStrings;
+  lang: OrderLang;
   showArabic: boolean;
   onItems: (items: ParsedItem[]) => void;
 };
@@ -34,7 +84,7 @@ function formatChf(cents: number) {
   return `CHF ${(cents / 100).toFixed(2)}`;
 }
 
-export function AiOrderBox({ restaurantId, t, showArabic, onItems }: Props) {
+export function AiOrderBox({ restaurantId, t, lang, showArabic, onItems }: Props) {
   const labelFor = (option: SuggestionOption) =>
     showArabic && option.nameAr ? option.nameAr : option.name;
   const [text, setText] = useState("");
@@ -42,6 +92,122 @@ export function AiOrderBox({ restaurantId, t, showArabic, onItems }: Props) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [micState, setMicState] = useState<MicState>("idle");
+  const [seconds, setSeconds] = useState(0);
+
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  function releaseMic() {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = null;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }
+
+  useEffect(() => {
+    return () => {
+      const recorder = recorderRef.current;
+      if (recorder && recorder.state !== "inactive") {
+        recorder.onstop = null;
+        recorder.stop();
+      }
+      if (timerRef.current) clearInterval(timerRef.current);
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
+
+  async function transcribe(audio: Blob) {
+    setMicState("transcribing");
+    try {
+      const form = new FormData();
+      form.append("restaurantId", restaurantId);
+      form.append("lang", lang);
+      form.append("audio", audio);
+      const response = await fetch("/api/order-transcribe", {
+        method: "POST",
+        body: form,
+      });
+      const data = await response.json().catch(() => ({}));
+      const spoken = typeof data.text === "string" ? data.text.trim() : "";
+      if (!response.ok || !spoken) throw new Error(t.micError);
+      setText((current) =>
+        (current.trim() ? `${current.trim()} ${spoken}` : spoken).slice(0, 500)
+      );
+    } catch {
+      setError(t.micError);
+    } finally {
+      setMicState("idle");
+    }
+  }
+
+  function stopRecording() {
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== "inactive") recorder.stop();
+  }
+
+  async function startRecording() {
+    setError("");
+    setMessage("");
+    setSuggestions([]);
+
+    const mimeType = pickRecordingType();
+    if (!navigator.mediaDevices?.getUserMedia || mimeType === undefined) {
+      setError(t.micUnsupported);
+      return;
+    }
+
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setError(t.micDenied);
+      return;
+    }
+
+    streamRef.current = stream;
+    chunksRef.current = [];
+    const recorder = new MediaRecorder(stream, {
+      mimeType,
+      audioBitsPerSecond: 64000,
+    });
+    recorderRef.current = recorder;
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) chunksRef.current.push(event.data);
+    };
+    recorder.onstop = () => {
+      releaseMic();
+      const audio = new Blob(chunksRef.current, {
+        type: recorder.mimeType || mimeType,
+      });
+      chunksRef.current = [];
+      if (audio.size === 0) {
+        setMicState("idle");
+        setError(t.micError);
+        return;
+      }
+      void transcribe(audio);
+    };
+
+    recorder.start();
+    setSeconds(0);
+    setMicState("recording");
+    timerRef.current = setInterval(() => {
+      setSeconds((value) => {
+        const next = value + 1;
+        if (next >= MAX_RECORDING_SECONDS) stopRecording();
+        return next;
+      });
+    }, 1000);
+  }
+
+  function toggleMic() {
+    if (micState === "recording") stopRecording();
+    else if (micState === "idle") void startRecording();
+  }
 
   async function submit(event?: FormEvent) {
     event?.preventDefault();
@@ -141,8 +307,41 @@ export function AiOrderBox({ restaurantId, t, showArabic, onItems }: Props) {
           className="w-full resize-none rounded-xl border bg-[#f8f9fb] p-3 text-base leading-relaxed outline-none focus:border-black"
         />
         <button
+          type="button"
+          onClick={toggleMic}
+          disabled={micState === "transcribing" || loading}
+          aria-pressed={micState === "recording"}
+          className={`flex min-h-14 items-center justify-center gap-3 rounded-xl border-2 px-4 py-3 font-bold disabled:opacity-60 ${
+            micState === "recording"
+              ? "border-red-600 bg-red-600 text-white"
+              : "border-black bg-white text-black"
+          }`}
+        >
+          {micState === "recording" ? (
+            <>
+              <span className="relative flex size-3" aria-hidden="true">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex size-3 rounded-full bg-white" />
+              </span>
+              <span>{t.micListening}</span>
+              <span className="tabular-nums" dir="ltr">
+                {`0:${String(seconds).padStart(2, "0")} / 0:${MAX_RECORDING_SECONDS}`}
+              </span>
+              <StopIcon />
+              <span className="sr-only">{t.micStop}</span>
+            </>
+          ) : micState === "transcribing" ? (
+            <span role="status">{t.micTranscribing}</span>
+          ) : (
+            <>
+              <MicIcon />
+              <span>{t.micStart}</span>
+            </>
+          )}
+        </button>
+        <button
           type="submit"
-          disabled={loading || !text.trim()}
+          disabled={loading || micState !== "idle" || !text.trim()}
           className="min-h-11 rounded-xl bg-orange-500 px-4 py-3 font-bold text-black disabled:opacity-50"
         >
           {loading ? t.aiLoading : t.aiSubmit}
