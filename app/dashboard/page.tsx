@@ -36,6 +36,7 @@ type Order = {
   status: OrderStatus;
   total_cents: number;
   notes: string | null;
+  table_number: string | null;
   created_at: string;
   order_items: OrderItem[];
 };
@@ -214,6 +215,7 @@ export default function DashboardPage() {
               status,
               total_cents,
               notes,
+              table_number,
               created_at,
               order_items (
                 id,
@@ -453,9 +455,11 @@ export default function DashboardPage() {
                     <h3 className="font-bold mt-1">{order.customer_name}</h3>
 
                     <p className="text-sm text-gray-500 mt-1">
-                      {order.order_type === "delivery"
-                        ? "Lieferung"
-                        : "Abholung"}
+                      {order.table_number
+                        ? `Tisch ${order.table_number}`
+                        : order.order_type === "delivery"
+                          ? "Lieferung"
+                          : "Abholung"}
                     </p>
                   </div>
 
