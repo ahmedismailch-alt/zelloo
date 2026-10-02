@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
@@ -56,6 +56,44 @@ const statusOptions: { value: OrderStatus; label: string }[] = [
   { value: "cancelled", label: "Storniert" },
 ];
 
+const nextStep: Partial<
+  Record<OrderStatus, { status: OrderStatus; label: string }>
+> = {
+  new: { status: "accepted", label: "Annehmen" },
+  accepted: { status: "preparing", label: "Zubereitung starten" },
+  preparing: { status: "ready", label: "Bereit" },
+  ready: { status: "completed", label: "Abschliessen" },
+};
+
+const statusBadge: Record<OrderStatus, string> = {
+  new: "bg-orange-100 text-orange-800",
+  accepted: "bg-blue-100 text-blue-800",
+  preparing: "bg-yellow-100 text-yellow-800",
+  ready: "bg-green-100 text-green-800",
+  completed: "bg-gray-100 text-gray-700",
+  cancelled: "bg-red-100 text-red-800",
+};
+
+const POLL_INTERVAL_MS = 10000;
+const HIGHLIGHT_MS = 8000;
+
+function playDing(context: AudioContext) {
+  const start = context.currentTime;
+  [880, 1320].forEach((frequency, index) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const at = start + index * 0.18;
+    oscillator.type = "sine";
+    oscillator.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(0.4, at + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.5);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start(at);
+    oscillator.stop(at + 0.55);
+  });
+}
+
 function formatMoney(cents: number | string) {
   return new Intl.NumberFormat("de-CH", {
     style: "currency",
@@ -103,6 +141,36 @@ export default function DashboardPage() {
   const [actionError, setActionError] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
+  const [soundOn, setSoundOn] = useState(false);
+  const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
+
+  const knownIdsRef = useRef<Set<string> | null>(null);
+  const audioRef = useRef<AudioContext | null>(null);
+  const soundOnRef = useRef(false);
+
+  async function enableSound() {
+    try {
+      const AudioCtor =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext;
+      const context = audioRef.current ?? new AudioCtor();
+      audioRef.current = context;
+      await context.resume();
+      playDing(context);
+      soundOnRef.current = true;
+      setSoundOn(true);
+    } catch (error) {
+      console.error(error);
+      setActionError("Ton konnte nicht aktiviert werden.");
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      void audioRef.current?.close();
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -234,8 +302,36 @@ export default function DashboardPage() {
         if (ordersResult.error) throw ordersResult.error;
         if (cancelled) return;
 
+        const fetched = (ordersResult.data || []) as Order[];
+        const known = knownIdsRef.current;
+
+        if (known) {
+          const arrived = fetched
+            .filter((order) => order.status === "new" && !known.has(order.id))
+            .map((order) => order.id);
+
+          if (arrived.length > 0) {
+            if (soundOnRef.current && audioRef.current) {
+              playDing(audioRef.current);
+            }
+            setHighlighted((current) => new Set([...current, ...arrived]));
+            window.setTimeout(() => {
+              setHighlighted((current) => {
+                const next = new Set(current);
+                arrived.forEach((id) => next.delete(id));
+                return next;
+              });
+            }, HIGHLIGHT_MS);
+          }
+        }
+
+        knownIdsRef.current = new Set([
+          ...(known ?? []),
+          ...fetched.map((order) => order.id),
+        ]);
+
         setStats(statsResult.data as DashboardStats);
-        setOrders((ordersResult.data || []) as Order[]);
+        setOrders(fetched);
         setOrdersLoaded(true);
         setOrdersError("");
       } catch (error) {
@@ -257,7 +353,7 @@ export default function DashboardPage() {
 
     const timer = window.setInterval(() => {
       void loadOrders();
-    }, 30000);
+    }, POLL_INTERVAL_MS);
 
     return () => {
       cancelled = true;
@@ -426,9 +522,23 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          <p className="text-sm text-gray-500 mb-5">
-            Letzte 50 Bestellungen · Aktualisierung alle 30 Sekunden
+          <p className="text-sm text-gray-500 mb-4">
+            Letzte 50 Bestellungen · Aktualisierung alle 10 Sekunden
           </p>
+
+          <button
+            type="button"
+            onClick={() => void enableSound()}
+            disabled={soundOn}
+            aria-pressed={soundOn}
+            className={`w-full min-h-11 rounded-xl px-4 py-3 font-bold mb-5 ${
+              soundOn
+                ? "bg-green-50 text-green-800 border border-green-200"
+                : "bg-orange-500 text-black"
+            }`}
+          >
+            {soundOn ? "Ton an · Neue Bestellungen klingeln" : "Ton aktivieren"}
+          </button>
 
           {!ordersLoaded && !ordersError && (
             <p className="text-gray-500">Bestellungen werden geladen...</p>
@@ -445,7 +555,14 @@ export default function DashboardPage() {
 
           <div className="space-y-4">
             {orders.map((order) => (
-              <article key={order.id} className="border rounded-xl p-4">
+              <article
+                key={order.id}
+                className={`border rounded-xl p-4 transition-colors ${
+                  highlighted.has(order.id)
+                    ? "bg-orange-50 border-orange-400"
+                    : ""
+                }`}
+              >
                 <div className="flex flex-wrap justify-between gap-3">
                   <div>
                     <p className="text-xs text-gray-500">
@@ -463,9 +580,17 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <p className="font-black">
-                    {formatMoney(order.total_cents)}
-                  </p>
+                  <div className="flex flex-col items-end gap-2">
+                    <p className="font-black">
+                      {formatMoney(order.total_cents)}
+                    </p>
+                    <span
+                      className={`text-xs font-bold rounded-full px-2 py-1 ${statusBadge[order.status]}`}
+                    >
+                      {statusOptions.find((o) => o.value === order.status)
+                        ?.label ?? order.status}
+                    </span>
+                  </div>
                 </div>
 
                 {order.customer_phone && (
@@ -505,7 +630,48 @@ export default function DashboardPage() {
                   </p>
                 )}
 
-                <label className="block text-sm font-semibold mt-4">
+                {(nextStep[order.status] ||
+                  order.status === "new" ||
+                  order.status === "accepted") && (
+                  <div className="flex gap-2 mt-4">
+                    {nextStep[order.status] && (
+                      <button
+                        type="button"
+                        disabled={savingId !== null}
+                        onClick={() =>
+                          void changeStatus(
+                            order,
+                            nextStep[order.status]!.status
+                          )
+                        }
+                        className="flex-1 min-h-12 rounded-xl bg-black text-white font-bold px-4 py-3 disabled:opacity-50"
+                      >
+                        {nextStep[order.status]!.label}
+                      </button>
+                    )}
+                    {order.status !== "completed" &&
+                      order.status !== "cancelled" && (
+                        <button
+                          type="button"
+                          disabled={savingId !== null}
+                          onClick={() => {
+                            if (window.confirm("Bestellung stornieren?")) {
+                              void changeStatus(order, "cancelled");
+                            }
+                          }}
+                          className="min-h-12 rounded-xl border border-red-200 text-red-700 font-semibold px-4 py-3 disabled:opacity-50"
+                        >
+                          Stornieren
+                        </button>
+                      )}
+                  </div>
+                )}
+
+                <details className="mt-3">
+                  <summary className="text-sm text-gray-500 cursor-pointer min-h-11 flex items-center">
+                    Status manuell ändern
+                  </summary>
+                <label className="block text-sm font-semibold mt-2">
                   Status
                   <select
                     value={order.status}
@@ -525,6 +691,7 @@ export default function DashboardPage() {
                     ))}
                   </select>
                 </label>
+                </details>
 
                 {savingId === order.id && (
                   <p role="status" className="text-sm text-gray-500 mt-2">
