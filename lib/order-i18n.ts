@@ -44,6 +44,13 @@ export type OrderStrings = {
   aiNotFound: (list: string) => string;
   aiNothing: string;
   aiError: string;
+  micStart: string;
+  micStop: string;
+  micListening: string;
+  micTranscribing: string;
+  micDenied: string;
+  micUnsupported: string;
+  micError: string;
   didYouMean: string;
   viewCart: (count: number) => string;
   closeCart: string;
@@ -91,6 +98,13 @@ const de: OrderStrings = {
   aiNotFound: (l) => `Nicht gefunden: ${l}`,
   aiNothing: "Keine passenden Artikel gefunden. Bitte anders formulieren.",
   aiError: "Bestellung konnte nicht verstanden werden.",
+  micStart: "Tippen und sprechen",
+  micStop: "Aufnahme beenden",
+  micListening: "Ich höre zu...",
+  micTranscribing: "Wird umgewandelt...",
+  micDenied: "Kein Zugriff aufs Mikrofon. Bitte schreiben Sie Ihre Bestellung.",
+  micUnsupported: "Sprachaufnahme wird hier nicht unterstützt. Bitte schreiben Sie.",
+  micError: "Wir konnten Sie nicht verstehen. Bitte nochmals versuchen.",
   didYouMean: "Meinten Sie:",
   viewCart: (c) => `Warenkorb ansehen (${c})`,
   closeCart: "Warenkorb schliessen",
@@ -138,6 +152,13 @@ const fr: OrderStrings = {
   aiNotFound: (l) => `Introuvable : ${l}`,
   aiNothing: "Aucun article correspondant. Veuillez reformuler.",
   aiError: "La commande n'a pas pu être comprise.",
+  micStart: "Touchez et parlez",
+  micStop: "Arrêter l'enregistrement",
+  micListening: "Je vous écoute...",
+  micTranscribing: "Conversion en cours...",
+  micDenied: "Pas d'accès au micro. Veuillez écrire votre commande.",
+  micUnsupported: "L'enregistrement vocal n'est pas pris en charge ici. Veuillez écrire.",
+  micError: "Nous n'avons pas pu vous comprendre. Veuillez réessayer.",
   didYouMean: "Vouliez-vous dire :",
   viewCart: (c) => `Voir le panier (${c})`,
   closeCart: "Fermer le panier",
@@ -185,6 +206,13 @@ const it: OrderStrings = {
   aiNotFound: (l) => `Non trovato: ${l}`,
   aiNothing: "Nessun articolo corrispondente. Prova a riformulare.",
   aiError: "Non è stato possibile capire l'ordine.",
+  micStart: "Tocca e parla",
+  micStop: "Termina registrazione",
+  micListening: "Ti ascolto...",
+  micTranscribing: "Conversione in corso...",
+  micDenied: "Nessun accesso al microfono. Scrivi il tuo ordine.",
+  micUnsupported: "La registrazione vocale non è supportata qui. Scrivi il tuo ordine.",
+  micError: "Non siamo riusciti a capirti. Riprova.",
   didYouMean: "Intendevi:",
   viewCart: (c) => `Vedi carrello (${c})`,
   closeCart: "Chiudi carrello",
@@ -232,6 +260,13 @@ const en: OrderStrings = {
   aiNotFound: (l) => `Not found: ${l}`,
   aiNothing: "No matching items found. Please try different words.",
   aiError: "Your order could not be understood.",
+  micStart: "Tap and speak",
+  micStop: "Stop recording",
+  micListening: "Listening...",
+  micTranscribing: "Converting...",
+  micDenied: "No microphone access. Please type your order.",
+  micUnsupported: "Voice recording isn't supported here. Please type your order.",
+  micError: "We couldn't understand you. Please try again.",
   didYouMean: "Did you mean:",
   viewCart: (c) => `View cart (${c})`,
   closeCart: "Close cart",
@@ -279,6 +314,13 @@ const ar: OrderStrings = {
   aiNotFound: (l) => `غير موجود: ${l}`,
   aiNothing: "لم نجد أصنافاً مطابقة. جرّب كتابة الطلب بطريقة أخرى.",
   aiError: "لم نتمكن من فهم الطلب.",
+  micStart: "اضغط وتكلّم",
+  micStop: "إيقاف التسجيل",
+  micListening: "جاري الاستماع...",
+  micTranscribing: "جاري التحويل إلى نص...",
+  micDenied: "لا يوجد إذن للميكروفون. يرجى كتابة طلبك.",
+  micUnsupported: "التسجيل الصوتي غير مدعوم هنا. يرجى كتابة طلبك.",
+  micError: "لم نتمكن من فهم الصوت. يرجى المحاولة مرة أخرى.",
   didYouMean: "هل تقصد:",
   viewCart: (c) => `عرض السلة (${c})`,
   closeCart: "إغلاق السلة",

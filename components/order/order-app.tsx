@@ -130,6 +130,7 @@ export function OrderApp({ restaurantId, restaurantName, table, menu }: Props) {
         <AiOrderBox
           restaurantId={restaurantId}
           t={t}
+          lang={lang}
           showArabic={lang === "ar"}
           onItems={addParsed}
         />
