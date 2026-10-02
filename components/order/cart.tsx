@@ -40,6 +40,7 @@ type Props = {
   menuById: Map<string, PublicMenuItem>;
   t: OrderStrings;
   dir: "ltr" | "rtl";
+  showArabic: boolean;
   onSetQuantity: (id: string, quantity: number) => void;
   onOrdered: () => void;
 };
@@ -51,9 +52,12 @@ export function Cart({
   menuById,
   t,
   dir,
+  showArabic,
   onSetQuantity,
   onOrdered,
 }: Props) {
+  const labelFor = (item: PublicMenuItem) =>
+    showArabic && item.nameAr ? item.nameAr : item.name;
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [notes, setNotes] = useState("");
@@ -230,14 +234,19 @@ export function Cart({
               {lines.map((line) => (
                 <li key={line.id} className="flex items-center justify-between gap-3 border-b pb-2">
                   <div className="min-w-0 flex flex-col">
-                    <span className="font-semibold break-words" dir="auto">{line.item!.name}</span>
+                    <span className="font-semibold break-words" dir="auto">{labelFor(line.item!)}</span>
+                    {showArabic && line.item!.nameAr && (
+                      <span className="text-xs text-gray-400 break-words" dir="ltr" lang="de">
+                        {line.item!.name}
+                      </span>
+                    )}
                     {line.note && <span className="text-sm text-gray-500">{line.note}</span>}
                   </div>
                   <div className="shrink-0 flex items-center gap-1" dir="ltr">
                     <button
                       type="button"
                       onClick={() => onSetQuantity(line.id, line.quantity - 1)}
-                      aria-label={t.remove(line.item!.name)}
+                      aria-label={t.remove(labelFor(line.item!))}
                       className="size-11 rounded-full border text-xl font-bold"
                     >
                       {"−"}
@@ -246,7 +255,7 @@ export function Cart({
                     <button
                       type="button"
                       onClick={() => onSetQuantity(line.id, line.quantity + 1)}
-                      aria-label={t.add(line.item!.name)}
+                      aria-label={t.add(labelFor(line.item!))}
                       className="size-11 rounded-full border text-xl font-bold"
                     >
                       +

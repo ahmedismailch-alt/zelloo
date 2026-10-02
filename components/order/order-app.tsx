@@ -127,7 +127,12 @@ export function OrderApp({ restaurantId, restaurantName, table, menu }: Props) {
       </header>
 
       <div className="max-w-xl mx-auto flex flex-col gap-6 px-4 pt-5 pb-40">
-        <AiOrderBox restaurantId={restaurantId} t={t} onItems={addParsed} />
+        <AiOrderBox
+          restaurantId={restaurantId}
+          t={t}
+          showArabic={lang === "ar"}
+          onItems={addParsed}
+        />
 
         {menu.length === 0 ? (
           <div className="bg-white border rounded-2xl p-6 text-center">
@@ -135,7 +140,13 @@ export function OrderApp({ restaurantId, restaurantName, table, menu }: Props) {
             <p className="text-sm text-gray-500 mt-2">{t.menuUnavailableText}</p>
           </div>
         ) : (
-          <MenuList menu={menu} cart={cart} t={t} onSetQuantity={setQuantity} />
+          <MenuList
+            menu={menu}
+            cart={cart}
+            t={t}
+            showArabic={lang === "ar"}
+            onSetQuantity={setQuantity}
+          />
         )}
       </div>
 
@@ -146,6 +157,7 @@ export function OrderApp({ restaurantId, restaurantName, table, menu }: Props) {
         menuById={menuById}
         t={t}
         dir={dir}
+        showArabic={lang === "ar"}
         onSetQuantity={setQuantity}
         onOrdered={() => setCart({})}
       />

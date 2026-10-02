@@ -14,7 +14,13 @@ type MenuItem = {
   currency: string;
   is_available: boolean;
   is_confirmed: boolean;
+  name_translations: Record<string, string> | null;
 };
+
+function arabicNameOf(item: MenuItem) {
+  const value = item.name_translations?.ar;
+  return typeof value === "string" ? value.trim() : "";
+}
 
 type AIItem = {
   name: string;
@@ -39,6 +45,8 @@ export default function MenuPage() {
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [editArabic, setEditArabic] = useState("");
+  const [generatingArabic, setGeneratingArabic] = useState(false);
 
   const [search, setSearch] = useState("");
   const [priceEditingId, setPriceEditingId] = useState<string | null>(null);
@@ -274,6 +282,62 @@ export default function MenuPage() {
     );
   }
 
+  async function requestArabicNames(
+    itemIds: string[] | null,
+    options: { silent?: boolean } = {}
+  ) {
+    if (itemIds && itemIds.length === 0) return;
+    if (!options.silent) {
+      setGeneratingArabic(true);
+      setMessage("Arabische Namen werden erstellt...");
+    }
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("no session");
+
+      const response = await fetch("/api/menu-transliterate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ itemIds, onlyMissing: itemIds === null }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error);
+
+      const updated = new Map<string, Record<string, string>>(
+        (data.updated || []).map(
+          (entry: { id: string; name_translations: Record<string, string> }) => [
+            entry.id,
+            entry.name_translations,
+          ]
+        )
+      );
+      setItems((current) =>
+        current.map((item) =>
+          updated.has(String(item.id))
+            ? { ...item, name_translations: updated.get(String(item.id))! }
+            : item
+        )
+      );
+      if (!options.silent) {
+        setMessage(`${updated.size} arabische Namen wurden erstellt.`);
+      }
+    } catch {
+      setMessage(
+        options.silent
+          ? "Gespeichert. Der arabische Name konnte nicht erstellt werden – bitte später «Arabische Namen erstellen» drücken."
+          : "Arabische Namen konnten nicht erstellt werden."
+      );
+    } finally {
+      if (!options.silent) setGeneratingArabic(false);
+    }
+  }
+
   async function importAIItems() {
     if (!restaurantId || aiItems.length === 0) return;
 
@@ -320,6 +384,10 @@ export default function MenuPage() {
     );
 
     setImporting(false);
+    void requestArabicNames(
+      (data || []).map((item: MenuItem) => String(item.id)),
+      { silent: true }
+    );
   }
 
   async function addItem(e: React.FormEvent) {
@@ -367,6 +435,7 @@ export default function MenuPage() {
 
     setMessage("Gericht wurde hinzugefügt.");
     setSaving(false);
+    void requestArabicNames([String(data.id)], { silent: true });
   }
 
   function startEditing(item: MenuItem) {
@@ -374,6 +443,7 @@ export default function MenuPage() {
     setEditName(item.name);
     setEditCategory(item.category || "");
     setEditPrice(item.price === null ? "" : String(item.price));
+    setEditArabic(arabicNameOf(item));
     setMessage("");
   }
 
@@ -382,6 +452,7 @@ export default function MenuPage() {
     setEditName("");
     setEditCategory("");
     setEditPrice("");
+    setEditArabic("");
   }
 
   async function saveEdit(item: MenuItem) {
@@ -404,6 +475,18 @@ export default function MenuPage() {
     setMessage("");
 
     const nameChanged = editName.trim() !== item.name.trim();
+    const arabicInput = editArabic.trim().slice(0, 120);
+    const arabicEditedByHand = arabicInput !== arabicNameOf(item);
+    const regenerateArabic = nameChanged && !arabicEditedByHand;
+
+    const nextTranslations: Record<string, string> = {
+      ...(item.name_translations || {}),
+    };
+    if (regenerateArabic || !arabicInput) {
+      delete nextTranslations.ar;
+    } else {
+      nextTranslations.ar = arabicInput;
+    }
 
     const { data, error } = await supabase
       .from("menu_items")
@@ -412,6 +495,7 @@ export default function MenuPage() {
         category: editCategory.trim() || null,
         price: parsedPrice,
         is_confirmed: nameChanged ? false : item.is_confirmed,
+        name_translations: nextTranslations,
       })
       .eq("id", item.id)
       .select()
@@ -432,6 +516,9 @@ export default function MenuPage() {
     cancelEditing();
     setMessage("Änderung wurde gespeichert.");
     setSaving(false);
+    if (regenerateArabic) {
+      void requestArabicNames([String(item.id)], { silent: true });
+    }
   }
 
   function replaceItem(updated: MenuItem) {
@@ -888,6 +975,21 @@ export default function MenuPage() {
               <p className="text-sm text-gray-500 mt-1">
                 Prüfen, bearbeiten und bestätigen Sie Ihre Gerichte.
               </p>
+
+              {items.some((item) => !arabicNameOf(item)) && (
+                <button
+                  type="button"
+                  onClick={() => requestArabicNames(null)}
+                  disabled={generatingArabic}
+                  className="mt-3 min-h-11 border-2 border-black rounded-xl px-4 py-2 font-bold disabled:opacity-50"
+                >
+                  {generatingArabic
+                    ? "Wird erstellt..."
+                    : `Arabische Namen erstellen (${
+                        items.filter((item) => !arabicNameOf(item)).length
+                      })`}
+                </button>
+              )}
             </div>
 
             <span className="bg-gray-100 rounded-full px-3 py-1 text-sm font-bold">
@@ -972,6 +1074,22 @@ export default function MenuPage() {
                         className="w-full border rounded-xl px-4 py-3"
                       />
 
+                      <label className="flex flex-col gap-1 text-sm font-bold">
+                        Arabischer Name (optional)
+                        <input
+                          value={editArabic}
+                          onChange={(e) => setEditArabic(e.target.value)}
+                          placeholder="z. B. بيتزا مارغريتا"
+                          dir="rtl"
+                          lang="ar"
+                          maxLength={120}
+                          className="w-full border rounded-xl px-4 py-3 text-base font-normal"
+                        />
+                        <span className="text-xs font-normal text-gray-500">
+                          Leer lassen: Zelloo erstellt ihn automatisch, wenn Sie den Namen ändern.
+                        </span>
+                      </label>
+
                       <div className="flex gap-2">
                         <button
                           onClick={() => saveEdit(item)}
@@ -996,6 +1114,16 @@ export default function MenuPage() {
                           <p className="font-black text-lg text-pretty">
                             {item.name}
                           </p>
+
+                          {arabicNameOf(item) ? (
+                            <p className="text-sm text-gray-600" dir="rtl" lang="ar">
+                              {arabicNameOf(item)}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-gray-400">
+                              Kein arabischer Name
+                            </p>
+                          )}
 
                           {item.description && (
                             <p className="text-sm text-gray-500 mt-1">
