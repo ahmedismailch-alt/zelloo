@@ -40,6 +40,11 @@ export default function MenuPage() {
   const [editCategory, setEditCategory] = useState("");
   const [editPrice, setEditPrice] = useState("");
 
+  const [search, setSearch] = useState("");
+  const [priceEditingId, setPriceEditingId] = useState<string | null>(null);
+  const [priceDraft, setPriceDraft] = useState("");
+  const [busyItemId, setBusyItemId] = useState<string | null>(null);
+
   const [menuImages, setMenuImages] = useState<File[]>([]);
   const [aiItems, setAiItems] = useState<AIItem[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
@@ -398,13 +403,15 @@ export default function MenuPage() {
     setSaving(true);
     setMessage("");
 
+    const nameChanged = editName.trim() !== item.name.trim();
+
     const { data, error } = await supabase
       .from("menu_items")
       .update({
         name: editName.trim(),
         category: editCategory.trim() || null,
         price: parsedPrice,
-        is_confirmed: false,
+        is_confirmed: nameChanged ? false : item.is_confirmed,
       })
       .eq("id", item.id)
       .select()
@@ -425,6 +432,78 @@ export default function MenuPage() {
     cancelEditing();
     setMessage("Änderung wurde gespeichert.");
     setSaving(false);
+  }
+
+  function replaceItem(updated: MenuItem) {
+    setItems((current) =>
+      current.map((currentItem) =>
+        currentItem.id === updated.id ? updated : currentItem
+      )
+    );
+  }
+
+  async function toggleAvailable(item: MenuItem) {
+    setBusyItemId(item.id);
+    setMessage("");
+
+    const { data, error } = await supabase
+      .from("menu_items")
+      .update({ is_available: !item.is_available })
+      .eq("id", item.id)
+      .select()
+      .single();
+
+    setBusyItemId(null);
+
+    if (error || !data) {
+      setMessage("Änderung konnte nicht gespeichert werden.");
+      return;
+    }
+
+    replaceItem(data);
+    setMessage(
+      data.is_available
+        ? `"${item.name}" ist wieder verfügbar.`
+        : `"${item.name}" ist ausverkauft und für Gäste ausgeblendet.`
+    );
+  }
+
+  function startPriceEditing(item: MenuItem) {
+    setPriceEditingId(item.id);
+    setPriceDraft(item.price === null ? "" : Number(item.price).toFixed(2));
+    setMessage("");
+  }
+
+  async function savePrice(item: MenuItem) {
+    const parsed = Number(priceDraft.replace(",", ".").trim());
+
+    if (priceDraft.trim() === "" || Number.isNaN(parsed) || parsed <= 0) {
+      setMessage("Bitte geben Sie einen gültigen Preis ein.");
+      return;
+    }
+
+    const rounded = Math.round(parsed * 100) / 100;
+
+    setBusyItemId(item.id);
+
+    const { data, error } = await supabase
+      .from("menu_items")
+      .update({ price: rounded })
+      .eq("id", item.id)
+      .select()
+      .single();
+
+    setBusyItemId(null);
+
+    if (error || !data) {
+      setMessage("Preis konnte nicht gespeichert werden.");
+      return;
+    }
+
+    replaceItem(data);
+    setPriceEditingId(null);
+    setPriceDraft("");
+    setMessage(`Neuer Preis für "${item.name}": CHF ${rounded.toFixed(2)}`);
   }
 
   async function deleteItem(item: MenuItem) {
@@ -524,6 +603,22 @@ export default function MenuPage() {
 
     setSaving(false);
   }
+
+  const normalizedSearch = search.trim().toLowerCase();
+  const groupedItems = Object.entries(
+    items
+      .filter(
+        (item) =>
+          normalizedSearch === "" ||
+          item.name.toLowerCase().includes(normalizedSearch) ||
+          (item.category || "").toLowerCase().includes(normalizedSearch)
+      )
+      .reduce<Record<string, MenuItem[]>>((groups, item) => {
+        const key = item.category?.trim() || "Ohne Kategorie";
+        (groups[key] ||= []).push(item);
+        return groups;
+      }, {})
+  );
 
   if (loading) {
     return (
@@ -809,9 +904,50 @@ export default function MenuPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.id} className="border rounded-xl p-4">
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="menu-search" className="sr-only">
+                  Gericht suchen
+                </label>
+                <input
+                  id="menu-search"
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Gericht suchen, z.B. calz"
+                  className="w-full border rounded-xl px-4 py-3 text-base min-h-11"
+                />
+                {items.some((item) => !item.is_available) && (
+                  <p className="text-sm text-gray-500">
+                    {items.filter((item) => !item.is_available).length} ausverkauft
+                    {" · für Gäste ausgeblendet"}
+                  </p>
+                )}
+              </div>
+
+              {groupedItems.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-6">
+                  Keine Treffer für «{search}».
+                </p>
+              )}
+
+              {groupedItems.map(([groupName, groupItems]) => (
+                <section key={groupName} className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-black text-base">{groupName}</h3>
+                    <span className="bg-gray-100 rounded-full px-3 py-1 text-xs font-bold">
+                      {groupItems.length}
+                    </span>
+                  </div>
+              {groupItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={
+                    item.is_available
+                      ? "border rounded-xl p-4"
+                      : "border rounded-xl p-4 bg-gray-100 opacity-70"
+                  }
+                >
                   {editingId === item.id ? (
                     <div className="space-y-3">
                       <input
@@ -856,14 +992,8 @@ export default function MenuPage() {
                   ) : (
                     <>
                       <div className="flex justify-between gap-4">
-                        <div>
-                          {item.category && (
-                            <p className="text-xs text-gray-500">
-                              {item.category}
-                            </p>
-                          )}
-
-                          <p className="font-black text-lg">
+                        <div className="min-w-0">
+                          <p className="font-black text-lg text-pretty">
                             {item.name}
                           </p>
 
@@ -873,37 +1003,101 @@ export default function MenuPage() {
                             </p>
                           )}
 
-                          <p className="font-semibold mt-1">
-                            {item.price === null
-                              ? "Preis fehlt"
-                              : `${item.currency} ${Number(
-                                  item.price
-                                ).toFixed(2)}`}
-                          </p>
+                          {priceEditingId === item.id ? (
+                            <form
+                              className="flex items-center gap-2 mt-2"
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                savePrice(item);
+                              }}
+                            >
+                              <span className="font-semibold">CHF</span>
+                              <label htmlFor={`price-${item.id}`} className="sr-only">
+                                Neuer Preis
+                              </label>
+                              <input
+                                id={`price-${item.id}`}
+                                value={priceDraft}
+                                onChange={(e) => setPriceDraft(e.target.value)}
+                                inputMode="decimal"
+                                autoFocus
+                                className="w-24 border rounded-lg px-3 py-2 text-base min-h-11"
+                              />
+                              <button
+                                type="submit"
+                                disabled={busyItemId === item.id}
+                                aria-label="Preis speichern"
+                                className="bg-black text-white rounded-lg min-h-11 min-w-11 font-bold disabled:opacity-50"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPriceEditingId(null)}
+                                aria-label="Abbrechen"
+                                className="border rounded-lg min-h-11 min-w-11 font-bold"
+                              >
+                                ✕
+                              </button>
+                            </form>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => startPriceEditing(item)}
+                              className="font-semibold mt-1 min-h-11 underline decoration-dotted underline-offset-4 text-left"
+                              aria-label={`Preis von ${item.name} ändern`}
+                            >
+                              {item.price === null
+                                ? "Preis fehlt – tippen"
+                                : `${item.currency} ${Number(
+                                    item.price
+                                  ).toFixed(2)}`}
+                            </button>
+                          )}
                         </div>
 
-                        <span
-                          className={
-                            item.is_confirmed
-                              ? "text-green-600 text-sm font-bold"
-                              : "text-orange-500 text-sm font-bold"
-                          }
-                        >
-                          {item.is_confirmed ? "Bestätigt" : "Prüfen"}
-                        </span>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span
+                            className={
+                              item.is_confirmed
+                                ? "text-green-600 text-sm font-bold"
+                                : "text-orange-500 text-sm font-bold"
+                            }
+                          >
+                            {item.is_confirmed ? "Bestätigt" : "Prüfen"}
+                          </span>
+                          {!item.is_available && (
+                            <span className="bg-gray-700 text-white rounded-full px-2 py-0.5 text-xs font-bold">
+                              Ausverkauft
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => toggleAvailable(item)}
+                        disabled={busyItemId === item.id}
+                        className={
+                          item.is_available
+                            ? "w-full mt-4 min-h-11 rounded-xl border-2 border-gray-800 font-bold disabled:opacity-50"
+                            : "w-full mt-4 min-h-11 rounded-xl bg-green-600 text-white font-bold disabled:opacity-50"
+                        }
+                      >
+                        {item.is_available ? "Ausverkauft" : "Wieder verfügbar"}
+                      </button>
+
+                      <div className="flex flex-wrap gap-2 mt-2">
                         <button
                           onClick={() => startEditing(item)}
-                          className="border rounded-lg px-4 py-2 text-sm font-bold"
+                          className="border rounded-lg px-4 min-h-11 text-sm font-bold"
                         >
                           Bearbeiten
                         </button>
 
                         <button
                           onClick={() => toggleConfirmed(item)}
-                          className="border rounded-lg px-4 py-2 text-sm font-bold"
+                          className="border rounded-lg px-4 min-h-11 text-sm font-bold"
                         >
                           {item.is_confirmed
                             ? "Bestätigung entfernen"
@@ -912,7 +1106,7 @@ export default function MenuPage() {
 
                         <button
                           onClick={() => deleteItem(item)}
-                          className="border border-red-300 text-red-600 rounded-lg px-4 py-2 text-sm font-bold"
+                          className="border border-red-300 text-red-600 rounded-lg px-4 min-h-11 text-sm font-bold"
                         >
                           Löschen
                         </button>
@@ -920,6 +1114,8 @@ export default function MenuPage() {
                     </>
                   )}
                 </div>
+              ))}
+                </section>
               ))}
             </div>
           )}
