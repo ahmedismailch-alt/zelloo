@@ -1,10 +1,43 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import { formatChf } from "./format";
 
 export type CartLine = { quantity: number; note: string | null };
+
+type OrderStatus =
+  | "new"
+  | "accepted"
+  | "preparing"
+  | "ready"
+  | "completed"
+  | "cancelled";
+
+const STATUS_POLL_MS = 10000;
+
+const progressSteps: { status: OrderStatus; label: string }[] = [
+  { status: "new", label: "Eingegangen" },
+  { status: "accepted", label: "Angenommen" },
+  { status: "preparing", label: "In Zubereitung" },
+  { status: "ready", label: "Bereit" },
+];
+
+function statusHeadline(status: OrderStatus) {
+  switch (status) {
+    case "accepted":
+      return "Ihre Bestellung wurde angenommen.";
+    case "preparing":
+      return "Ihre Bestellung wird zubereitet.";
+    case "ready":
+    case "completed":
+      return "Ihre Bestellung ist bereit!";
+    case "cancelled":
+      return "Ihre Bestellung wurde storniert.";
+    default:
+      return "Danke! Ihre Bestellung ist eingegangen.";
+  }
+}
 
 type Props = {
   restaurantId: string;
@@ -29,6 +62,43 @@ export function Cart({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState<{ id: string; totalCents: number } | null>(null);
+  const [orderStatus, setOrderStatus] = useState<OrderStatus>("new");
+
+  const confirmedId = confirmed?.id;
+
+  useEffect(() => {
+    if (!confirmedId) return;
+
+    let cancelled = false;
+    let timer: number | undefined;
+
+    async function poll() {
+      try {
+        const response = await fetch(
+          `/api/orders/${encodeURIComponent(confirmedId!)}?restaurant=${encodeURIComponent(restaurantId)}`,
+          { cache: "no-store" }
+        );
+        if (response.ok) {
+          const data = (await response.json()) as { status: OrderStatus };
+          if (cancelled) return;
+          setOrderStatus(data.status);
+          if (data.status === "completed" || data.status === "cancelled") {
+            return;
+          }
+        }
+      } catch {
+        // Network hiccup: keep the last known status and try again.
+      }
+      if (!cancelled) timer = window.setTimeout(poll, STATUS_POLL_MS);
+    }
+
+    timer = window.setTimeout(poll, STATUS_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [confirmedId, restaurantId]);
 
   const lines = Object.entries(cart)
     .map(([id, line]) => ({ id, ...line, item: menuById.get(id) }))
@@ -66,6 +136,7 @@ export function Cart({
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Fehler");
 
+      setOrderStatus("new");
       setConfirmed({ id: String(data.orderId), totalCents: data.totalCents });
       setNotes("");
       onOrdered();
@@ -79,14 +150,49 @@ export function Cart({
   }
 
   if (confirmed) {
+    const isReady = orderStatus === "ready" || orderStatus === "completed";
+    const isCancelled = orderStatus === "cancelled";
+    const reachedIndex = isReady
+      ? progressSteps.length - 1
+      : progressSteps.findIndex((step) => step.status === orderStatus);
+
     return (
-      <div className="fixed inset-x-0 bottom-0 z-20 bg-black text-white rounded-t-3xl px-5 pt-6 pb-8">
-        <div className="max-w-xl mx-auto flex flex-col gap-2" role="status">
-          <p className="text-xs font-bold tracking-widest text-orange-500">
-            BESTELLUNG GESENDET
+      <div
+        className={`fixed inset-x-0 bottom-0 z-20 text-white rounded-t-3xl px-5 pt-6 pb-8 transition-colors ${
+          isReady ? "bg-green-700" : isCancelled ? "bg-red-800" : "bg-black"
+        }`}
+      >
+        <div className="max-w-xl mx-auto flex flex-col gap-2" role="status" aria-live="polite">
+          <p
+            className={`text-xs font-bold tracking-widest ${
+              isReady || isCancelled ? "text-white" : "text-orange-500"
+            }`}
+          >
+            {isCancelled ? "STORNIERT" : isReady ? "BEREIT" : "BESTELLUNG GESENDET"}
           </p>
-          <p className="text-2xl font-black">Danke! Wir bereiten alles vor.</p>
-          <p className="text-sm text-gray-400">
+          <p className="text-2xl font-black text-balance">{statusHeadline(orderStatus)}</p>
+
+          {!isCancelled && (
+            <ol className="flex gap-1 mt-2" aria-label="Bestellstatus">
+              {progressSteps.map((step, index) => {
+                const done = index <= reachedIndex;
+                return (
+                  <li key={step.status} className="flex-1 flex flex-col gap-1">
+                    <span
+                      className={`h-1.5 rounded-full ${done ? "bg-white" : "bg-white/25"}`}
+                    />
+                    <span
+                      className={`text-xs ${done ? "text-white font-semibold" : "text-white/50"}`}
+                    >
+                      {step.label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+
+          <p className="text-sm text-white/70 mt-1">
             {`Nr. #${confirmed.id.slice(0, 8)} · ${formatChf(confirmed.totalCents)} · Bezahlung an der Kasse`}
           </p>
           <button
