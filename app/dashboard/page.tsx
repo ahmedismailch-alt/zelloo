@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { OrderBell } from "../../lib/order-bell";
 
 type Restaurant = {
   id: number | string;
@@ -76,23 +77,7 @@ const statusBadge: Record<OrderStatus, string> = {
 
 const POLL_INTERVAL_MS = 10000;
 const HIGHLIGHT_MS = 8000;
-
-function playDing(context: AudioContext) {
-  const start = context.currentTime;
-  [880, 1320].forEach((frequency, index) => {
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    const at = start + index * 0.18;
-    oscillator.type = "sine";
-    oscillator.frequency.value = frequency;
-    gain.gain.setValueAtTime(0.0001, at);
-    gain.gain.exponentialRampToValueAtTime(0.4, at + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.5);
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start(at);
-    oscillator.stop(at + 0.55);
-  });
-}
+const BELL_REPEAT_MS = 3000;
 
 function formatMoney(cents: number | string) {
   return new Intl.NumberFormat("de-CH", {
@@ -145,20 +130,14 @@ export default function DashboardPage() {
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
 
   const knownIdsRef = useRef<Set<string> | null>(null);
-  const audioRef = useRef<AudioContext | null>(null);
-  const soundOnRef = useRef(false);
+  const bellRef = useRef<OrderBell | null>(null);
 
   async function enableSound() {
     try {
-      const AudioCtor =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext })
-          .webkitAudioContext;
-      const context = audioRef.current ?? new AudioCtor();
-      audioRef.current = context;
-      await context.resume();
-      playDing(context);
-      soundOnRef.current = true;
+      const bell = bellRef.current ?? new OrderBell();
+      bellRef.current = bell;
+      await bell.enable();
+      bell.ring();
       setSoundOn(true);
     } catch (error) {
       console.error(error);
@@ -167,10 +146,30 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
+    function handleVisibility() {
+      if (document.visibilityState === "visible") {
+        void bellRef.current?.resume();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
     return () => {
-      void audioRef.current?.close();
+      document.removeEventListener("visibilitychange", handleVisibility);
+      bellRef.current?.dispose();
+      bellRef.current = null;
     };
   }, []);
+
+  const pendingOrders = orders.filter((order) => order.status === "new");
+  const hasPending = pendingOrders.length > 0;
+
+  useEffect(() => {
+    if (!soundOn || !hasPending) return;
+    bellRef.current?.ring();
+    const timer = window.setInterval(() => {
+      bellRef.current?.ring();
+    }, BELL_REPEAT_MS);
+    return () => window.clearInterval(timer);
+  }, [soundOn, hasPending]);
 
   useEffect(() => {
     let cancelled = false;
@@ -311,9 +310,6 @@ export default function DashboardPage() {
             .map((order) => order.id);
 
           if (arrived.length > 0) {
-            if (soundOnRef.current && audioRef.current) {
-              playDing(audioRef.current);
-            }
             setHighlighted((current) => new Set([...current, ...arrived]));
             window.setTimeout(() => {
               setHighlighted((current) => {
@@ -466,6 +462,45 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-[#f8f9fb] text-black p-5">
+      {hasPending && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="sticky top-0 z-50 -mx-5 -mt-5 mb-5 bg-red-600 text-white px-5 py-4 shadow-lg"
+        >
+          <div className="max-w-5xl mx-auto flex flex-col gap-3">
+            <div>
+              <p className="text-xl font-black animate-pulse">
+                {pendingOrders.length === 1
+                  ? "Neue Bestellung!"
+                  : `${pendingOrders.length} neue Bestellungen!`}
+              </p>
+              <p className="text-sm font-semibold">
+                {pendingOrders[pendingOrders.length - 1].table_number
+                  ? `Tisch ${pendingOrders[pendingOrders.length - 1].table_number}`
+                  : pendingOrders[pendingOrders.length - 1].customer_name}
+                {" · "}
+                {formatMoney(pendingOrders[pendingOrders.length - 1].total_cents)}
+                {!soundOn && " · Ton ist aus"}
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={savingId !== null}
+              onClick={() =>
+                void changeStatus(
+                  pendingOrders[pendingOrders.length - 1],
+                  "accepted"
+                )
+              }
+              className="w-full min-h-12 rounded-xl bg-white text-red-700 font-black text-lg px-4 py-3 disabled:opacity-60"
+            >
+              {savingId !== null ? "Wird gespeichert..." : "Annehmen"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-start gap-4 mb-8">
           <div className="min-w-0">
@@ -537,8 +572,16 @@ export default function DashboardPage() {
                 : "bg-orange-500 text-black"
             }`}
           >
-            {soundOn ? "Ton an · Neue Bestellungen klingeln" : "Ton aktivieren"}
+            {soundOn
+              ? "Ton an · Klingelt bis zur Annahme"
+              : "Ton aktivieren"}
           </button>
+
+          {soundOn && (
+            <p className="text-xs text-gray-500 -mt-3 mb-5">
+              Bildschirm bleibt an. Lautstärke am Gerät auf Maximum stellen.
+            </p>
+          )}
 
           {!ordersLoaded && !ordersError && (
             <p className="text-gray-500">Bestellungen werden geladen...</p>
