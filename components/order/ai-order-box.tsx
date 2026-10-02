@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent, type KeyboardEvent } from "react";
+import type { OrderStrings } from "../../lib/order-i18n";
 
 export type ParsedItem = {
   menuItemId: string;
@@ -23,6 +24,7 @@ type Suggestion = {
 
 type Props = {
   restaurantId: string;
+  t: OrderStrings;
   onItems: (items: ParsedItem[]) => void;
 };
 
@@ -30,7 +32,7 @@ function formatChf(cents: number) {
   return `CHF ${(cents / 100).toFixed(2)}`;
 }
 
-export function AiOrderBox({ restaurantId, onItems }: Props) {
+export function AiOrderBox({ restaurantId, t, onItems }: Props) {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -54,7 +56,7 @@ export function AiOrderBox({ restaurantId, onItems }: Props) {
         body: JSON.stringify({ restaurantId, text: value }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Fehler");
+      if (!response.ok) throw new Error(t.aiError);
 
       const items = (data.items || []) as ParsedItem[];
       const notFound = (data.notFound || []) as string[];
@@ -65,22 +67,20 @@ export function AiOrderBox({ restaurantId, onItems }: Props) {
 
       const parts: string[] = [];
       if (items.length > 0) {
-        parts.push(`${items.length} Artikel zum Warenkorb hinzugefügt.`);
+        parts.push(t.aiAdded(items.length));
       }
       if (notFound.length > 0) {
-        parts.push(`Nicht gefunden: ${notFound.join(", ")}`);
+        parts.push(t.aiNotFound(notFound.join(", ")));
       }
       if (parts.length === 0 && nextSuggestions.length === 0) {
-        parts.push("Keine passenden Artikel gefunden. Bitte anders formulieren.");
+        parts.push(t.aiNothing);
       }
       if (nextSuggestions.length === 0 && notFound.length === 0) {
         setText("");
       }
       setMessage(parts.join(" "));
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Bestellung konnte nicht verstanden werden."
-      );
+      setError(err instanceof Error ? err.message : t.aiError);
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export function AiOrderBox({ restaurantId, onItems }: Props) {
 
     const remaining = suggestions.filter((_, i) => i !== index);
     setSuggestions(remaining);
-    setMessage(`${suggestion.quantity}× ${option.name} zum Warenkorb hinzugefügt.`);
+    setMessage(t.aiAddedOne(suggestion.quantity, option.name));
     if (remaining.length === 0) setText("");
   }
 
@@ -115,15 +115,15 @@ export function AiOrderBox({ restaurantId, onItems }: Props) {
   return (
     <section className="bg-white border-2 border-black rounded-2xl p-4 flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <h2 className="font-black">Einfach schreiben, was Sie möchten</h2>
+        <h2 className="font-black">{t.aiTitle}</h2>
         <p className="text-sm text-gray-500 leading-relaxed">
-          {"Zum Beispiel: «2 Cappuccino und ein Gipfeli»"}
+          {t.aiExample}
         </p>
       </div>
 
       <form onSubmit={submit} className="flex flex-col gap-3">
         <label htmlFor="ai-order" className="sr-only">
-          Bestellung in eigenen Worten
+          {t.aiLabel}
         </label>
         <textarea
           id="ai-order"
@@ -132,7 +132,8 @@ export function AiOrderBox({ restaurantId, onItems }: Props) {
           onKeyDown={handleKeyDown}
           maxLength={500}
           rows={2}
-          placeholder="Ich hätte gerne..."
+          placeholder={t.aiPlaceholder}
+          dir="auto"
           className="w-full resize-none rounded-xl border bg-[#f8f9fb] p-3 text-base leading-relaxed outline-none focus:border-black"
         />
         <button
@@ -140,7 +141,7 @@ export function AiOrderBox({ restaurantId, onItems }: Props) {
           disabled={loading || !text.trim()}
           className="min-h-11 rounded-xl bg-orange-500 px-4 py-3 font-bold text-black disabled:opacity-50"
         >
-          {loading ? "Wird verstanden..." : "Zum Warenkorb hinzufügen"}
+          {loading ? t.aiLoading : t.aiSubmit}
         </button>
       </form>
 
@@ -150,7 +151,7 @@ export function AiOrderBox({ restaurantId, onItems }: Props) {
           className="flex flex-col gap-2 rounded-xl bg-[#f8f9fb] p-3"
         >
           <p className="text-sm leading-relaxed">
-            <span className="font-bold">Meinten Sie:</span>{" "}
+            <span className="font-bold">{t.didYouMean}</span>{" "}
             <span className="text-gray-500">
               {`«${suggestion.query}»`}
               {suggestion.quantity > 1 ? ` · ${suggestion.quantity}×` : ""}
@@ -162,10 +163,10 @@ export function AiOrderBox({ restaurantId, onItems }: Props) {
                 <button
                   type="button"
                   onClick={() => pickSuggestion(index, option)}
-                  className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border-2 border-black bg-white px-4 py-3 text-left"
+                  className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border-2 border-black bg-white px-4 py-3 text-start"
                 >
                   <span className="font-bold text-pretty">{option.name}</span>
-                  <span className="shrink-0 text-sm font-bold">
+                  <span className="shrink-0 text-sm font-bold" dir="ltr">
                     {formatChf(option.priceCents)}
                   </span>
                 </button>
