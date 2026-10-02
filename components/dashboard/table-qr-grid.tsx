@@ -25,7 +25,7 @@ function TableQrCard({
   }
 
   return (
-    <article className="bg-white border rounded-2xl p-4 flex flex-col items-center text-center break-inside-avoid print:border-gray-400">
+    <article className="min-w-0 bg-white border rounded-2xl p-4 flex flex-col items-center text-center break-inside-avoid print:border-gray-400">
       <p className="text-xs font-bold text-orange-500 tracking-wide">
         {restaurantName}
       </p>
@@ -38,7 +38,7 @@ function TableQrCard({
           marginSize={2}
           level="M"
           title={`QR-Code für Tisch ${table}`}
-          className="w-full h-auto"
+          style={{ width: "100%", height: "auto", display: "block" }}
         />
       </div>
 
