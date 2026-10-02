@@ -576,6 +576,19 @@ export default function DashboardPage() {
             Speisekarte öffnen
           </Link>
         </section>
+
+        <section className="bg-white border rounded-2xl p-5 mt-6">
+          <h2 className="text-xl font-black">QR-Codes für Tische</h2>
+          <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+            Ihr Restaurant-Link und ein QR-Code pro Tisch, bereit zum Drucken.
+          </p>
+          <Link
+            href="/dashboard/tables"
+            className="inline-block mt-4 bg-black text-white font-bold px-5 py-3 rounded-xl"
+          >
+            QR-Codes öffnen
+          </Link>
+        </section>
       </div>
     </main>
   );
