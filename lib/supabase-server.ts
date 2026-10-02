@@ -6,7 +6,14 @@ export type PublicMenuItem = {
   category: string | null;
   description: string | null;
   priceCents: number;
+  nameAr: string | null;
 };
+
+export function readArabicName(translations: unknown): string | null {
+  if (!translations || typeof translations !== "object") return null;
+  const value = (translations as Record<string, unknown>).ar;
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
 
 export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -47,7 +54,7 @@ export async function getOrderableMenu(
 ): Promise<PublicMenuItem[]> {
   const { data, error } = await getSupabaseAdmin()
     .from("menu_items")
-    .select("id, name, category, description, price, is_available")
+    .select("id, name, category, description, price, is_available, name_translations")
     .eq("restaurant_id", restaurantId)
     .eq("is_confirmed", true)
     .order("category", { ascending: true })
@@ -68,5 +75,6 @@ export async function getOrderableMenu(
       category: item.category,
       description: item.description,
       priceCents: Math.round(Number(item.price) * 100),
+      nameAr: readArabicName(item.name_translations),
     }));
 }

@@ -9,10 +9,11 @@ type Props = {
   menu: PublicMenuItem[];
   cart: Record<string, CartLine>;
   t: OrderStrings;
+  showArabic: boolean;
   onSetQuantity: (id: string, quantity: number) => void;
 };
 
-export function MenuList({ menu, cart, t, onSetQuantity }: Props) {
+export function MenuList({ menu, cart, t, showArabic, onSetQuantity }: Props) {
   const groups = new Map<string, PublicMenuItem[]>();
   for (const item of menu) {
     const key = item.category?.trim() || "";
@@ -27,13 +28,25 @@ export function MenuList({ menu, cart, t, onSetQuantity }: Props) {
           <ul className="flex flex-col gap-2">
             {items.map((item) => {
               const quantity = cart[item.id]?.quantity ?? 0;
+              const label = showArabic && item.nameAr ? item.nameAr : item.name;
               return (
                 <li
                   key={item.id}
                   className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0 flex flex-col gap-1" dir="auto">
-                    <p className="font-bold break-words" dir="auto">{item.name}</p>
+                    {showArabic && item.nameAr ? (
+                      <>
+                        <p className="font-bold break-words" dir="rtl" lang="ar">
+                          {item.nameAr}
+                        </p>
+                        <p className="text-xs text-gray-400 break-words" dir="ltr" lang="de">
+                          {item.name}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="font-bold break-words" dir="auto">{item.name}</p>
+                    )}
                     {item.description && (
                       <p className="text-sm text-gray-500 leading-relaxed" dir="auto">
                         {item.description}
@@ -48,7 +61,7 @@ export function MenuList({ menu, cart, t, onSetQuantity }: Props) {
                     <button
                       type="button"
                       onClick={() => onSetQuantity(item.id, 1)}
-                      aria-label={t.add(item.name)}
+                      aria-label={t.add(label)}
                       className="shrink-0 size-11 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center"
                     >
                       +
@@ -61,7 +74,7 @@ export function MenuList({ menu, cart, t, onSetQuantity }: Props) {
                       <button
                         type="button"
                         onClick={() => onSetQuantity(item.id, quantity - 1)}
-                        aria-label={t.remove(item.name)}
+                        aria-label={t.remove(label)}
                         className="size-11 rounded-full bg-black/10 text-xl font-bold flex items-center justify-center"
                       >
                         {"−"}
@@ -72,7 +85,7 @@ export function MenuList({ menu, cart, t, onSetQuantity }: Props) {
                       <button
                         type="button"
                         onClick={() => onSetQuantity(item.id, quantity + 1)}
-                        aria-label={t.add(item.name)}
+                        aria-label={t.add(label)}
                         className="size-11 rounded-full bg-black/10 text-xl font-bold flex items-center justify-center"
                       >
                         +

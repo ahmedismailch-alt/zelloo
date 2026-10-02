@@ -12,6 +12,7 @@ export type ParsedItem = {
 type SuggestionOption = {
   menuItemId: string;
   name: string;
+  nameAr: string | null;
   priceCents: number;
 };
 
@@ -25,6 +26,7 @@ type Suggestion = {
 type Props = {
   restaurantId: string;
   t: OrderStrings;
+  showArabic: boolean;
   onItems: (items: ParsedItem[]) => void;
 };
 
@@ -32,7 +34,9 @@ function formatChf(cents: number) {
   return `CHF ${(cents / 100).toFixed(2)}`;
 }
 
-export function AiOrderBox({ restaurantId, t, onItems }: Props) {
+export function AiOrderBox({ restaurantId, t, showArabic, onItems }: Props) {
+  const labelFor = (option: SuggestionOption) =>
+    showArabic && option.nameAr ? option.nameAr : option.name;
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -100,7 +104,7 @@ export function AiOrderBox({ restaurantId, t, onItems }: Props) {
 
     const remaining = suggestions.filter((_, i) => i !== index);
     setSuggestions(remaining);
-    setMessage(t.aiAddedOne(suggestion.quantity, option.name));
+    setMessage(t.aiAddedOne(suggestion.quantity, labelFor(option)));
     if (remaining.length === 0) setText("");
   }
 
@@ -165,7 +169,14 @@ export function AiOrderBox({ restaurantId, t, onItems }: Props) {
                   onClick={() => pickSuggestion(index, option)}
                   className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border-2 border-black bg-white px-4 py-3 text-start"
                 >
-                  <span className="font-bold text-pretty">{option.name}</span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="font-bold text-pretty" dir="auto">{labelFor(option)}</span>
+                    {showArabic && option.nameAr && (
+                      <span className="text-xs text-gray-400" dir="ltr" lang="de">
+                        {option.name}
+                      </span>
+                    )}
+                  </span>
                   <span className="shrink-0 text-sm font-bold" dir="ltr">
                     {formatChf(option.priceCents)}
                   </span>
