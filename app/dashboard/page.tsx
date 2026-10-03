@@ -10,6 +10,7 @@ type Restaurant = {
   id: number | string;
   name: string;
   source_url: string | null;
+  phone: string | null;
   subscription_status: string | null;
   subscription_plan: string | null;
   current_period_end: string | null;
@@ -50,6 +51,15 @@ type DashboardStats = {
   new_orders: number | string;
   revenue_today_cents: number | string;
 };
+
+type OrderFilter = "all" | "table" | "pickup" | "delivery";
+
+const filterOptions: { value: OrderFilter; label: string }[] = [
+  { value: "all", label: "Alle" },
+  { value: "table", label: "Tische" },
+  { value: "pickup", label: "Abholung" },
+  { value: "delivery", label: "Lieferung" },
+];
 
 const statusOptions: { value: OrderStatus; label: string }[] = [
   { value: "new", label: "Neu" },
@@ -132,6 +142,7 @@ export default function DashboardPage() {
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [soundOn, setSoundOn] = useState(false);
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
+  const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
 
   const knownIdsRef = useRef<Set<string> | null>(null);
   const bellRef = useRef<OrderBell | null>(null);
@@ -214,7 +225,7 @@ export default function DashboardPage() {
         const { data: existing, error: readError } = await supabase
           .from("restaurants")
           .select(
-            "id, name, source_url, subscription_status, subscription_plan, current_period_end"
+            "id, name, source_url, phone, subscription_status, subscription_plan, current_period_end"
           )
           .eq("owner_id", user.id)
           .maybeSingle();
@@ -510,7 +521,12 @@ export default function DashboardPage() {
     setPrintingOrder(order);
   }
 
-  const cards = [
+  const cards: {
+    label: string;
+    value: string;
+    compact?: boolean;
+    hint?: string;
+  }[] = [
     {
       label: "Neue Bestellungen",
       value: stats ? String(stats.new_orders) : "—",
@@ -522,6 +538,26 @@ export default function DashboardPage() {
   ];
 
   const revenueToday = stats ? formatMoney(stats.revenue_today_cents) : "—";
+
+  // Orders already arrive newest-first; a stable sort keeps that order
+  // within each group while bringing "new" orders to the top so staff
+  // never miss one among older, already-handled orders.
+  const sortedOrders = [...orders].sort((a, b) => {
+    if (a.status === "new" && b.status !== "new") return -1;
+    if (a.status !== "new" && b.status === "new") return 1;
+    return 0;
+  });
+
+  const filteredOrders = sortedOrders.filter((order) => {
+    if (orderFilter === "table") return Boolean(order.table_number);
+    if (orderFilter === "pickup") {
+      return !order.table_number && order.order_type === "pickup";
+    }
+    if (orderFilter === "delivery") {
+      return !order.table_number && order.order_type === "delivery";
+    }
+    return true;
+  });
 
   return (
     <>
@@ -578,12 +614,21 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-col items-end gap-2">
-            <button
-              onClick={handleLogout}
-              className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
-            >
-              Abmelden
-            </button>
+            <div className="flex gap-2">
+              <Link
+                href="/dashboard/settings"
+                className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
+              >
+                Einstellungen
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
+              >
+                Abmelden
+              </button>
+            </div>
 
             <div className="bg-white border rounded-xl px-3 py-1.5 text-right">
               <p className="text-[10px] leading-tight text-gray-500">
@@ -653,6 +698,32 @@ export default function DashboardPage() {
             Letzte 50 Bestellungen · Aktualisierung alle 10 Sekunden
           </p>
 
+          <div
+            role="tablist"
+            aria-label="Bestellungen filtern"
+            className="flex gap-2 overflow-x-auto -mx-1 px-1 mb-5"
+          >
+            {filterOptions.map((option) => {
+              const active = orderFilter === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setOrderFilter(option.value)}
+                  className={`shrink-0 min-h-11 rounded-full px-4 text-sm font-bold ${
+                    active
+                      ? "bg-black text-white"
+                      : "bg-white border border-gray-300 text-gray-700"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+
           <button
             type="button"
             onClick={() => void enableSound()}
@@ -688,8 +759,17 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {ordersLoaded && orders.length > 0 && filteredOrders.length === 0 && (
+            <div className="border border-dashed rounded-xl p-6 text-center">
+              <p className="font-bold">Keine Bestellungen in dieser Kategorie</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Versuchen Sie einen anderen Filter.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-3">
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <article
                 key={order.id}
                 className={`border rounded-xl p-3 transition-colors ${

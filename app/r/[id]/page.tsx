@@ -34,6 +34,7 @@ export default async function RestaurantOrderPage({
     <OrderApp
       restaurantId={id}
       restaurantName={restaurant.name}
+      restaurantPhone={restaurant.phone}
       table={normalizeTable(Array.isArray(table) ? table[0] : table)}
       menu={menu}
       categoryAr={categoryAr}

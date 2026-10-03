@@ -20,12 +20,20 @@ const MAX_QUANTITY = 20;
 type Props = {
   restaurantId: string;
   restaurantName: string;
+  restaurantPhone: string | null;
   table: string | null;
   menu: PublicMenuItem[];
   categoryAr: Record<string, string>;
 };
 
-export function OrderApp({ restaurantId, restaurantName, table, menu, categoryAr }: Props) {
+export function OrderApp({
+  restaurantId,
+  restaurantName,
+  restaurantPhone,
+  table,
+  menu,
+  categoryAr,
+}: Props) {
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [lang, setLang] = useState<OrderLang>("de");
 
@@ -123,6 +131,14 @@ export function OrderApp({ restaurantId, restaurantName, table, menu, categoryAr
             <p className="text-sm text-gray-400">
               {table ? `${t.table(table)} · ${t.payAtCounter}` : t.payAtCounter}
             </p>
+            {restaurantPhone && (
+              <a
+                href={`tel:${restaurantPhone}`}
+                className="text-sm text-orange-500 font-semibold underline"
+              >
+                {t.contactPhone(restaurantPhone)}
+              </a>
+            )}
           </div>
         </div>
       </header>

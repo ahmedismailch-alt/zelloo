@@ -27,6 +27,7 @@ export type OrderStrings = {
   languageLabel: string;
   table: (table: string) => string;
   payAtCounter: string;
+  contactPhone: (phone: string) => string;
   menuUnavailableTitle: string;
   menuUnavailableText: string;
   menuLabel: string;
@@ -92,6 +93,7 @@ const de: OrderStrings = {
   languageLabel: "Sprache",
   table: (t) => `Tisch ${t}`,
   payAtCounter: "Bezahlung an der Kasse",
+  contactPhone: (phone) => `Fragen? Rufen Sie an: ${phone}`,
   menuUnavailableTitle: "Speisekarte noch nicht verfügbar",
   menuUnavailableText: "Bitte bestellen Sie direkt beim Personal.",
   menuLabel: "Speisekarte",
@@ -158,6 +160,7 @@ const fr: OrderStrings = {
   languageLabel: "Langue",
   table: (t) => `Table ${t}`,
   payAtCounter: "Paiement à la caisse",
+  contactPhone: (phone) => `Des questions ? Appelez : ${phone}`,
   menuUnavailableTitle: "Carte pas encore disponible",
   menuUnavailableText: "Veuillez commander directement auprès du personnel.",
   menuLabel: "Carte",
@@ -205,7 +208,7 @@ const fr: OrderStrings = {
   order: (t) => `Commander · ${t}`,
   sendError: "La commande n'a pas pu être envoyée.",
   statusLabel: "Statut de la commande",
-  steps: { new: "Reçue", accepted: "Acceptée", preparing: "En préparation", ready: "Prête" },
+  steps: { new: "Reçue", accepted: "Accept��e", preparing: "En préparation", ready: "Prête" },
   badgeSent: "COMMANDE ENVOYÉE",
   badgeReady: "PRÊTE",
   badgeCancelled: "ANNULÉE",
@@ -224,6 +227,7 @@ const it: OrderStrings = {
   languageLabel: "Lingua",
   table: (t) => `Tavolo ${t}`,
   payAtCounter: "Pagamento alla cassa",
+  contactPhone: (phone) => `Domande? Chiamate: ${phone}`,
   menuUnavailableTitle: "Menù non ancora disponibile",
   menuUnavailableText: "Si prega di ordinare direttamente al personale.",
   menuLabel: "Menù",
@@ -290,6 +294,7 @@ const en: OrderStrings = {
   languageLabel: "Language",
   table: (t) => `Table ${t}`,
   payAtCounter: "Pay at the counter",
+  contactPhone: (phone) => `Questions? Call: ${phone}`,
   menuUnavailableTitle: "Menu not available yet",
   menuUnavailableText: "Please order directly with the staff.",
   menuLabel: "Menu",
@@ -356,6 +361,7 @@ const ar: OrderStrings = {
   languageLabel: "اللغة",
   table: (t) => `طاولة ${t}`,
   payAtCounter: "الدفع عند الصندوق",
+  contactPhone: (phone) => `أسئلة؟ اتصل بنا: ${phone}`,
   menuUnavailableTitle: "قائمة الطعام غير متوفرة بعد",
   menuUnavailableText: "يرجى الطلب مباشرة من الموظفين.",
   menuLabel: "قائمة الطعام",
