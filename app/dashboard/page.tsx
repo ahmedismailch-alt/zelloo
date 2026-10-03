@@ -10,6 +10,9 @@ type Restaurant = {
   id: number | string;
   name: string;
   source_url: string | null;
+  subscription_status: string | null;
+  subscription_plan: string | null;
+  current_period_end: string | null;
 };
 
 type OrderStatus =
@@ -125,6 +128,7 @@ export default function DashboardPage() {
   const [ordersError, setOrdersError] = useState("");
   const [actionError, setActionError] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [openingBilling, setOpeningBilling] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [soundOn, setSoundOn] = useState(false);
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
@@ -209,7 +213,9 @@ export default function DashboardPage() {
 
         const { data: existing, error: readError } = await supabase
           .from("restaurants")
-          .select("id, name, source_url")
+          .select(
+            "id, name, source_url, subscription_status, subscription_plan, current_period_end"
+          )
           .eq("owner_id", user.id)
           .maybeSingle();
 
@@ -239,7 +245,9 @@ export default function DashboardPage() {
             source_url: metadataUrl,
             email: user.email || "",
           })
-          .select("id, name, source_url")
+          .select(
+            "id, name, source_url, subscription_status, subscription_plan, current_period_end"
+          )
           .single();
 
         if (insertError) throw insertError;
@@ -432,6 +440,37 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleManageBilling() {
+    setActionError("");
+    setOpeningBilling(true);
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+
+      const response = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ returnUrl: window.location.href }),
+      });
+
+      const body = await response.json();
+      if (!response.ok || !body.url) {
+        throw new Error(body?.error || "Konnte nicht geöffnet werden.");
+      }
+
+      window.location.href = body.url;
+    } catch (error) {
+      console.error(error);
+      setActionError("Abonnement konnte nicht geöffnet werden.");
+    } finally {
+      setOpeningBilling(false);
+    }
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -473,12 +512,12 @@ export default function DashboardPage() {
 
   const cards = [
     {
-      label: "Bestellungen heute",
-      value: stats ? String(stats.orders_today) : "—",
-    },
-    {
       label: "Neue Bestellungen",
       value: stats ? String(stats.new_orders) : "—",
+    },
+    {
+      label: "Bestellungen heute",
+      value: stats ? String(stats.orders_today) : "—",
     },
     {
       label: "Bestellwert heute",
@@ -530,15 +569,15 @@ export default function DashboardPage() {
       )}
 
       <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-start gap-4 mb-8">
+        <div className="flex justify-between items-start gap-4 mb-6">
           <div className="min-w-0">
             <p className="text-sm font-bold text-orange-500">ZELLOO</p>
 
-            <h1 className="text-3xl font-black mt-1 break-words">
+            <h1 className="text-2xl font-black mt-1 break-words">
               {restaurant.name}
             </h1>
 
-            <p className="text-gray-500 mt-1 break-all">{email}</p>
+            <p className="text-gray-500 mt-1 break-all text-sm">{email}</p>
           </div>
 
           <button
@@ -559,11 +598,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
           {cards.map((card) => (
-            <div key={card.label} className="bg-white border rounded-2xl p-5">
+            <div key={card.label} className="bg-white border rounded-2xl p-4">
               <p className="text-gray-500 text-sm">{card.label}</p>
-              <p className="text-3xl font-black mt-2">{card.value}</p>
+              <p className="text-2xl font-black mt-2">{card.value}</p>
 
               {card.hint && (
                 <p className="text-xs text-gray-500 mt-2">{card.hint}</p>
@@ -572,9 +611,9 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <section className="bg-white border rounded-2xl p-5 mb-6">
+        <section className="bg-white border rounded-2xl p-4 mb-6 max-w-2xl mx-auto w-full">
           <div className="flex justify-between items-center gap-3 mb-2">
-            <h2 className="text-xl font-black">Bestellungen</h2>
+            <h2 className="text-lg font-black">Bestellungen</h2>
 
             <button
               disabled={ordersLoading || savingId !== null}
@@ -624,11 +663,11 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {orders.map((order) => (
               <article
                 key={order.id}
-                className={`border rounded-xl p-4 transition-colors ${
+                className={`border rounded-xl p-3 transition-colors ${
                   highlighted.has(order.id)
                     ? "bg-orange-50 border-orange-400"
                     : ""
@@ -640,7 +679,7 @@ export default function DashboardPage() {
                       #{order.id.slice(0, 8)} · {formatDate(order.created_at)}
                     </p>
 
-                    <h3 className="font-bold mt-1">{order.customer_name}</h3>
+                    <h3 className="font-bold mt-1 text-sm">{order.customer_name}</h3>
 
                     <p className="text-sm text-gray-500 mt-1">
                       {order.table_number
@@ -652,7 +691,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex flex-col items-end gap-2">
-                    <p className="font-black">
+                    <p className="font-black text-sm">
                       {formatMoney(order.total_cents)}
                     </p>
                     <span
@@ -715,7 +754,7 @@ export default function DashboardPage() {
                             nextStep[order.status]!.status
                           )
                         }
-                        className="flex-1 min-h-12 rounded-xl bg-black text-white font-bold px-4 py-3 disabled:opacity-50"
+                        className="flex-1 min-h-11 rounded-xl bg-black text-white font-bold text-sm px-3 py-2.5 disabled:opacity-50"
                       >
                         {nextStep[order.status]!.label}
                       </button>
@@ -730,7 +769,7 @@ export default function DashboardPage() {
                               void changeStatus(order, "cancelled");
                             }
                           }}
-                          className="min-h-12 rounded-xl border border-red-200 text-red-700 font-semibold px-4 py-3 disabled:opacity-50"
+                          className="min-h-11 rounded-xl border border-red-200 text-red-700 font-semibold text-sm px-3 py-2.5 disabled:opacity-50"
                         >
                           Stornieren
                         </button>
@@ -741,7 +780,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => printOrder(order)}
-                    className="w-full min-h-12 rounded-xl border border-gray-300 text-black font-semibold px-4 py-3 mt-2 active:bg-gray-100"
+                    className="w-full min-h-11 rounded-xl border border-gray-300 text-black font-semibold text-sm px-3 py-2.5 mt-2 active:bg-gray-100"
                   >
                     Drucken
                   </button>
@@ -803,6 +842,58 @@ export default function DashboardPage() {
                 {restaurantUrl}
               </a>
             </div>
+          )}
+        </section>
+
+        <section className="bg-white border rounded-2xl p-5 mb-6">
+          <h2 className="text-xl font-black mb-2">Abonnement</h2>
+
+          {restaurant.subscription_status === "active" ||
+          restaurant.subscription_status === "trialing" ? (
+            <>
+              <div className="border rounded-xl p-4 mt-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs text-gray-500">Status</p>
+                  <p className="font-bold mt-1 text-green-700">
+                    {restaurant.subscription_plan === "zelloo-yearly"
+                      ? "Jährlich · Aktiv"
+                      : "Monatlich · Aktiv"}
+                  </p>
+                  {restaurant.current_period_end && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Verlängert am{" "}
+                      {new Date(
+                        restaurant.current_period_end
+                      ).toLocaleDateString("de-CH")}
+                    </p>
+                  )}
+                </div>
+                <span className="w-3 h-3 rounded-full bg-green-500 shrink-0" />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => void handleManageBilling()}
+                disabled={openingBilling}
+                className="w-full min-h-12 rounded-xl border border-gray-300 text-black font-semibold px-4 py-3 mt-4 disabled:opacity-50"
+              >
+                {openingBilling ? "Wird geöffnet..." : "Abonnement verwalten"}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="border rounded-xl p-4 mt-4">
+                <p className="text-xs text-gray-500">Status</p>
+                <p className="font-bold mt-1 text-red-700">Kein aktives Abonnement</p>
+              </div>
+
+              <Link
+                href="/pricing"
+                className="inline-block w-full text-center min-h-12 rounded-xl bg-orange-500 text-black font-bold px-4 py-3 mt-4 hover:bg-orange-400 transition-colors"
+              >
+                Jetzt abonnieren
+              </Link>
+            </>
           )}
         </section>
 

@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { QRCodeCanvas } from "qrcode.react";
 import { supabase } from "../../../lib/supabase";
-import { TableQrGrid } from "../../../components/dashboard/table-qr-grid";
+import {
+  GeneralQrCard,
+  TableQrGrid,
+} from "../../../components/dashboard/table-qr-grid";
 
 const MIN_TABLES = 1;
 const MAX_TABLES = 100;
@@ -20,6 +24,7 @@ export default function TablesPage() {
   const [pageError, setPageError] = useState("");
   const [tableInput, setTableInput] = useState("10");
   const [copied, setCopied] = useState(false);
+  const generalQrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,6 +118,16 @@ export default function TablesPage() {
     }
   }
 
+  function downloadGeneralQrPng() {
+    const canvas = generalQrRef.current?.querySelector("canvas");
+    if (!canvas) return;
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = "zelloo-restaurant-qr.png";
+    link.click();
+  }
+
   return (
     <main className="min-h-screen bg-[#f8f9fb] text-black p-5 print:bg-white print:p-0">
       <div className="max-w-5xl mx-auto">
@@ -135,6 +150,9 @@ export default function TablesPage() {
 
           <section className="bg-white border rounded-2xl p-5 mt-6">
             <h2 className="text-lg font-black">Ihr Restaurant-Link</h2>
+            <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+              Für Abholung oder Bestellungen ohne feste Tischnummer.
+            </p>
             <p className="font-mono text-sm break-all bg-gray-50 rounded-xl p-3 mt-3">
               {restaurantLink}
             </p>
@@ -158,6 +176,13 @@ export default function TablesPage() {
             <p role="status" className="sr-only">
               {copied ? "Link kopiert" : ""}
             </p>
+
+            <div className="mt-4 max-w-44">
+              <GeneralQrCard
+                url={restaurantLink}
+                restaurantName={restaurant.name}
+              />
+            </div>
           </section>
 
           <section className="bg-white border rounded-2xl p-5 mt-4 mb-6">
