@@ -799,6 +799,19 @@ export default function DashboardPage() {
             QR-Codes öffnen
           </Link>
         </section>
+
+        <section className="bg-white border rounded-2xl p-5 mt-6">
+          <h2 className="text-xl font-black">Statistik</h2>
+          <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+            Umsatz, meistverkaufte Artikel und Ihre stärksten Zeiten.
+          </p>
+          <Link
+            href="/dashboard/stats"
+            className="inline-block mt-4 bg-orange-500 text-black font-bold px-5 py-3 rounded-xl hover:bg-orange-400 transition-colors"
+          >
+            Statistik öffnen
+          </Link>
+        </section>
       </div>
     </main>
   );
