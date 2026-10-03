@@ -512,12 +512,12 @@ export default function DashboardPage() {
 
   const cards = [
     {
-      label: "Bestellungen heute",
-      value: stats ? String(stats.orders_today) : "—",
-    },
-    {
       label: "Neue Bestellungen",
       value: stats ? String(stats.new_orders) : "—",
+    },
+    {
+      label: "Bestellungen heute",
+      value: stats ? String(stats.orders_today) : "—",
     },
     {
       label: "Bestellwert heute",
