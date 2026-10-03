@@ -241,6 +241,10 @@ export default function StatsPage() {
                 bars={stats.hourBars}
                 formatValue={(value) => `${value} Bestellungen`}
                 labelEvery={3}
+                formatPeak={(bar) => {
+                  const hour = Number(bar.label);
+                  return `${bar.label}–${String((hour + 1) % 24).padStart(2, "0")} Uhr`;
+                }}
               />
 
               <StatsBars
