@@ -722,7 +722,7 @@ export default function DashboardPage() {
                   role="tab"
                   aria-selected={active}
                   onClick={() => setOrderFilter(option.value)}
-                  className={`shrink-0 min-h-11 rounded-full px-4 text-sm font-bold flex items-center gap-2 ${
+                  className={`shrink-0 min-h-9 rounded-full pl-3 pr-2 py-1 text-xs font-bold flex items-center gap-1.5 ${
                     active
                       ? "bg-black text-white"
                       : "bg-white border border-gray-300 text-gray-700"
@@ -730,10 +730,8 @@ export default function DashboardPage() {
                 >
                   {option.label}
                   <span
-                    className={`inline-flex min-w-5 h-5 items-center justify-center rounded-full px-1.5 text-xs font-black ${
-                      active
-                        ? "bg-white text-black"
-                        : "bg-gray-100 text-gray-700"
+                    className={`inline-flex min-w-5 h-5 items-center justify-center rounded-full px-1.5 text-xs font-black text-white ${
+                      count > 0 ? "bg-orange-500" : "bg-gray-300"
                     }`}
                   >
                     {count}
