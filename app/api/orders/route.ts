@@ -37,7 +37,12 @@ export async function POST(request: Request) {
 
     const table = normalizeTable(body.table);
     const customerName = cleanText(body.customerName, 60);
+    const customerPhone = cleanText(body.customerPhone, 30);
     const orderNote = cleanText(body.notes, 300);
+
+    if (!table && (!customerName || !customerPhone)) {
+      return badRequest("Bitte Name und Telefonnummer angeben.");
+    }
 
     if (!Array.isArray(body.items) || body.items.length === 0) {
       return badRequest("Der Warenkorb ist leer.");
@@ -116,6 +121,7 @@ export async function POST(request: Request) {
       .insert({
         restaurant_id: restaurant.id,
         customer_name: customerName || (table ? `Tisch ${table}` : "Gast"),
+        customer_phone: customerPhone,
         order_type: "pickup",
         status: "new",
         total_cents: totalCents,

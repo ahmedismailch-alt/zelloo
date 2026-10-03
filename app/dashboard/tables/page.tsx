@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { QRCodeCanvas } from "qrcode.react";
 import { supabase } from "../../../lib/supabase";
-import { TableQrGrid } from "../../../components/dashboard/table-qr-grid";
+import {
+  GeneralQrCard,
+  TableQrGrid,
+} from "../../../components/dashboard/table-qr-grid";
 
 const MIN_TABLES = 1;
 const MAX_TABLES = 100;
@@ -174,24 +177,11 @@ export default function TablesPage() {
               {copied ? "Link kopiert" : ""}
             </p>
 
-            <div className="mt-5 pt-5 border-t flex flex-col items-center text-center">
-              <div ref={generalQrRef} className="w-full max-w-44">
-                <QRCodeCanvas
-                  value={restaurantLink}
-                  size={512}
-                  marginSize={2}
-                  level="M"
-                  title="QR-Code für den allgemeinen Restaurant-Link"
-                  style={{ width: "100%", height: "auto", display: "block" }}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={downloadGeneralQrPng}
-                className="mt-3 w-full max-w-44 min-h-11 border border-gray-300 rounded-xl px-3 text-sm font-semibold"
-              >
-                Als Bild speichern
-              </button>
+            <div className="mt-4 max-w-44">
+              <GeneralQrCard
+                url={restaurantLink}
+                restaurantName={restaurant.name}
+              />
             </div>
           </section>
 

@@ -60,6 +60,7 @@ export function Cart({
     showArabic && item.nameAr ? item.nameAr : item.name;
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -116,6 +117,11 @@ export function Cart({
     event.preventDefault();
     if (sending || lines.length === 0) return;
 
+    if (!table && (!name.trim() || !phone.trim())) {
+      setError(t.missingContactError);
+      return;
+    }
+
     setSending(true);
     setError("");
 
@@ -127,6 +133,7 @@ export function Cart({
           restaurantId,
           table,
           customerName: name,
+          customerPhone: phone,
           notes,
           items: lines.map((line) => ({
             menuItemId: line.id,
@@ -265,16 +272,39 @@ export function Cart({
               ))}
             </ul>
 
+            {!table && (
+              <p className="text-sm text-gray-600 bg-gray-50 rounded-xl p-3 leading-relaxed">
+                {t.noTableHint}
+              </p>
+            )}
+
             <label className="flex flex-col gap-1 text-sm font-semibold">
-              {t.nameLabel}
+              {table ? t.nameLabel : t.nameLabelRequired}
               <input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 maxLength={60}
+                required={!table}
                 autoComplete="given-name"
                 className="rounded-xl border p-3 text-base font-normal"
               />
             </label>
+
+            {!table && (
+              <label className="flex flex-col gap-1 text-sm font-semibold">
+                {t.phoneLabel}
+                <input
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  maxLength={30}
+                  type="tel"
+                  required
+                  autoComplete="tel"
+                  placeholder={t.phonePlaceholder}
+                  className="rounded-xl border p-3 text-base font-normal"
+                />
+              </label>
+            )}
 
             <label className="flex flex-col gap-1 text-sm font-semibold">
               {t.noteLabel}

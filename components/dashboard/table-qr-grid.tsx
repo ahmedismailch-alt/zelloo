@@ -57,6 +57,61 @@ function TableQrCard({
   );
 }
 
+export function GeneralQrCard({
+  url,
+  restaurantName,
+}: {
+  url: string;
+  restaurantName: string;
+}) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  function downloadPng() {
+    const canvas = wrapperRef.current?.querySelector("canvas");
+    if (!canvas) return;
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = "zelloo-allgemein.png";
+    link.click();
+  }
+
+  return (
+    <article className="bg-white border rounded-2xl p-4 flex flex-col items-center text-center print:border-gray-400">
+      <p className="text-xs font-bold text-orange-500 tracking-wide">
+        {restaurantName}
+      </p>
+      <p className="text-lg font-black mt-1">Allgemeiner Link</p>
+      <p className="text-xs text-gray-500 mt-0.5">
+        Ohne Tischnummer · für Abholung am Tresen
+      </p>
+
+      <div ref={wrapperRef} className="mt-3 w-40">
+        <QRCodeCanvas
+          value={url}
+          size={512}
+          marginSize={2}
+          level="M"
+          title="QR-Code für den allgemeinen Restaurant-Link"
+          style={{ width: "100%", height: "auto", display: "block" }}
+        />
+      </div>
+
+      <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+        Scannen und bestellen
+      </p>
+
+      <button
+        type="button"
+        onClick={downloadPng}
+        className="mt-3 w-full min-h-11 border border-gray-300 rounded-xl px-3 text-sm font-semibold print:hidden"
+      >
+        Als Bild speichern
+      </button>
+    </article>
+  );
+}
+
 export function TableQrGrid({
   baseUrl,
   tableCount,
