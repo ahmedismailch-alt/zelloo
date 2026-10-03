@@ -10,6 +10,9 @@ type Restaurant = {
   id: number | string;
   name: string;
   source_url: string | null;
+  subscription_status: string | null;
+  subscription_plan: string | null;
+  current_period_end: string | null;
 };
 
 type OrderStatus =
@@ -125,6 +128,7 @@ export default function DashboardPage() {
   const [ordersError, setOrdersError] = useState("");
   const [actionError, setActionError] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [openingBilling, setOpeningBilling] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [soundOn, setSoundOn] = useState(false);
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
@@ -209,7 +213,9 @@ export default function DashboardPage() {
 
         const { data: existing, error: readError } = await supabase
           .from("restaurants")
-          .select("id, name, source_url")
+          .select(
+            "id, name, source_url, subscription_status, subscription_plan, current_period_end"
+          )
           .eq("owner_id", user.id)
           .maybeSingle();
 
@@ -239,7 +245,9 @@ export default function DashboardPage() {
             source_url: metadataUrl,
             email: user.email || "",
           })
-          .select("id, name, source_url")
+          .select(
+            "id, name, source_url, subscription_status, subscription_plan, current_period_end"
+          )
           .single();
 
         if (insertError) throw insertError;
@@ -429,6 +437,37 @@ export default function DashboardPage() {
     } catch (error) {
       console.error(error);
       setActionError("Abmelden fehlgeschlagen. Bitte erneut versuchen.");
+    }
+  }
+
+  async function handleManageBilling() {
+    setActionError("");
+    setOpeningBilling(true);
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+
+      const response = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ returnUrl: window.location.href }),
+      });
+
+      const body = await response.json();
+      if (!response.ok || !body.url) {
+        throw new Error(body?.error || "Konnte nicht geöffnet werden.");
+      }
+
+      window.location.href = body.url;
+    } catch (error) {
+      console.error(error);
+      setActionError("Abonnement konnte nicht geöffnet werden.");
+    } finally {
+      setOpeningBilling(false);
     }
   }
 
@@ -803,6 +842,58 @@ export default function DashboardPage() {
                 {restaurantUrl}
               </a>
             </div>
+          )}
+        </section>
+
+        <section className="bg-white border rounded-2xl p-5 mb-6">
+          <h2 className="text-xl font-black mb-2">Abonnement</h2>
+
+          {restaurant.subscription_status === "active" ||
+          restaurant.subscription_status === "trialing" ? (
+            <>
+              <div className="border rounded-xl p-4 mt-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs text-gray-500">Status</p>
+                  <p className="font-bold mt-1 text-green-700">
+                    {restaurant.subscription_plan === "zelloo-yearly"
+                      ? "Jährlich · Aktiv"
+                      : "Monatlich · Aktiv"}
+                  </p>
+                  {restaurant.current_period_end && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Verlängert am{" "}
+                      {new Date(
+                        restaurant.current_period_end
+                      ).toLocaleDateString("de-CH")}
+                    </p>
+                  )}
+                </div>
+                <span className="w-3 h-3 rounded-full bg-green-500 shrink-0" />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => void handleManageBilling()}
+                disabled={openingBilling}
+                className="w-full min-h-12 rounded-xl border border-gray-300 text-black font-semibold px-4 py-3 mt-4 disabled:opacity-50"
+              >
+                {openingBilling ? "Wird geöffnet..." : "Abonnement verwalten"}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="border rounded-xl p-4 mt-4">
+                <p className="text-xs text-gray-500">Status</p>
+                <p className="font-bold mt-1 text-red-700">Kein aktives Abonnement</p>
+              </div>
+
+              <Link
+                href="/pricing"
+                className="inline-block w-full text-center min-h-12 rounded-xl bg-orange-500 text-black font-bold px-4 py-3 mt-4 hover:bg-orange-400 transition-colors"
+              >
+                Jetzt abonnieren
+              </Link>
+            </>
           )}
         </section>
 
