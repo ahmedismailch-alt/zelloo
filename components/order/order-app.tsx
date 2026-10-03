@@ -22,9 +22,10 @@ type Props = {
   restaurantName: string;
   table: string | null;
   menu: PublicMenuItem[];
+  categoryAr: Record<string, string>;
 };
 
-export function OrderApp({ restaurantId, restaurantName, table, menu }: Props) {
+export function OrderApp({ restaurantId, restaurantName, table, menu, categoryAr }: Props) {
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [lang, setLang] = useState<OrderLang>("de");
 
@@ -146,6 +147,7 @@ export function OrderApp({ restaurantId, restaurantName, table, menu }: Props) {
             cart={cart}
             t={t}
             showArabic={lang === "ar"}
+            categoryAr={categoryAr}
             onSetQuantity={setQuantity}
           />
         )}

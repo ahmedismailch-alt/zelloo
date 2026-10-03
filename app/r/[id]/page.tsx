@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { OrderApp } from "../../../components/order/order-app";
 import {
+  getCategoryTranslations,
   getOrderableMenu,
   getRestaurant,
   isValidRestaurantId,
@@ -24,7 +25,10 @@ export default async function RestaurantOrderPage({
   const restaurant = await getRestaurant(id);
   if (!restaurant) notFound();
 
-  const menu = await getOrderableMenu(id);
+  const [menu, categoryAr] = await Promise.all([
+    getOrderableMenu(id),
+    getCategoryTranslations(id),
+  ]);
 
   return (
     <OrderApp
@@ -32,6 +36,7 @@ export default async function RestaurantOrderPage({
       restaurantName={restaurant.name}
       table={normalizeTable(Array.isArray(table) ? table[0] : table)}
       menu={menu}
+      categoryAr={categoryAr}
     />
   );
 }

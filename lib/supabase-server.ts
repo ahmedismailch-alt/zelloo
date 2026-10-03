@@ -15,6 +15,34 @@ export function readArabicName(translations: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+export type CategoryTranslations = Record<string, string>;
+
+export function readCategoryTranslations(value: unknown): CategoryTranslations {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const result: CategoryTranslations = {};
+  for (const [key, ar] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof ar === "string" && ar.trim()) result[key] = ar.trim();
+  }
+  return result;
+}
+
+// Returns {} if the category_translations column does not exist yet.
+export async function getCategoryTranslations(
+  restaurantId: string | number
+): Promise<CategoryTranslations> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("restaurants")
+    .select("category_translations")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Zelloo category translations unavailable:", error.message);
+    return {};
+  }
+  return readCategoryTranslations(data?.category_translations);
+}
+
 export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
