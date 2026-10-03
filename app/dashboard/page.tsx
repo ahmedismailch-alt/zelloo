@@ -548,16 +548,20 @@ export default function DashboardPage() {
     return 0;
   });
 
-  const filteredOrders = sortedOrders.filter((order) => {
-    if (orderFilter === "table") return Boolean(order.table_number);
-    if (orderFilter === "pickup") {
+  const matchesFilter = (order: Order, filter: OrderFilter) => {
+    if (filter === "table") return Boolean(order.table_number);
+    if (filter === "pickup") {
       return !order.table_number && order.order_type === "pickup";
     }
-    if (orderFilter === "delivery") {
+    if (filter === "delivery") {
       return !order.table_number && order.order_type === "delivery";
     }
     return true;
-  });
+  };
+
+  const filteredOrders = sortedOrders.filter((order) =>
+    matchesFilter(order, orderFilter)
+  );
 
   return (
     <>
@@ -705,6 +709,12 @@ export default function DashboardPage() {
           >
             {filterOptions.map((option) => {
               const active = orderFilter === option.value;
+              const count =
+                option.value === "all"
+                  ? sortedOrders.length
+                  : sortedOrders.filter((order) =>
+                      matchesFilter(order, option.value)
+                    ).length;
               return (
                 <button
                   key={option.value}
@@ -712,13 +722,22 @@ export default function DashboardPage() {
                   role="tab"
                   aria-selected={active}
                   onClick={() => setOrderFilter(option.value)}
-                  className={`shrink-0 min-h-11 rounded-full px-4 text-sm font-bold ${
+                  className={`shrink-0 min-h-11 rounded-full px-4 text-sm font-bold flex items-center gap-2 ${
                     active
                       ? "bg-black text-white"
                       : "bg-white border border-gray-300 text-gray-700"
                   }`}
                 >
                   {option.label}
+                  <span
+                    className={`inline-flex min-w-5 h-5 items-center justify-center rounded-full px-1.5 text-xs font-black ${
+                      active
+                        ? "bg-white text-black"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {count}
+                  </span>
                 </button>
               );
             })}
