@@ -455,9 +455,6 @@ export default function DashboardPage() {
   const restaurantName = restaurant.name;
 
   function printOrder(order: Order) {
-    const printWindow = window.open("", "_blank", "width=380,height=600");
-    if (!printWindow) return;
-
     const itemsHtml = (order.order_items || [])
       .map(
         (item) => `
@@ -474,7 +471,7 @@ export default function DashboardPage() {
       )
       .join("");
 
-    printWindow.document.write(`
+    const receiptHtml = `
       <!doctype html>
       <html>
         <head>
@@ -509,12 +506,47 @@ export default function DashboardPage() {
             </tfoot>
           </table>
           ${order.notes ? `<hr /><p>Hinweis: ${escapeHtml(order.notes)}</p>` : ""}
-          <script>window.onload = function () { window.print(); };</script>
         </body>
       </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
+    `;
+
+    // Use a hidden same-page iframe instead of window.open: mobile Safari/Chrome
+    // routinely block or silently drop popups opened this way, so window.print()
+    // never ran and nothing visibly happened. An iframe triggers no popup blocker.
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    document.body.appendChild(iframe);
+
+    const cleanup = () => {
+      window.setTimeout(() => {
+        iframe.remove();
+      }, 1000);
+    };
+
+    iframe.onload = () => {
+      const win = iframe.contentWindow;
+      if (!win) {
+        cleanup();
+        return;
+      }
+      win.focus();
+      win.print();
+      cleanup();
+    };
+
+    const doc = iframe.contentDocument;
+    if (!doc) {
+      cleanup();
+      return;
+    }
+    doc.open();
+    doc.write(receiptHtml);
+    doc.close();
   }
 
   const cards = [
