@@ -69,12 +69,12 @@ export function normalizeTable(value: unknown): string | null {
 export async function getRestaurant(restaurantId: string) {
   const { data, error } = await getSupabaseAdmin()
     .from("restaurants")
-    .select("id, name")
+    .select("id, name, phone")
     .eq("id", restaurantId)
     .maybeSingle();
 
   if (error) throw error;
-  return data as { id: number | string; name: string } | null;
+  return data as { id: number | string; name: string; phone: string | null } | null;
 }
 
 export async function getOrderableMenu(

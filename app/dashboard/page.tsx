@@ -10,6 +10,7 @@ type Restaurant = {
   id: number | string;
   name: string;
   source_url: string | null;
+  phone: string | null;
   subscription_status: string | null;
   subscription_plan: string | null;
   current_period_end: string | null;
@@ -50,6 +51,15 @@ type DashboardStats = {
   new_orders: number | string;
   revenue_today_cents: number | string;
 };
+
+type OrderFilter = "all" | "table" | "pickup" | "delivery";
+
+const filterOptions: { value: OrderFilter; label: string }[] = [
+  { value: "all", label: "Alle" },
+  { value: "table", label: "Tische" },
+  { value: "pickup", label: "Abholung" },
+  { value: "delivery", label: "Lieferung" },
+];
 
 const statusOptions: { value: OrderStatus; label: string }[] = [
   { value: "new", label: "Neu" },
@@ -132,6 +142,7 @@ export default function DashboardPage() {
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [soundOn, setSoundOn] = useState(false);
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
+  const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
 
   const knownIdsRef = useRef<Set<string> | null>(null);
   const bellRef = useRef<OrderBell | null>(null);
@@ -214,7 +225,7 @@ export default function DashboardPage() {
         const { data: existing, error: readError } = await supabase
           .from("restaurants")
           .select(
-            "id, name, source_url, subscription_status, subscription_plan, current_period_end"
+            "id, name, source_url, phone, subscription_status, subscription_plan, current_period_end"
           )
           .eq("owner_id", user.id)
           .maybeSingle();
@@ -510,7 +521,12 @@ export default function DashboardPage() {
     setPrintingOrder(order);
   }
 
-  const cards = [
+  const cards: {
+    label: string;
+    value: string;
+    compact?: boolean;
+    hint?: string;
+  }[] = [
     {
       label: "Neue Bestellungen",
       value: stats ? String(stats.new_orders) : "—",
@@ -519,12 +535,33 @@ export default function DashboardPage() {
       label: "Bestellungen heute",
       value: stats ? String(stats.orders_today) : "—",
     },
-    {
-      label: "Bestellwert heute",
-      value: stats ? formatMoney(stats.revenue_today_cents) : "—",
-      hint: "Abgeschlossene Bestellungen, heute eingegangen",
-    },
   ];
+
+  const revenueToday = stats ? formatMoney(stats.revenue_today_cents) : "—";
+
+  // Orders already arrive newest-first; a stable sort keeps that order
+  // within each group while bringing "new" orders to the top so staff
+  // never miss one among older, already-handled orders.
+  const sortedOrders = [...orders].sort((a, b) => {
+    if (a.status === "new" && b.status !== "new") return -1;
+    if (a.status !== "new" && b.status === "new") return 1;
+    return 0;
+  });
+
+  const matchesFilter = (order: Order, filter: OrderFilter) => {
+    if (filter === "table") return Boolean(order.table_number);
+    if (filter === "pickup") {
+      return !order.table_number && order.order_type === "pickup";
+    }
+    if (filter === "delivery") {
+      return !order.table_number && order.order_type === "delivery";
+    }
+    return true;
+  };
+
+  const filteredOrders = sortedOrders.filter((order) =>
+    matchesFilter(order, orderFilter)
+  );
 
   return (
     <>
@@ -580,12 +617,32 @@ export default function DashboardPage() {
             <p className="text-gray-500 mt-1 break-all text-sm">{email}</p>
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
-          >
-            Abmelden
-          </button>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex gap-2">
+              <Link
+                href="/dashboard/settings"
+                className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
+              >
+                Einstellungen
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
+              >
+                Abmelden
+              </button>
+            </div>
+
+            <div className="bg-white border rounded-xl px-3 py-1.5 text-right">
+              <p className="text-[10px] leading-tight text-gray-500">
+                Umsatz Heute
+              </p>
+              <p className="text-sm font-black leading-tight">
+                {revenueToday}
+              </p>
+            </div>
+          </div>
         </div>
 
         {(ordersError || actionError) && (
@@ -600,9 +657,26 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
           {cards.map((card) => (
-            <div key={card.label} className="bg-white border rounded-2xl p-4">
-              <p className="text-gray-500 text-sm">{card.label}</p>
-              <p className="text-2xl font-black mt-2">{card.value}</p>
+            <div
+              key={card.label}
+              className={`bg-white border rounded-2xl ${
+                card.compact ? "p-3" : "p-4"
+              }`}
+            >
+              <p
+                className={`text-gray-500 ${
+                  card.compact ? "text-xs" : "text-sm"
+                }`}
+              >
+                {card.label}
+              </p>
+              <p
+                className={`font-black mt-1 ${
+                  card.compact ? "text-lg" : "text-2xl mt-2"
+                }`}
+              >
+                {card.value}
+              </p>
 
               {card.hint && (
                 <p className="text-xs text-gray-500 mt-2">{card.hint}</p>
@@ -627,6 +701,45 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-500 mb-4">
             Letzte 50 Bestellungen · Aktualisierung alle 10 Sekunden
           </p>
+
+          <div
+            role="tablist"
+            aria-label="Bestellungen filtern"
+            className="flex gap-2 overflow-x-auto -mx-1 px-1 mb-5"
+          >
+            {filterOptions.map((option) => {
+              const active = orderFilter === option.value;
+              const count =
+                option.value === "all"
+                  ? sortedOrders.length
+                  : sortedOrders.filter((order) =>
+                      matchesFilter(order, option.value)
+                    ).length;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setOrderFilter(option.value)}
+                  className={`shrink-0 min-h-9 rounded-full pl-3 pr-2 py-1 text-xs font-bold flex items-center gap-1.5 ${
+                    active
+                      ? "bg-black text-white"
+                      : "bg-white border border-gray-300 text-gray-700"
+                  }`}
+                >
+                  {option.label}
+                  <span
+                    className={`inline-flex min-w-5 h-5 items-center justify-center rounded-full px-1.5 text-xs font-black text-white ${
+                      count > 0 ? "bg-orange-500" : "bg-gray-300"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
           <button
             type="button"
@@ -663,8 +776,17 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {ordersLoaded && orders.length > 0 && filteredOrders.length === 0 && (
+            <div className="border border-dashed rounded-xl p-6 text-center">
+              <p className="font-bold">Keine Bestellungen in dieser Kategorie</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Versuchen Sie einen anderen Filter.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-3">
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <article
                 key={order.id}
                 className={`border rounded-xl p-3 transition-colors ${
