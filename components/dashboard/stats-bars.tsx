@@ -6,9 +6,10 @@ type StatsBarsProps = {
   bars: Bar[];
   formatValue: (value: number) => string;
   labelEvery?: number;
+  formatPeak?: (bar: Bar) => string;
 };
 
-export function StatsBars({ title, description, bars, formatValue, labelEvery = 1 }: StatsBarsProps) {
+export function StatsBars({ title, description, bars, formatValue, labelEvery = 1, formatPeak }: StatsBarsProps) {
   const max = Math.max(0, ...bars.map((bar) => bar.value));
   const peak = bars.find((bar) => bar.value === max && max > 0);
 
@@ -22,7 +23,7 @@ export function StatsBars({ title, description, bars, formatValue, labelEvery = 
         {peak && (
           <p className="text-right shrink-0">
             <span className="block text-xs text-gray-500">Spitze</span>
-            <span className="block font-bold text-orange-600">{peak.label}</span>
+            <span className="block font-bold text-orange-600">{formatPeak ? formatPeak(peak) : peak.label}</span>
           </p>
         )}
       </div>
