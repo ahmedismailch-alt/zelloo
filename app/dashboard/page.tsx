@@ -97,15 +97,6 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 function safeRestaurantUrl(value: string | null) {
   if (!value) return null;
 
@@ -140,6 +131,23 @@ export default function DashboardPage() {
 
   const knownIdsRef = useRef<Set<string> | null>(null);
   const bellRef = useRef<OrderBell | null>(null);
+  const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    if (!printingOrder) return;
+    // Render the hidden receipt first, then print on the next frame so the
+    // browser has painted it. A same-page print (no popup, no iframe) is the
+    // only approach that works reliably across iOS Safari and Android Chrome.
+    const frame = window.requestAnimationFrame(() => {
+      window.print();
+    });
+    const handleAfterPrint = () => setPrintingOrder(null);
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("afterprint", handleAfterPrint);
+    };
+  }, [printingOrder]);
 
   async function enableSound() {
     try {
@@ -455,98 +463,12 @@ export default function DashboardPage() {
   const restaurantName = restaurant.name;
 
   function printOrder(order: Order) {
-    const itemsHtml = (order.order_items || [])
-      .map(
-        (item) => `
-          <tr>
-            <td style="padding:4px 0;">${item.quantity} × ${escapeHtml(item.item_name)}</td>
-            <td style="padding:4px 0; text-align:right; white-space:nowrap;">${formatMoney(item.quantity * item.unit_price_cents)}</td>
-          </tr>
-          ${
-            item.notes
-              ? `<tr><td colspan="2" style="padding:0 0 4px 12px; color:#555; font-size:12px;">${escapeHtml(item.notes)}</td></tr>`
-              : ""
-          }
-        `
-      )
-      .join("");
-
-    const receiptHtml = `
-      <!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Bestellung #${order.id.slice(0, 8)}</title>
-          <style>
-            body { font-family: "Courier New", monospace; padding: 16px; color: #000; }
-            h1 { font-size: 18px; margin: 0 0 4px; }
-            p { margin: 2px 0; font-size: 13px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
-            tfoot td { border-top: 1px solid #000; padding-top: 6px; font-weight: bold; }
-            hr { border: none; border-top: 1px dashed #000; margin: 10px 0; }
-          </style>
-        </head>
-        <body>
-          <h1>${escapeHtml(restaurantName)}</h1>
-          <p>#${order.id.slice(0, 8)} · ${formatDate(order.created_at)}</p>
-          <p>${
-            order.table_number
-              ? `Tisch ${order.table_number}`
-              : order.order_type === "delivery"
-                ? "Lieferung"
-                : "Abholung"
-          }</p>
-          ${order.customer_phone ? `<p>Telefon: ${escapeHtml(order.customer_phone)}</p>` : ""}
-          ${order.customer_address ? `<p>Adresse: ${escapeHtml(order.customer_address)}</p>` : ""}
-          <hr />
-          <table>
-            <tbody>${itemsHtml}</tbody>
-            <tfoot>
-              <tr><td>Total</td><td style="text-align:right;">${formatMoney(order.total_cents)}</td></tr>
-            </tfoot>
-          </table>
-          ${order.notes ? `<hr /><p>Hinweis: ${escapeHtml(order.notes)}</p>` : ""}
-        </body>
-      </html>
-    `;
-
-    // Use a hidden same-page iframe instead of window.open: mobile Safari/Chrome
-    // routinely block or silently drop popups opened this way, so window.print()
-    // never ran and nothing visibly happened. An iframe triggers no popup blocker.
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    document.body.appendChild(iframe);
-
-    const cleanup = () => {
-      window.setTimeout(() => {
-        iframe.remove();
-      }, 1000);
-    };
-
-    iframe.onload = () => {
-      const win = iframe.contentWindow;
-      if (!win) {
-        cleanup();
-        return;
-      }
-      win.focus();
-      win.print();
-      cleanup();
-    };
-
-    const doc = iframe.contentDocument;
-    if (!doc) {
-      cleanup();
-      return;
-    }
-    doc.open();
-    doc.write(receiptHtml);
-    doc.close();
+    // Render the receipt into a hidden section of this same page and print
+    // the page itself (print CSS shows only the receipt). iframes and
+    // window.open popups are unreliable on iOS Safari and get blocked on
+    // Android Chrome, so an in-page print is the only approach that works
+    // consistently on mobile.
+    setPrintingOrder(order);
   }
 
   const cards = [
@@ -566,7 +488,8 @@ export default function DashboardPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#f8f9fb] text-black p-5">
+    <>
+    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 print:hidden">
       {hasPending && (
         <div
           role="alert"
@@ -815,13 +738,13 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => printOrder(order)}
-                  className="w-full min-h-12 rounded-xl border border-gray-300 text-black font-semibold px-4 py-3 mt-2"
-                >
-                  Drucken
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => printOrder(order)}
+                    className="w-full min-h-12 rounded-xl border border-gray-300 text-black font-semibold px-4 py-3 mt-2 active:bg-gray-100"
+                  >
+                    Drucken
+                  </button>
 
                 <details className="mt-3">
                   <summary className="text-sm text-gray-500 cursor-pointer min-h-11 flex items-center">
@@ -927,5 +850,58 @@ export default function DashboardPage() {
         </section>
       </div>
     </main>
+
+      {printingOrder && (
+        <div className="hidden print:block p-6 font-mono text-black">
+          <h1 className="text-lg font-bold mb-1">{restaurantName}</h1>
+          <p className="text-sm m-0">
+            #{printingOrder.id.slice(0, 8)} · {formatDate(printingOrder.created_at)}
+          </p>
+          <p className="text-sm m-0">
+            {printingOrder.table_number
+              ? `Tisch ${printingOrder.table_number}`
+              : printingOrder.order_type === "delivery"
+                ? "Lieferung"
+                : "Abholung"}
+          </p>
+          {printingOrder.customer_phone && (
+            <p className="text-sm m-0">Telefon: {printingOrder.customer_phone}</p>
+          )}
+          {printingOrder.customer_address && (
+            <p className="text-sm m-0">Adresse: {printingOrder.customer_address}</p>
+          )}
+          <hr className="border-t border-dashed border-black my-3" />
+          <table className="w-full border-collapse text-sm">
+            <tbody>
+              {(printingOrder.order_items || []).map((item) => (
+                <tr key={item.id}>
+                  <td className="py-1 align-top">
+                    {item.quantity} × {item.item_name}
+                    {item.notes && (
+                      <div className="text-xs text-gray-600 pl-3">{item.notes}</div>
+                    )}
+                  </td>
+                  <td className="py-1 text-right whitespace-nowrap align-top">
+                    {formatMoney(item.quantity * item.unit_price_cents)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-black font-bold">
+                <td className="pt-2">Total</td>
+                <td className="pt-2 text-right">{formatMoney(printingOrder.total_cents)}</td>
+              </tr>
+            </tfoot>
+          </table>
+          {printingOrder.notes && (
+            <>
+              <hr className="border-t border-dashed border-black my-3" />
+              <p className="text-sm m-0">Hinweis: {printingOrder.notes}</p>
+            </>
+          )}
+        </div>
+      )}
+    </>
   );
 }
