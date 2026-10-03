@@ -22,6 +22,16 @@ function arabicNameOf(item: MenuItem) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function readCategoryMap(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).filter(
+      (entry): entry is [string, string] =>
+        typeof entry[1] === "string" && entry[1].trim() !== ""
+    )
+  );
+}
+
 type AIItem = {
   name: string;
   category: string | null;
@@ -47,6 +57,11 @@ export default function MenuPage() {
   const [editPrice, setEditPrice] = useState("");
   const [editArabic, setEditArabic] = useState("");
   const [generatingArabic, setGeneratingArabic] = useState(false);
+  const [categoryAr, setCategoryAr] = useState<Record<string, string>>({});
+  const [categoryArAvailable, setCategoryArAvailable] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [categoryDraft, setCategoryDraft] = useState("");
+  const [savingCategory, setSavingCategory] = useState(false);
 
   const [search, setSearch] = useState("");
   const [priceEditingId, setPriceEditingId] = useState<string | null>(null);
@@ -89,6 +104,16 @@ export default function MenuPage() {
 
       setRestaurantId(restaurant.id);
       setRestaurantName(restaurant.name);
+
+      const { data: categoryData, error: categoryError } = await supabase
+        .from("restaurants")
+        .select("category_translations")
+        .eq("id", restaurant.id)
+        .maybeSingle();
+      if (!categoryError) {
+        setCategoryArAvailable(true);
+        setCategoryAr(readCategoryMap(categoryData?.category_translations));
+      }
 
       const { data: menuData, error: menuError } =
         await supabase
@@ -324,6 +349,9 @@ export default function MenuPage() {
             : item
         )
       );
+      if (data.categoryTranslations) {
+        setCategoryAr(readCategoryMap(data.categoryTranslations));
+      }
       if (!options.silent) {
         setMessage(`${updated.size} arabische Namen wurden erstellt.`);
       }
@@ -335,6 +363,37 @@ export default function MenuPage() {
       );
     } finally {
       if (!options.silent) setGeneratingArabic(false);
+    }
+  }
+
+  async function saveCategoryArabic(categoryName: string) {
+    setSavingCategory(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("no session");
+
+      const response = await fetch("/api/menu-transliterate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          categoryEdit: { category: categoryName, ar: categoryDraft },
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error);
+
+      setCategoryAr(readCategoryMap(data.categoryTranslations));
+      setEditingCategory(null);
+      setMessage("Arabischer Kategoriename gespeichert.");
+    } catch {
+      setMessage("Arabischer Kategoriename konnte nicht gespeichert werden.");
+    } finally {
+      setSavingCategory(false);
     }
   }
 
@@ -707,6 +766,16 @@ export default function MenuPage() {
       }, {})
   );
 
+  const missingCategoryCount = categoryArAvailable
+    ? new Set(
+        items
+          .map((item) => item.category?.trim() || "")
+          .filter((name) => name && !categoryAr[name])
+      ).size
+    : 0;
+  const missingArabicCount =
+    items.filter((item) => !arabicNameOf(item)).length + missingCategoryCount;
+
   if (loading) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -976,7 +1045,7 @@ export default function MenuPage() {
                 Prüfen, bearbeiten und bestätigen Sie Ihre Gerichte.
               </p>
 
-              {items.some((item) => !arabicNameOf(item)) && (
+              {missingArabicCount > 0 && (
                 <button
                   type="button"
                   onClick={() => requestArabicNames(null)}
@@ -985,9 +1054,7 @@ export default function MenuPage() {
                 >
                   {generatingArabic
                     ? "Wird erstellt..."
-                    : `Arabische Namen erstellen (${
-                        items.filter((item) => !arabicNameOf(item)).length
-                      })`}
+                    : `Arabische Namen erstellen (${missingArabicCount})`}
                 </button>
               )}
             </div>
@@ -1035,9 +1102,70 @@ export default function MenuPage() {
 
               {groupedItems.map(([groupName, groupItems]) => (
                 <section key={groupName} className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-black text-base">{groupName}</h3>
-                    <span className="bg-gray-100 rounded-full px-3 py-1 text-xs font-bold">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex flex-col gap-1">
+                      <h3 className="font-black text-base break-words">{groupName}</h3>
+                      {categoryArAvailable && groupName !== "Ohne Kategorie" && (
+                        editingCategory === groupName ? (
+                          <div className="flex flex-col gap-2">
+                            <label
+                              htmlFor={`category-ar-${groupName}`}
+                              className="text-xs font-bold text-gray-500"
+                            >
+                              Arabischer Kategoriename
+                            </label>
+                            <input
+                              id={`category-ar-${groupName}`}
+                              value={categoryDraft}
+                              onChange={(e) => setCategoryDraft(e.target.value)}
+                              dir="rtl"
+                              lang="ar"
+                              maxLength={120}
+                              className="w-full border rounded-xl px-4 py-2 text-base min-h-11"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => saveCategoryArabic(groupName)}
+                                disabled={savingCategory}
+                                className="min-h-11 bg-black text-white font-bold px-4 rounded-xl disabled:opacity-50"
+                              >
+                                {savingCategory ? "Speichern..." : "Speichern"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingCategory(null)}
+                                className="min-h-11 border font-bold px-4 rounded-xl"
+                              >
+                                Abbrechen
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            {categoryAr[groupName] ? (
+                              <p className="text-sm text-gray-600" dir="rtl" lang="ar">
+                                {categoryAr[groupName]}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-gray-400">Kein arabischer Name</p>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCategory(groupName);
+                                setCategoryDraft(categoryAr[groupName] || "");
+                              }}
+                              aria-label={`Arabischen Namen für ${groupName} bearbeiten`}
+                              className="size-11 shrink-0 rounded-full border flex items-center justify-center text-base"
+                            >
+                              {"✎"}
+                            </button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                    <span className="shrink-0 bg-gray-100 rounded-full px-3 py-1 text-xs font-bold">
                       {groupItems.length}
                     </span>
                   </div>

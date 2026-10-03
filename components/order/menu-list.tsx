@@ -10,10 +10,11 @@ type Props = {
   cart: Record<string, CartLine>;
   t: OrderStrings;
   showArabic: boolean;
+  categoryAr: Record<string, string>;
   onSetQuantity: (id: string, quantity: number) => void;
 };
 
-export function MenuList({ menu, cart, t, showArabic, onSetQuantity }: Props) {
+export function MenuList({ menu, cart, t, showArabic, categoryAr, onSetQuantity }: Props) {
   const groups = new Map<string, PublicMenuItem[]>();
   for (const item of menu) {
     const key = item.category?.trim() || "";
@@ -24,7 +25,18 @@ export function MenuList({ menu, cart, t, showArabic, onSetQuantity }: Props) {
     <section aria-label={t.menuLabel} className="flex flex-col gap-6">
       {[...groups.entries()].map(([category, items]) => (
         <div key={category || "__other"} className="flex flex-col gap-3">
-          <h2 className="text-lg font-black">{category || t.otherCategory}</h2>
+          {showArabic && category && categoryAr[category] ? (
+            <div className="flex flex-col">
+              <h2 className="text-lg font-black" dir="rtl" lang="ar">
+                {categoryAr[category]}
+              </h2>
+              <p className="text-xs text-gray-400" dir="ltr" lang="de">
+                {category}
+              </p>
+            </div>
+          ) : (
+            <h2 className="text-lg font-black" dir="auto">{category || t.otherCategory}</h2>
+          )}
           <ul className="flex flex-col gap-2">
             {items.map((item) => {
               const quantity = cart[item.id]?.quantity ?? 0;

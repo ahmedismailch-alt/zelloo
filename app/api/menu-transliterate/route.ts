@@ -1,6 +1,11 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin, readArabicName } from "../../../lib/supabase-server";
+import {
+  getSupabaseAdmin,
+  readArabicName,
+  readCategoryTranslations,
+  type CategoryTranslations,
+} from "../../../lib/supabase-server";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -16,14 +21,14 @@ type ItemRow = {
   name_translations: Record<string, unknown> | null;
 };
 
-async function transliterate(openai: OpenAI, rows: ItemRow[]) {
+async function transliterate(openai: OpenAI, rows: { id: string | number; name: string }[]) {
   const response = await openai.responses.create({
     model: "gpt-5.6-luna",
     input: [
       {
         role: "system",
         content: `
-Du schreibst Namen von Gerichten und Getränken einer Schweizer Speisekarte in arabischer Schrift, so wie man sie ausspricht (Transliteration).
+Du schreibst Namen von Gerichten, Getränken und Kategorien einer Schweizer Speisekarte in arabischer Schrift, so wie man sie ausspricht (Transliteration).
 
 REGELN:
 1. NICHT übersetzen, nur lautgetreu in arabische Buchstaben schreiben. Beispiele: "Pizza Wald" = "بيتزا فالد", "Pizza Margherita" = "بيتزا مارغريتا", "Cappuccino" = "كابتشينو", "Gipfeli" = "غيبفلي".
@@ -80,6 +85,82 @@ REGELN:
   return result;
 }
 
+type Admin = ReturnType<typeof getSupabaseAdmin>;
+
+const CATEGORY_COLUMN_MISSING =
+  "Kategorie-Namen können noch nicht gespeichert werden (SQL in Supabase ausführen).";
+
+async function loadCategoryTranslations(
+  admin: Admin,
+  restaurantId: string | number
+): Promise<CategoryTranslations | null> {
+  const { data, error } = await admin
+    .from("restaurants")
+    .select("category_translations")
+    .eq("id", restaurantId)
+    .maybeSingle();
+  if (error) {
+    console.error("Zelloo category translations unavailable:", error.message);
+    return null;
+  }
+  return readCategoryTranslations(data?.category_translations);
+}
+
+async function saveCategoryTranslations(
+  admin: Admin,
+  restaurantId: string | number,
+  translations: CategoryTranslations
+) {
+  const { error } = await admin
+    .from("restaurants")
+    .update({ category_translations: translations })
+    .eq("id", restaurantId);
+  if (error) console.error("Zelloo category translations save error:", error.message);
+  return !error;
+}
+
+// Only fills categories without an Arabic name, so manual corrections are never overwritten.
+// Returns null when the column is missing, so item names still work before the SQL is run.
+async function fillMissingCategories(
+  openai: OpenAI,
+  admin: Admin,
+  restaurantId: string | number
+): Promise<CategoryTranslations | null> {
+  const current = await loadCategoryTranslations(admin, restaurantId);
+  if (!current) return null;
+
+  const { data, error } = await admin
+    .from("menu_items")
+    .select("category")
+    .eq("restaurant_id", restaurantId)
+    .limit(MAX_ITEMS);
+  if (error) throw error;
+
+  const missing = [
+    ...new Set(
+      (data || [])
+        .map((row) => (typeof row.category === "string" ? row.category.trim() : ""))
+        .filter((category) => category && category.length <= 120 && !current[category])
+    ),
+  ];
+  if (missing.length === 0) return current;
+
+  const names = await transliterate(
+    openai,
+    missing.map((name, index) => ({ id: `c${index}`, name }))
+  );
+
+  // Re-read so a manual edit made while the AI was working wins.
+  const latest = (await loadCategoryTranslations(admin, restaurantId)) || current;
+  const next = { ...latest };
+  missing.forEach((category, index) => {
+    const ar = names.get(`c${index}`);
+    if (ar && !next[category]) next[category] = ar;
+  });
+
+  return (await saveCategoryTranslations(admin, restaurantId, next)) ? next : latest;
+}
+
 export async function POST(request: Request) {
   try {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -112,6 +193,28 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => null);
+
+    if (body?.categoryEdit) {
+      const category =
+        typeof body.categoryEdit.category === "string" ? body.categoryEdit.category.trim() : "";
+      const ar = typeof body.categoryEdit.ar === "string" ? body.categoryEdit.ar.trim() : "";
+      if (!category || category.length > 120 || ar.length > MAX_ARABIC_LENGTH) {
+        return NextResponse.json({ error: "Ungültige Eingabe." }, { status: 400 });
+      }
+      const current = await loadCategoryTranslations(admin, restaurant.id);
+      if (!current) {
+        return NextResponse.json({ error: CATEGORY_COLUMN_MISSING }, { status: 500 });
+      }
+      const next = { ...current };
+      if (ar) next[category] = ar;
+      else delete next[category];
+      const saved = await saveCategoryTranslations(admin, restaurant.id, next);
+      if (!saved) {
+        return NextResponse.json({ error: CATEGORY_COLUMN_MISSING }, { status: 500 });
+      }
+      return NextResponse.json({ updated: [], categoryTranslations: next });
+    }
+
     const onlyMissing = body?.onlyMissing !== false;
     const itemIds = Array.isArray(body?.itemIds)
       ? body.itemIds
@@ -125,8 +228,7 @@ export async function POST(request: Request) {
       .eq("restaurant_id", restaurant.id)
       .limit(MAX_ITEMS);
     if (itemIds) {
-      if (itemIds.length === 0) return NextResponse.json({ updated: [] });
-      query = query.in("id", itemIds);
+      query = query.in("id", itemIds.length > 0 ? itemIds : ["__none__"]);
     }
 
     const { data, error } = await query;
@@ -137,6 +239,7 @@ export async function POST(request: Request) {
     );
 
     const openai = new OpenAI({ apiKey });
+    const categoryTranslations = await fillMissingCategories(openai, admin, restaurant.id);
     const updated: { id: string; name_translations: Record<string, unknown> }[] = [];
 
     for (let start = 0; start < rows.length; start += BATCH_SIZE) {
@@ -162,7 +265,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ updated });
+    return NextResponse.json({ updated, categoryTranslations });
   } catch (error) {
     console.error("Zelloo transliterate error:", error);
     return NextResponse.json(
