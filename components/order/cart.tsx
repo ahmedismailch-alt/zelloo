@@ -61,6 +61,8 @@ export function Cart({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [orderType, setOrderType] = useState<"pickup" | "delivery">("pickup");
+  const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -122,6 +124,11 @@ export function Cart({
       return;
     }
 
+    if (!table && orderType === "delivery" && !address.trim()) {
+      setError(t.missingAddressError);
+      return;
+    }
+
     setSending(true);
     setError("");
 
@@ -134,6 +141,8 @@ export function Cart({
           table,
           customerName: name,
           customerPhone: phone,
+          orderType: table ? "pickup" : orderType,
+          customerAddress: table ? "" : orderType === "delivery" ? address : "",
           notes,
           items: lines.map((line) => ({
             menuItemId: line.id,
@@ -276,6 +285,54 @@ export function Cart({
               <p className="text-sm text-gray-600 bg-gray-50 rounded-xl p-3 leading-relaxed">
                 {t.noTableHint}
               </p>
+            )}
+
+            {!table && (
+              <div className="flex flex-col gap-2 text-sm font-semibold">
+                {t.orderTypeLabel}
+                <div className="flex gap-2" dir="ltr">
+                  <button
+                    type="button"
+                    onClick={() => setOrderType("pickup")}
+                    aria-pressed={orderType === "pickup"}
+                    className={`flex-1 min-h-11 rounded-xl border px-3 py-2 font-bold ${
+                      orderType === "pickup"
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-black border-gray-300"
+                    }`}
+                  >
+                    {t.pickupOption}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOrderType("delivery")}
+                    aria-pressed={orderType === "delivery"}
+                    className={`flex-1 min-h-11 rounded-xl border px-3 py-2 font-bold ${
+                      orderType === "delivery"
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-black border-gray-300"
+                    }`}
+                  >
+                    {t.deliveryOption}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!table && orderType === "delivery" && (
+              <label className="flex flex-col gap-1 text-sm font-semibold">
+                {t.addressLabel}
+                <input
+                  value={address}
+                  onChange={(event) => setAddress(event.target.value)}
+                  maxLength={200}
+                  required
+                  autoComplete="street-address"
+                  placeholder={t.addressPlaceholder}
+                  dir="auto"
+                  className="rounded-xl border p-3 text-base font-normal"
+                />
+              </label>
             )}
 
             <label className="flex flex-col gap-1 text-sm font-semibold">

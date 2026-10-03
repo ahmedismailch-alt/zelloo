@@ -60,6 +60,12 @@ export type OrderStrings = {
   phonePlaceholder: string;
   noTableHint: string;
   missingContactError: string;
+  orderTypeLabel: string;
+  pickupOption: string;
+  deliveryOption: string;
+  addressLabel: string;
+  addressPlaceholder: string;
+  missingAddressError: string;
   noteLabel: string;
   notePlaceholder: string;
   finalPriceInfo: string;
@@ -120,6 +126,12 @@ const de: OrderStrings = {
   noTableHint:
     "Kein Tisch gescannt. Bitte Name und Telefonnummer angeben, damit wir Sie finden können.",
   missingContactError: "Bitte Name und Telefonnummer angeben.",
+  orderTypeLabel: "Abholung oder Lieferung?",
+  pickupOption: "Abholung",
+  deliveryOption: "Lieferung",
+  addressLabel: "Lieferadresse",
+  addressPlaceholder: "Strasse, Hausnummer, PLZ, Ort",
+  missingAddressError: "Bitte Lieferadresse angeben.",
   noteLabel: "Hinweis (optional)",
   notePlaceholder: "z. B. Allergien",
   finalPriceInfo: "Der Endbetrag wird vom Restaurant anhand der aktuellen Preise berechnet.",
@@ -180,6 +192,12 @@ const fr: OrderStrings = {
   noTableHint:
     "Aucune table scannée. Merci d'indiquer votre nom et votre numéro de téléphone pour que nous puissions vous retrouver.",
   missingContactError: "Merci d'indiquer votre nom et votre numéro de téléphone.",
+  orderTypeLabel: "À emporter ou livraison ?",
+  pickupOption: "À emporter",
+  deliveryOption: "Livraison",
+  addressLabel: "Adresse de livraison",
+  addressPlaceholder: "Rue, numéro, NPA, localité",
+  missingAddressError: "Merci d'indiquer l'adresse de livraison.",
   noteLabel: "Remarque (facultatif)",
   notePlaceholder: "p. ex. allergies",
   finalPriceInfo: "Le montant final est calculé par le restaurant selon les prix actuels.",
@@ -240,6 +258,12 @@ const it: OrderStrings = {
   noTableHint:
     "Nessun tavolo scansionato. Indica nome e numero di telefono per permetterci di trovarti.",
   missingContactError: "Indica nome e numero di telefono.",
+  orderTypeLabel: "Ritiro o consegna?",
+  pickupOption: "Ritiro",
+  deliveryOption: "Consegna",
+  addressLabel: "Indirizzo di consegna",
+  addressPlaceholder: "Via, numero, CAP, città",
+  missingAddressError: "Indica l'indirizzo di consegna.",
   noteLabel: "Nota (facoltativo)",
   notePlaceholder: "es. allergie",
   finalPriceInfo: "L'importo finale viene calcolato dal ristorante in base ai prezzi attuali.",
@@ -300,6 +324,12 @@ const en: OrderStrings = {
   noTableHint:
     "No table scanned. Please provide your name and phone number so we can find you.",
   missingContactError: "Please provide your name and phone number.",
+  orderTypeLabel: "Pickup or delivery?",
+  pickupOption: "Pickup",
+  deliveryOption: "Delivery",
+  addressLabel: "Delivery address",
+  addressPlaceholder: "Street, house number, postal code, city",
+  missingAddressError: "Please provide a delivery address.",
   noteLabel: "Note (optional)",
   notePlaceholder: "e.g. allergies",
   finalPriceInfo: "The final amount is calculated by the restaurant using current prices.",
@@ -359,6 +389,12 @@ const ar: OrderStrings = {
   phonePlaceholder: "مثلاً 079 123 45 67",
   noTableHint: "لم يتم مسح رمز طاولة. يرجى كتابة اسمك ورقم هاتفك لنتمكن من الوصول إليك.",
   missingContactError: "يرجى كتابة الاسم ورقم الهاتف.",
+  orderTypeLabel: "استلام أو توصيل؟",
+  pickupOption: "استلام",
+  deliveryOption: "توصيل",
+  addressLabel: "عنوان التوصيل",
+  addressPlaceholder: "الشارع، رقم المبنى، الرمز البريدي، المدينة",
+  missingAddressError: "يرجى كتابة عنوان التوصيل.",
   noteLabel: "ملاحظة (اختياري)",
   notePlaceholder: "مثلاً: حساسية",
   finalPriceInfo: "يحسب المطعم المبلغ النهائي حسب الأسعار الحالية.",
