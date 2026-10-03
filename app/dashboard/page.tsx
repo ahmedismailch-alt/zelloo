@@ -512,12 +512,6 @@ export default function DashboardPage() {
 
   const cards = [
     {
-      label: "Umsatz Heute",
-      value: stats ? formatMoney(stats.revenue_today_cents) : "—",
-      hint: "Abgeschlossene Bestellungen, heute eingegangen",
-      compact: true,
-    },
-    {
       label: "Neue Bestellungen",
       value: stats ? String(stats.new_orders) : "—",
     },
@@ -526,6 +520,8 @@ export default function DashboardPage() {
       value: stats ? String(stats.orders_today) : "—",
     },
   ];
+
+  const revenueToday = stats ? formatMoney(stats.revenue_today_cents) : "—";
 
   return (
     <>
@@ -581,12 +577,23 @@ export default function DashboardPage() {
             <p className="text-gray-500 mt-1 break-all text-sm">{email}</p>
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
-          >
-            Abmelden
-          </button>
+          <div className="flex flex-col items-end gap-2">
+            <button
+              onClick={handleLogout}
+              className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
+            >
+              Abmelden
+            </button>
+
+            <div className="bg-white border rounded-xl px-3 py-1.5 text-right">
+              <p className="text-[10px] leading-tight text-gray-500">
+                Umsatz Heute
+              </p>
+              <p className="text-sm font-black leading-tight">
+                {revenueToday}
+              </p>
+            </div>
+          </div>
         </div>
 
         {(ordersError || actionError) && (
