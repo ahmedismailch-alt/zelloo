@@ -512,17 +512,18 @@ export default function DashboardPage() {
 
   const cards = [
     {
+      label: "Umsatz Heute",
+      value: stats ? formatMoney(stats.revenue_today_cents) : "—",
+      hint: "Abgeschlossene Bestellungen, heute eingegangen",
+      compact: true,
+    },
+    {
       label: "Neue Bestellungen",
       value: stats ? String(stats.new_orders) : "—",
     },
     {
       label: "Bestellungen heute",
       value: stats ? String(stats.orders_today) : "—",
-    },
-    {
-      label: "Bestellwert heute",
-      value: stats ? formatMoney(stats.revenue_today_cents) : "—",
-      hint: "Abgeschlossene Bestellungen, heute eingegangen",
     },
   ];
 
@@ -600,9 +601,26 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
           {cards.map((card) => (
-            <div key={card.label} className="bg-white border rounded-2xl p-4">
-              <p className="text-gray-500 text-sm">{card.label}</p>
-              <p className="text-2xl font-black mt-2">{card.value}</p>
+            <div
+              key={card.label}
+              className={`bg-white border rounded-2xl ${
+                card.compact ? "p-3" : "p-4"
+              }`}
+            >
+              <p
+                className={`text-gray-500 ${
+                  card.compact ? "text-xs" : "text-sm"
+                }`}
+              >
+                {card.label}
+              </p>
+              <p
+                className={`font-black mt-1 ${
+                  card.compact ? "text-lg" : "text-2xl mt-2"
+                }`}
+              >
+                {card.value}
+              </p>
 
               {card.hint && (
                 <p className="text-xs text-gray-500 mt-2">{card.hint}</p>
