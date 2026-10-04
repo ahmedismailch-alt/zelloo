@@ -66,6 +66,7 @@ export async function POST(request: Request) {
       redirect_on_completion: "never",
       mode: "subscription",
       customer: customerId,
+      payment_method_types: ["card", "twint"],
       line_items: [
         {
           price_data: {
