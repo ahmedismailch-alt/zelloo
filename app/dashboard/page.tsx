@@ -52,6 +52,12 @@ type DashboardStats = {
   revenue_today_cents: number | string;
 };
 
+type AdminMessage = {
+  id: string;
+  message: string;
+  created_at: string;
+};
+
 type OrderFilter = "all" | "table" | "pickup" | "delivery";
 
 const filterOptions: { value: OrderFilter; label: string }[] = [
@@ -143,6 +149,8 @@ export default function DashboardPage() {
   const [soundOn, setSoundOn] = useState(false);
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
+  const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
+  const [dismissingMessageId, setDismissingMessageId] = useState<string | null>(null);
 
   const knownIdsRef = useRef<Set<string> | null>(null);
   const bellRef = useRef<OrderBell | null>(null);
@@ -287,6 +295,64 @@ export default function DashboardPage() {
   }, [router]);
 
   const restaurantId = restaurant?.id;
+
+  useEffect(() => {
+    if (restaurantId === undefined) return;
+
+    let cancelled = false;
+
+    async function loadAdminMessages() {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) return;
+
+        const response = await fetch("/api/restaurant-messages", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const body = await response.json();
+        if (!cancelled && response.ok) {
+          setAdminMessages(body.messages || []);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    void loadAdminMessages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [restaurantId]);
+
+  async function dismissAdminMessage(messageId: string) {
+    setDismissingMessageId(messageId);
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+
+      const response = await fetch("/api/restaurant-messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ messageId }),
+      });
+
+      if (response.ok) {
+        setAdminMessages((current) =>
+          current.filter((item) => item.id !== messageId)
+        );
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDismissingMessageId(null);
+    }
+  }
 
   useEffect(() => {
     if (restaurantId === undefined) return;
@@ -606,6 +672,36 @@ export default function DashboardPage() {
       )}
 
       <div className="max-w-5xl mx-auto">
+        {adminMessages.length > 0 && (
+          <div className="mb-6 flex flex-col gap-3">
+            {adminMessages.map((item) => (
+              <div
+                key={item.id}
+                role="status"
+                className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 flex items-start justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-orange-600">
+                    Nachricht von Zelloo
+                  </p>
+                  <p className="text-sm text-gray-800 mt-0.5 break-words">
+                    {item.message}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={dismissingMessageId === item.id}
+                  onClick={() => void dismissAdminMessage(item.id)}
+                  className="shrink-0 text-xs font-semibold text-orange-600 underline disabled:opacity-60"
+                >
+                  {dismissingMessageId === item.id ? "..." : "Verstanden"}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="flex justify-between items-start gap-4 mb-6">
           <div className="min-w-0">
             <p className="text-sm font-bold text-orange-500">ZELLOO</p>

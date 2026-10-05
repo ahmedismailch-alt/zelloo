@@ -1,4 +1,43 @@
+import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+
+// Only Zelloo's own account may use admin-only endpoints.
+export const ADMIN_EMAIL = "ahmed.ismail.ch@gmail.com";
+
+type AdminAuthResult =
+  | { ok: true; supabase: ReturnType<typeof getSupabaseAdmin>; userId: string }
+  | { ok: false; response: NextResponse };
+
+export async function requireAdmin(request: Request): Promise<AdminAuthResult> {
+  const authHeader = request.headers.get("authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 }),
+    };
+  }
+
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.auth.getUser(token);
+
+  if (error || !data.user) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 }),
+    };
+  }
+
+  if (data.user.email?.toLowerCase() !== ADMIN_EMAIL) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Kein Zugriff." }, { status: 403 }),
+    };
+  }
+
+  return { ok: true, supabase, userId: data.user.id };
+}
 
 export type PublicMenuItem = {
   id: string;
