@@ -14,6 +14,12 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSaved, setPasswordSaved] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -82,6 +88,40 @@ export default function SettingsPage() {
     setSaved(true);
   }
 
+  async function handlePasswordChange(e: FormEvent) {
+    e.preventDefault();
+
+    setPasswordError(null);
+    setPasswordSaved(false);
+
+    if (newPassword.length < 6) {
+      setPasswordError("Das Passwort muss mindestens 6 Zeichen lang sein.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Die Passwörter stimmen nicht überein.");
+      return;
+    }
+
+    setPasswordSaving(true);
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    setPasswordSaving(false);
+
+    if (updateError) {
+      setPasswordError("Passwort konnte nicht geändert werden. Bitte erneut versuchen.");
+      return;
+    }
+
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordSaved(true);
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="max-w-md mx-auto">
@@ -131,6 +171,56 @@ export default function SettingsPage() {
               className="min-h-12 rounded-xl bg-orange-500 text-white font-black text-base disabled:opacity-60"
             >
               {saving ? "Wird gespeichert..." : "Speichern"}
+            </button>
+          </form>
+        )}
+
+        {!loading && (
+          <form
+            onSubmit={handlePasswordChange}
+            className="bg-white border rounded-2xl p-4 flex flex-col gap-3 mt-4"
+          >
+            <h2 className="text-base font-bold">Passwort ändern</h2>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold">Neues Passwort</span>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mindestens 6 Zeichen"
+                autoComplete="new-password"
+                className="min-h-12 rounded-xl border border-gray-300 px-4 text-base"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold">
+                Neues Passwort bestätigen
+              </span>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Passwort erneut eingeben"
+                autoComplete="new-password"
+                className="min-h-12 rounded-xl border border-gray-300 px-4 text-base"
+              />
+            </label>
+
+            {passwordError && (
+              <p className="text-sm text-red-600">{passwordError}</p>
+            )}
+            {passwordSaved && !passwordError && (
+              <p className="text-sm text-green-600">Passwort geändert.</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={passwordSaving}
+              className="min-h-12 rounded-xl border border-gray-300 bg-white font-black text-base disabled:opacity-60"
+            >
+              {passwordSaving ? "Wird geändert..." : "Passwort ändern"}
             </button>
           </form>
         )}
