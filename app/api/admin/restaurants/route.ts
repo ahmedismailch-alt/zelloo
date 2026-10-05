@@ -1,34 +1,22 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../../lib/supabase-server";
+import { requireAdmin } from "../../../../lib/supabase-server";
 
 export const runtime = "nodejs";
 
 // Only Zelloo's own account may view this data. This is an internal
 // business-overview endpoint, not a per-restaurant resource.
-const ADMIN_EMAIL = "ahmed.ismail.ch@gmail.com";
 
 export async function GET(request: Request) {
   try {
-    const authHeader = request.headers.get("authorization") || "";
-    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-    if (!token) {
-      return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
-    }
-
-    const supabase = getSupabaseAdmin();
-
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !userData.user) {
-      return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
-    }
-
-    if (userData.user.email?.toLowerCase() !== ADMIN_EMAIL) {
-      return NextResponse.json({ error: "Kein Zugriff." }, { status: 403 });
-    }
+    const auth = await requireAdmin(request);
+    if (!auth.ok) return auth.response;
+    const { supabase } = auth;
 
     const { data, error } = await supabase
       .from("restaurants")
-      .select("id, name, email, subscription_status, subscription_plan, current_period_end")
+      .select(
+        "id, name, email, owner_id, stripe_subscription_id, subscription_status, subscription_plan, current_period_end"
+      )
       .order("name", { ascending: true });
 
     if (error) throw error;
