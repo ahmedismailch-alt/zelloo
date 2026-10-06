@@ -1,3 +1,5 @@
+import { AnimatedJourney } from "@/components/landing/animated-journey"
+
 export default function Page() {
   return (
     <div className="bg-white min-h-screen">
@@ -107,30 +109,10 @@ export default function Page() {
       <div className="bg-[#f7f7f7] mt-16 py-16">
         <div className="max-w-[1200px] mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-black text-center">So funktioniert&apos;s</h2>
-          <p className="text-gray-500 text-center mt-2">In 3 Schritten startklar — ohne technisches Wissen.</p>
+          <p className="text-gray-500 text-center mt-2">Vom Scan bis zur Küche — in Echtzeit.</p>
 
-          <div className="grid md:grid-cols-3 gap-6 mt-10">
-            <div className="bg-white rounded-2xl p-6">
-              <div className="w-10 h-10 rounded-full bg-[#c41e24] text-white font-black flex items-center justify-center">1</div>
-              <h3 className="font-bold text-lg mt-4">Menü einrichten</h3>
-              <p className="text-gray-500 text-sm mt-2 leading-relaxed">
-                Laden Sie Ihr Menü hoch — unsere KI erkennt Gerichte und Preise automatisch, in Minuten statt Stunden.
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl p-6">
-              <div className="w-10 h-10 rounded-full bg-[#c41e24] text-white font-black flex items-center justify-center">2</div>
-              <h3 className="font-bold text-lg mt-4">Zelloo übernimmt</h3>
-              <p className="text-gray-500 text-sm mt-2 leading-relaxed">
-                Gäste bestellen per QR-Code, Sprache oder WhatsApp. Zelloo nimmt die Bestellung entgegen — rund um die Uhr.
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl p-6">
-              <div className="w-10 h-10 rounded-full bg-[#c41e24] text-white font-black flex items-center justify-center">3</div>
-              <h3 className="font-bold text-lg mt-4">Bestellung kommt an</h3>
-              <p className="text-gray-500 text-sm mt-2 leading-relaxed">
-                Ein lauter Ton weckt Ihr Team auf — die Bestellung erscheint sofort im Dashboard, bereit zur Zubereitung.
-              </p>
-            </div>
+          <div className="mt-10">
+            <AnimatedJourney />
           </div>
         </div>
       </div>
