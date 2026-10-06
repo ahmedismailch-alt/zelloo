@@ -35,12 +35,41 @@ export default function Page() {
         </div>
 
         <div className="flex justify-center">
-          <div className="w-[300px] bg-black p-2 rounded-[36px]">
-            <div className="bg-white rounded-[28px] overflow-hidden">
-              <div className="bg-[#c41e24] text-white p-4 font-bold">Bestellungen</div>
-              <div className="p-3 bg-[#f7f7f7] space-y-3">
-                <div className="bg-white p-4 rounded-xl"><div className="text-[10px] bg-green-100 inline px-2 rounded-full">Aktiv</div><div className="font-black">#1024</div><div className="text-sm">2x Margherita, 1x Caesar</div></div>
-                <div className="bg-white p-4 rounded-xl"><div className="font-black">#1023</div><div className="text-sm">1x Prosciutto, 2x Cola</div></div>
+          <div className="relative w-[300px]">
+            <div className="absolute -inset-6 bg-[#c41e24]/10 rounded-[48px] blur-2xl -z-10" />
+            <div className="w-[300px] bg-black p-2.5 rounded-[40px] shadow-2xl">
+              <div className="bg-white rounded-[32px] overflow-hidden">
+                <div className="flex items-center justify-between px-5 pt-3 pb-1 text-[11px] font-semibold text-black">
+                  <span>9:41</span>
+                  <div className="w-20 h-5 bg-black rounded-full" />
+                  <span>100%</span>
+                </div>
+                <div className="bg-[#c41e24] text-white px-4 py-3.5 flex items-center justify-between">
+                  <span className="font-bold">Bestellungen</span>
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
+                  </span>
+                </div>
+                <div className="p-3 bg-[#f7f7f7] space-y-2.5 min-h-[260px]">
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-black/5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Neu</span>
+                      <span className="text-[11px] text-gray-400">vor 12 Sek.</span>
+                    </div>
+                    <div className="font-black mt-1.5">Tisch 4 · #1024</div>
+                    <div className="text-sm text-gray-600">2x Margherita, 1x Caesar</div>
+                    <div className="text-sm font-bold mt-1">CHF 34.50</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-black/5 opacity-70">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Fertig</span>
+                      <span className="text-[11px] text-gray-400">vor 6 Min.</span>
+                    </div>
+                    <div className="font-black mt-1.5">Abholung · #1023</div>
+                    <div className="text-sm text-gray-600">1x Prosciutto, 2x Cola</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
