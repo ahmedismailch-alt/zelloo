@@ -118,11 +118,13 @@ export const pageCopy: Record<
     priceNote: string
     finalCtaTitle: string
     finalCtaSubtitle: string
-    footerAbout: string
-    footerPricing: string
-    footerLogin: string
+  footerAbout: string
+  footerPricing: string
+  footerLogin: string
+  footerPrivacy: string
+  footerTerms: string
   }
-> = {
+  > = {
   de: {
     howItWorksTitle: "So funktioniert's",
     howItWorksSubtitle: "Vom Scan bis zur Küche — in Echtzeit.",
@@ -156,9 +158,11 @@ export const pageCopy: Record<
     priceNote: "Jederzeit kündbar · Ohne Vertragsbindung",
     finalCtaTitle: "Bereit, Zeit und Kosten zu sparen?",
     finalCtaSubtitle: "Starten Sie noch heute automatisiert — ohne Kreditkarte, ohne Risiko.",
-    footerAbout: "Über uns",
-    footerPricing: "Preise",
-    footerLogin: "Login",
+  footerAbout: "Über uns",
+  footerPricing: "Preise",
+  footerLogin: "Login",
+  footerPrivacy: "Datenschutz",
+  footerTerms: "AGB",
   },
   fr: {
     howItWorksTitle: "Comment ça marche",
@@ -193,9 +197,11 @@ export const pageCopy: Record<
     priceNote: "Annulable à tout moment · Sans engagement",
     finalCtaTitle: "Prêt à gagner du temps et économiser ?",
     finalCtaSubtitle: "Démarrez dès aujourd'hui automatiquement — sans carte de crédit, sans risque.",
-    footerAbout: "À propos",
-    footerPricing: "Tarifs",
-    footerLogin: "Connexion",
+  footerAbout: "À propos",
+  footerPricing: "Tarifs",
+  footerLogin: "Connexion",
+  footerPrivacy: "Confidentialité",
+  footerTerms: "CGV",
   },
   it: {
     howItWorksTitle: "Come funziona",
@@ -230,9 +236,11 @@ export const pageCopy: Record<
     priceNote: "Annullabile in ogni momento · Senza vincoli contrattuali",
     finalCtaTitle: "Pronto a risparmiare tempo e costi?",
     finalCtaSubtitle: "Inizia oggi in modo automatizzato — senza carta di credito, senza rischi.",
-    footerAbout: "Chi siamo",
-    footerPricing: "Prezzi",
-    footerLogin: "Accedi",
+  footerAbout: "Chi siamo",
+  footerPricing: "Prezzi",
+  footerLogin: "Accedi",
+  footerPrivacy: "Privacy",
+  footerTerms: "Termini",
   },
   en: {
     howItWorksTitle: "How it works",
@@ -267,9 +275,11 @@ export const pageCopy: Record<
     priceNote: "Cancel anytime · No contract",
     finalCtaTitle: "Ready to save time and costs?",
     finalCtaSubtitle: "Start automating today — no credit card, no risk.",
-    footerAbout: "About us",
-    footerPricing: "Pricing",
-    footerLogin: "Login",
+  footerAbout: "About us",
+  footerPricing: "Pricing",
+  footerLogin: "Login",
+  footerPrivacy: "Privacy",
+  footerTerms: "Terms",
   },
   ar: {
     howItWorksTitle: "كيف يعمل",
@@ -304,9 +314,11 @@ export const pageCopy: Record<
     priceNote: "إلغاء بأي وقت · بلا التزام بعقد",
     finalCtaTitle: "جاهزة توفّري وقت وتكاليف؟",
     finalCtaSubtitle: "ابدئي اليوم بشكل آلي — بلا بطاقة ائتمان، بلا مخاطرة.",
-    footerAbout: "من نحن",
-    footerPricing: "الأسعار",
-    footerLogin: "تسجيل الدخول",
+  footerAbout: "من نحن",
+  footerPricing: "الأسعار",
+  footerLogin: "تسجيل الدخول",
+  footerPrivacy: "الخصوصية",
+  footerTerms: "الشروط",
   },
   tr: {
     howItWorksTitle: "Nasıl çalışır",
@@ -341,11 +353,13 @@ export const pageCopy: Record<
     priceNote: "Her zaman iptal edilebilir · Sözleşme yok",
     finalCtaTitle: "Zamandan ve maliyetten tasarruf etmeye hazır mısınız?",
     finalCtaSubtitle: "Bugün otomatikleştirmeye başlayın — kredi kartı yok, risk yok.",
-    footerAbout: "Hakkımızda",
-    footerPricing: "Fiyatlandırma",
-    footerLogin: "Giriş",
+  footerAbout: "Hakkımızda",
+  footerPricing: "Fiyatlandırma",
+  footerLogin: "Giriş",
+  footerPrivacy: "Gizlilik",
+  footerTerms: "Koşullar",
   },
-}
+  }
 
 const LangContext = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
   lang: "de",

@@ -146,6 +146,12 @@ export function PageSections() {
             <a href="/login" className="hover:text-black">
               {p.footerLogin}
             </a>
+            <a href="/privacy" className="hover:text-black">
+              {p.footerPrivacy}
+            </a>
+            <a href="/terms" className="hover:text-black">
+              {p.footerTerms}
+            </a>
           </nav>
         </div>
       </footer>
