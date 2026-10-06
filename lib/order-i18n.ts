@@ -40,6 +40,9 @@ export type OrderStrings = {
   itemNotePlaceholder: string;
   popularBadge: string;
   upsellTitle: string;
+  shareButton: string;
+  shareMessage: (name: string) => string;
+  shareCopied: string;
   aiTitle: string;
   aiExample: string;
   aiLabel: string;
@@ -117,6 +120,9 @@ const de: OrderStrings = {
   itemNotePlaceholder: "Wunsch, z. B. ohne Zwiebeln",
   popularBadge: "Beliebt",
   upsellTitle: "Noch ein Getränk dazu?",
+  shareButton: "Restaurant teilen",
+  shareMessage: (name) => `Schau dir ${name} an – ganz einfach online bestellen mit Zelloo:`,
+  shareCopied: "Link kopiert!",
   aiTitle: "Einfach schreiben, was Sie möchten",
   aiExample: "Zum Beispiel: «2 Cappuccino und ein Gipfeli»",
   aiLabel: "Bestellung in eigenen Worten",
@@ -195,6 +201,9 @@ const fr: OrderStrings = {
   itemNotePlaceholder: "Souhait, p. ex. sans oignons",
   popularBadge: "Populaire",
   upsellTitle: "Une boisson en plus ?",
+  shareButton: "Partager le restaurant",
+  shareMessage: (name) => `Découvre ${name} – commande facilement en ligne avec Zelloo :`,
+  shareCopied: "Lien copié !",
   aiTitle: "Écrivez simplement ce que vous voulez",
   aiExample: "Par exemple : «2 cappuccinos et un croissant»",
   aiLabel: "Commande avec vos propres mots",
@@ -273,6 +282,9 @@ const it: OrderStrings = {
   itemNotePlaceholder: "Richiesta, es. senza cipolle",
   popularBadge: "Popolare",
   upsellTitle: "Aggiungi una bevanda?",
+  shareButton: "Condividi il ristorante",
+  shareMessage: (name) => `Guarda ${name} – ordina facilmente online con Zelloo:`,
+  shareCopied: "Link copiato!",
   aiTitle: "Scrivi semplicemente cosa desideri",
   aiExample: "Per esempio: «2 cappuccini e un cornetto»",
   aiLabel: "Ordine con parole tue",
@@ -351,6 +363,9 @@ const en: OrderStrings = {
   itemNotePlaceholder: "Request, e.g. no onions",
   popularBadge: "Popular",
   upsellTitle: "Add a drink?",
+  shareButton: "Share restaurant",
+  shareMessage: (name) => `Check out ${name} – order easily online with Zelloo:`,
+  shareCopied: "Link copied!",
   aiTitle: "Just write what you'd like",
   aiExample: "For example: «2 cappuccinos and a croissant»",
   aiLabel: "Order in your own words",
@@ -429,6 +444,9 @@ const ar: OrderStrings = {
   itemNotePlaceholder: "طلب خاص، مثلاً بدون بصل",
   popularBadge: "الأكثر طلباً",
   upsellTitle: "تحب تضيف مشروب؟",
+  shareButton: "شارك المطعم",
+  shareMessage: (name) => `شوف ${name} – اطلب أونلاين بسهولة مع Zelloo:`,
+  shareCopied: "تم نسخ الرابط!",
   aiTitle: "اكتب ببساطة ما تريد",
   aiExample: "مثلاً: «٢ كابتشينو وكرواسون»",
   aiLabel: "اكتب طلبك بكلماتك",
