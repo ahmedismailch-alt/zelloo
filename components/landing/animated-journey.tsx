@@ -2,45 +2,35 @@
 
 import { useEffect, useState } from "react"
 
-const STEPS = [
-  {
-    label: "1. Gast scannt QR",
-    title: "QR-Code am Tisch scannen",
-    description: "Der Gast öffnet die Kamera und scannt den Code — kein App-Download nötig.",
-  },
-  {
-    label: "2. Gast bestellt",
-    title: "Menü öffnen & bestellen",
-    description: "Das Menü öffnet sich direkt im Browser. Der Gast wählt Gerichte und bestätigt.",
-  },
-  {
-    label: "3. Küche erhält Bestellung",
-    title: "Bestellung kommt im Dashboard an",
-    description: "Ein lauter Ton weckt das Team — die Bestellung ist sofort sichtbar, bereit zur Zubereitung.",
-  },
-] as const
-
 const STEP_DURATION_MS = 3200
 
-export function AnimatedJourney() {
+export function AnimatedJourney({
+  steps,
+}: {
+  steps: readonly [
+    { title: string; description: string },
+    { title: string; description: string },
+    { title: string; description: string },
+  ]
+}) {
   const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveStep((prev) => (prev + 1) % STEPS.length)
+      setActiveStep((prev) => (prev + 1) % steps.length)
     }, STEP_DURATION_MS)
     return () => clearInterval(interval)
-  }, [])
+  }, [steps.length])
 
   return (
     <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 items-center">
       {/* Step list */}
       <div className="space-y-3 order-2 md:order-1">
-        {STEPS.map((step, index) => {
+        {steps.map((step, index) => {
           const isActive = index === activeStep
           return (
             <button
-              key={step.label}
+              key={step.title}
               type="button"
               onClick={() => setActiveStep(index)}
               className={`w-full text-left rounded-2xl px-5 py-4 transition-colors ${
