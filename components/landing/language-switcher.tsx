@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react"
 
-export type Lang = "de" | "fr" | "it" | "en" | "ar"
+export type Lang = "de" | "fr" | "it" | "en" | "ar" | "tr"
 
 export const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
   { code: "de", label: "Deutsch", flag: "🇩🇪" },
@@ -10,6 +10,7 @@ export const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
   { code: "it", label: "Italiano", flag: "🇮🇹" },
   { code: "en", label: "English", flag: "🇬🇧" },
   { code: "ar", label: "العربية", flag: "🇸🇦" },
+  { code: "tr", label: "Türkçe", flag: "🇹🇷" },
 ]
 
 export const heroCopy: Record<
@@ -74,6 +75,16 @@ export const heroCopy: Record<
     ctaNote: "بدون بطاقة ائتمان · إلغاء بأي وقت",
     check1: "جاهز خلال 10 دقائق",
     check2: "روبوت واتساب يستقبل طلبات 24/7",
+  },
+  tr: {
+    headline: ["Bir daha sipariş", "kaçırmayın.", "%0 komisyon."],
+    channels: "Google • Instagram • Facebook • WhatsApp • %100 otomatik",
+    badge1: "Sipariş başına %0 komisyon",
+    badge2: "Ayda 15 saate kadar tasarruf",
+    cta: "Şimdi kaydol - 15 gün ücretsiz",
+    ctaNote: "Kredi kartı gerekmez · Her zaman iptal edilebilir",
+    check1: "10 dakikada kurulur",
+    check2: "WhatsApp botu 7/24 sipariş alır",
   },
 }
 
