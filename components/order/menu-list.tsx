@@ -30,6 +30,16 @@ export function MenuList({
   const popularSet = useMemo(() => new Set(popularItemNames), [popularItemNames]);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  function markImageLoaded(id: string) {
+    setLoadedImages((current) => new Set(current).add(id));
+  }
+
+  function markImageFailed(id: string) {
+    setFailedImages((current) => new Set(current).add(id));
+  }
 
   const categories = useMemo(() => {
     const seen = new Set<string>();
@@ -157,21 +167,32 @@ export function MenuList({
               const quantity = cart[item.id]?.quantity ?? 0;
               const label = showArabic && item.nameAr ? item.nameAr : item.name;
               const note = cart[item.id]?.note ?? "";
+              const imageLoaded = loadedImages.has(item.id);
+              const imageFailed = failedImages.has(item.id);
               return (
                 <li
                   key={item.id}
                   className="bg-white border rounded-2xl p-4 flex flex-col gap-3"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl || "/placeholder.svg"}
-                        alt=""
-                        className="size-16 shrink-0 rounded-xl object-cover border"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
+                    {item.imageUrl && !imageFailed ? (
+                      <div className="relative size-16 shrink-0">
+                        {!imageLoaded && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-0 animate-pulse rounded-xl bg-gray-200"
+                          />
+                        )}
+                        <img
+                          src={item.imageUrl || "/placeholder.svg"}
+                          alt=""
+                          className={`size-16 rounded-xl object-cover border transition-opacity duration-200 ${
+                            imageLoaded ? "opacity-100" : "opacity-0"
+                          }`}
+                          onLoad={() => markImageLoaded(item.id)}
+                          onError={() => markImageFailed(item.id)}
+                        />
+                      </div>
                     ) : null}
                     <div className="min-w-0 flex flex-col gap-1 flex-1" dir="auto">
                       {popularSet.has(item.name) && (

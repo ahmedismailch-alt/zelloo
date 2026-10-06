@@ -388,8 +388,14 @@ export function Cart({
             <button
               type="submit"
               disabled={sending}
-              className="min-h-12 rounded-xl bg-orange-500 text-black font-black px-4 py-3 disabled:opacity-50"
+              className="min-h-12 flex items-center justify-center gap-2 rounded-xl bg-orange-500 text-black font-black px-4 py-3 disabled:opacity-70"
             >
+              {sending && (
+                <span
+                  aria-hidden="true"
+                  className="size-4 shrink-0 animate-spin rounded-full border-2 border-black/30 border-t-black"
+                />
+              )}
               {sending ? t.sending : t.order(formatChf(estimatedCents))}
             </button>
           </form>
