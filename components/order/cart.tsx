@@ -68,6 +68,33 @@ export function Cart({
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState<{ id: string; totalCents: number } | null>(null);
   const [orderStatus, setOrderStatus] = useState<OrderStatus>("new");
+  const [rating, setRating] = useState<number | null>(null);
+  const [ratingSent, setRatingSent] = useState(false);
+  const [ratingError, setRatingError] = useState(false);
+  const [ratingSending, setRatingSending] = useState(false);
+
+  async function submitRating(stars: number) {
+    if (!confirmed || ratingSending || ratingSent) return;
+    setRating(stars);
+    setRatingSending(true);
+    setRatingError(false);
+    try {
+      const response = await fetch(
+        `/api/orders/${encodeURIComponent(confirmed.id)}/rating`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ restaurantId, rating: stars }),
+        }
+      );
+      if (!response.ok) throw new Error("rating failed");
+      setRatingSent(true);
+    } catch {
+      setRatingError(true);
+    } finally {
+      setRatingSending(false);
+    }
+  }
 
   const confirmedId = confirmed?.id;
 
@@ -214,11 +241,55 @@ export function Cart({
           <p className="text-sm text-white/70 mt-1">
             {t.orderNumber(confirmed.id.slice(0, 8), formatChf(confirmed.totalCents))}
           </p>
+
+          {isReady && (
+            <div className="mt-2 rounded-2xl bg-white/10 p-4 flex flex-col gap-2">
+              {ratingSent ? (
+                <p className="text-sm font-bold">{t.rateThanks}</p>
+              ) : (
+                <>
+                  <p className="text-sm font-bold">{t.rateTitle}</p>
+                  <div className="flex gap-1" dir="ltr">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const filled = rating !== null && star <= rating;
+                      return (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => submitRating(star)}
+                          disabled={ratingSending}
+                          aria-label={t.rateStar(star)}
+                          className="size-11 flex items-center justify-center disabled:opacity-60"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            className={`size-7 ${filled ? "fill-orange-500" : "fill-none stroke-white/60 stroke-2"}`}
+                            aria-hidden="true"
+                          >
+                            <path d="M12 2.5l2.9 6.17 6.6.68-4.95 4.6 1.3 6.55L12 17.3l-5.85 3.2 1.3-6.55-4.95-4.6 6.6-.68L12 2.5z" />
+                          </svg>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {ratingError && (
+                    <p role="alert" className="text-xs text-white/80">
+                      {t.rateError}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => {
               setConfirmed(null);
               setOpen(false);
+              setRating(null);
+              setRatingSent(false);
+              setRatingError(false);
             }}
             className="mt-3 min-h-11 rounded-xl bg-white text-black font-bold px-4 py-3"
           >

@@ -93,6 +93,11 @@ export type OrderStrings = {
   };
   orderNumber: (id: string, total: string) => string;
   anotherOrder: string;
+  rateTitle: string;
+  rateStar: (n: number) => string;
+  rateSubmit: string;
+  rateThanks: string;
+  rateError: string;
 };
 
 const de: OrderStrings = {
@@ -166,6 +171,11 @@ const de: OrderStrings = {
   },
   orderNumber: (id, t) => `Nr. #${id} · ${t} · Bezahlung an der Kasse`,
   anotherOrder: "Weitere Bestellung",
+  rateTitle: "Wie war Ihre Bestellung?",
+  rateStar: (n) => `${n} von 5 Sternen`,
+  rateSubmit: "Bewertung senden",
+  rateThanks: "Danke für Ihre Bewertung!",
+  rateError: "Bewertung konnte nicht gesendet werden.",
 };
 
 const fr: OrderStrings = {
@@ -239,6 +249,11 @@ const fr: OrderStrings = {
   },
   orderNumber: (id, t) => `N° #${id} · ${t} · Paiement à la caisse`,
   anotherOrder: "Nouvelle commande",
+  rateTitle: "Comment était votre commande?",
+  rateStar: (n) => `${n} sur 5 étoiles`,
+  rateSubmit: "Envoyer l'évaluation",
+  rateThanks: "Merci pour votre évaluation!",
+  rateError: "L'évaluation n'a pas pu être envoyée.",
 };
 
 const it: OrderStrings = {
@@ -312,6 +327,11 @@ const it: OrderStrings = {
   },
   orderNumber: (id, t) => `N. #${id} · ${t} · Pagamento alla cassa`,
   anotherOrder: "Nuovo ordine",
+  rateTitle: "Com'è andato il tuo ordine?",
+  rateStar: (n) => `${n} su 5 stelle`,
+  rateSubmit: "Invia valutazione",
+  rateThanks: "Grazie per la tua valutazione!",
+  rateError: "Non è stato possibile inviare la valutazione.",
 };
 
 const en: OrderStrings = {
@@ -385,6 +405,11 @@ const en: OrderStrings = {
   },
   orderNumber: (id, t) => `No. #${id} · ${t} · Pay at the counter`,
   anotherOrder: "New order",
+  rateTitle: "How was your order?",
+  rateStar: (n) => `${n} out of 5 stars`,
+  rateSubmit: "Send rating",
+  rateThanks: "Thanks for your rating!",
+  rateError: "Your rating could not be sent.",
 };
 
 const ar: OrderStrings = {
@@ -457,6 +482,11 @@ const ar: OrderStrings = {
   },
   orderNumber: (id, t) => `رقم #${id} · ${t} · الدفع عند الصندوق`,
   anotherOrder: "طلب جديد",
+  rateTitle: "كيف كان طلبك؟",
+  rateStar: (n) => `${n} من 5 نجوم`,
+  rateSubmit: "إرسال التقييم",
+  rateThanks: "شكراً على تقييمك!",
+  rateError: "لم نتمكن من إرسال التقييم.",
 };
 
 export const ORDER_STRINGS: Record<OrderLang, OrderStrings> = { de, fr, it, en, ar };
