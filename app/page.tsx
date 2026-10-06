@@ -25,13 +25,16 @@ export default function Page() {
           </div>
           <p className="text-sm text-gray-500 mt-3">Ohne Kreditkarte · Jederzeit kündbar</p>
 
-          <div className="mt-6 flex items-center gap-3">
-            <div className="flex -space-x-2">
-              <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[11px] font-bold text-gray-500">Z</div>
-              <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[11px] font-bold text-gray-500">D</div>
-            </div>
-            <p className="text-sm text-gray-600">Schweizer Restaurants vertrauen bereits auf Zelloo</p>
-          </div>
+  <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
+  <div className="flex items-center gap-1.5">
+  <svg className="w-4 h-4 text-[#c41e24] shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" /></svg>
+  <span className="text-sm text-gray-600">In 10 Minuten eingerichtet</span>
+  </div>
+  <div className="flex items-center gap-1.5">
+  <svg className="w-4 h-4 text-[#c41e24] shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" /></svg>
+  <span className="text-sm text-gray-600">0% Kommission, immer</span>
+  </div>
+  </div>
         </div>
 
         <div className="flex justify-center pt-2">
@@ -183,7 +186,7 @@ export default function Page() {
       <div className="py-16">
         <div className="max-w-[1200px] mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-black text-balance">Bereit, Zeit und Kosten zu sparen?</h2>
-          <p className="text-gray-500 mt-2">Schliessen Sie sich Schweizer Restaurants an, die bereits automatisiert arbeiten.</p>
+          <p className="text-gray-500 mt-2">Starten Sie noch heute automatisiert — ohne Kreditkarte, ohne Risiko.</p>
           <a href="/dashboard" className="inline-block bg-[#c41e24] text-white font-bold px-8 py-3 rounded-lg mt-6">
             Jetzt registrieren - 15 Tage gratis
           </a>
