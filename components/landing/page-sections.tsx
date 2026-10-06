@@ -134,25 +134,36 @@ export function PageSections() {
       </div>
 
       <footer className="border-t border-black/5 py-8">
-        <div className="max-w-[1200px] mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
-          <span className="font-black text-black">ZELLOO.CH</span>
-          <nav className="flex items-center gap-5">
-            <a href="/about" className="hover:text-black">
-              {p.footerAbout}
+        <div className="max-w-[1200px] mx-auto px-6 flex flex-col gap-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
+            <span className="font-black text-black">ZELLOO.CH</span>
+            <nav className="flex flex-wrap items-center justify-center gap-5">
+              <a href="/about" className="hover:text-black">
+                {p.footerAbout}
+              </a>
+              <a href="/pricing" className="hover:text-black">
+                {p.footerPricing}
+              </a>
+              <a href="/login" className="hover:text-black">
+                {p.footerLogin}
+              </a>
+              <a href="/privacy" className="hover:text-black">
+                {p.footerPrivacy}
+              </a>
+              <a href="/terms" className="hover:text-black">
+                {p.footerTerms}
+              </a>
+            </nav>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm text-gray-500 border-t border-black/5 pt-5">
+            <a href="mailto:info@zelloo.ch" className="hover:text-black">
+              info@zelloo.ch
             </a>
-            <a href="/pricing" className="hover:text-black">
-              {p.footerPricing}
+            <span className="hidden sm:inline text-gray-300">•</span>
+            <a href="tel:+41445053220" className="hover:text-black" dir="ltr">
+              +41 44 505 32 20
             </a>
-            <a href="/login" className="hover:text-black">
-              {p.footerLogin}
-            </a>
-            <a href="/privacy" className="hover:text-black">
-              {p.footerPrivacy}
-            </a>
-            <a href="/terms" className="hover:text-black">
-              {p.footerTerms}
-            </a>
-          </nav>
+          </div>
         </div>
       </footer>
     </div>
