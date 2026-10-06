@@ -101,6 +101,8 @@ export type OrderStrings = {
   rateSubmit: string;
   rateThanks: string;
   rateError: string;
+  loyaltyProgress: (count: number, target: number) => string;
+  loyaltyReached: (reward: string) => string;
 };
 
 const de: OrderStrings = {
@@ -182,6 +184,9 @@ const de: OrderStrings = {
   rateSubmit: "Bewertung senden",
   rateThanks: "Danke für Ihre Bewertung!",
   rateError: "Bewertung konnte nicht gesendet werden.",
+  loyaltyProgress: (count, target) =>
+    `Treuepunkte: ${count} von ${target} Bestellungen. Noch ${Math.max(target - count, 0)} bis zur Belohnung!`,
+  loyaltyReached: (reward) => `Geschafft! Sie haben sich ${reward} verdient.`,
 };
 
 const fr: OrderStrings = {
@@ -263,6 +268,9 @@ const fr: OrderStrings = {
   rateSubmit: "Envoyer l'évaluation",
   rateThanks: "Merci pour votre évaluation!",
   rateError: "L'évaluation n'a pas pu être envoyée.",
+  loyaltyProgress: (count, target) =>
+    `Points fidélité : ${count} sur ${target} commandes. Encore ${Math.max(target - count, 0)} pour la récompense !`,
+  loyaltyReached: (reward) => `Bravo ! Vous avez gagné ${reward}.`,
 };
 
 const it: OrderStrings = {
@@ -344,6 +352,9 @@ const it: OrderStrings = {
   rateSubmit: "Invia valutazione",
   rateThanks: "Grazie per la tua valutazione!",
   rateError: "Non è stato possibile inviare la valutazione.",
+  loyaltyProgress: (count, target) =>
+    `Punti fedeltà: ${count} di ${target} ordini. Ancora ${Math.max(target - count, 0)} per la ricompensa!`,
+  loyaltyReached: (reward) => `Ce l'hai fatta! Hai guadagnato ${reward}.`,
 };
 
 const en: OrderStrings = {
@@ -425,6 +436,9 @@ const en: OrderStrings = {
   rateSubmit: "Send rating",
   rateThanks: "Thanks for your rating!",
   rateError: "Your rating could not be sent.",
+  loyaltyProgress: (count, target) =>
+    `Loyalty points: ${count} of ${target} orders. ${Math.max(target - count, 0)} more for your reward!`,
+  loyaltyReached: (reward) => `You made it! You earned ${reward}.`,
 };
 
 const ar: OrderStrings = {
@@ -503,6 +517,9 @@ const ar: OrderStrings = {
   rateTitle: "كيف كان طلبك؟",
   rateStar: (n) => `${n} من 5 نجوم`,
   rateSubmit: "إرسال التقييم",
+  loyaltyProgress: (count, target) =>
+    `نقاط الولاء: ${count} من ${target} طلبات. باقي ${Math.max(target - count, 0)} للحصول على الهدية!`,
+  loyaltyReached: (reward) => `برافو! حصلت على ${reward}.`,
   rateThanks: "شكراً على تقييمك!",
   rateError: "لم نتمكن من إرسال التقييم.",
 };

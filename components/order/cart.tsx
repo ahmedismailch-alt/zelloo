@@ -72,6 +72,44 @@ export function Cart({
   const [ratingSent, setRatingSent] = useState(false);
   const [ratingError, setRatingError] = useState(false);
   const [ratingSending, setRatingSending] = useState(false);
+  const [loyalty, setLoyalty] = useState<{
+    count: number;
+    target: number;
+    reward: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const trimmed = phone.trim();
+    if (table || trimmed.length < 6) {
+      setLoyalty(null);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/loyalty?restaurantId=${encodeURIComponent(restaurantId)}&phone=${encodeURIComponent(trimmed)}`,
+          { cache: "no-store" }
+        );
+        if (!response.ok || cancelled) return;
+        const data = await response.json();
+        if (cancelled) return;
+        setLoyalty(
+          data.enabled
+            ? { count: data.count, target: data.target, reward: data.reward }
+            : null
+        );
+      } catch {
+        if (!cancelled) setLoyalty(null);
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [phone, restaurantId, table]);
 
   async function submitRating(stars: number) {
     if (!confirmed || ratingSending || ratingSent) return;
@@ -432,6 +470,17 @@ export function Cart({
                   className="rounded-xl border p-3 text-base font-normal"
                 />
               </label>
+            )}
+
+            {loyalty && (
+              <div
+                className="rounded-xl bg-orange-50 border border-orange-200 p-3 text-sm font-semibold text-orange-900"
+                role="status"
+              >
+                {loyalty.count >= loyalty.target
+                  ? t.loyaltyReached(loyalty.reward)
+                  : t.loyaltyProgress(loyalty.count, loyalty.target)}
+              </div>
             )}
 
             <label className="flex flex-col gap-1 text-sm font-semibold">

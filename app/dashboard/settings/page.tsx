@@ -20,6 +20,14 @@ export default function SettingsPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSaved, setPasswordSaved] = useState(false);
 
+  const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
+  const [loyaltyTarget, setLoyaltyTarget] = useState("5");
+  const [loyaltyReward, setLoyaltyReward] = useState("");
+  const [loyaltySaving, setLoyaltySaving] = useState(false);
+  const [loyaltyError, setLoyaltyError] = useState<string | null>(null);
+  const [loyaltySaved, setLoyaltySaved] = useState(false);
+  const [loyaltyUnavailable, setLoyaltyUnavailable] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -38,20 +46,40 @@ export default function SettingsPage() {
 
       const { data, error: readError } = await supabase
         .from("restaurants")
-        .select("id, phone")
+        .select("id, phone, loyalty_enabled, loyalty_target, loyalty_reward")
         .eq("owner_id", user.id)
         .maybeSingle();
 
       if (cancelled) return;
 
       if (readError || !data) {
-        setError("Restaurant konnte nicht geladen werden.");
+        // Loyalty columns may not exist yet. Retry without them so the page still loads.
+        const { data: fallback, error: fallbackError } = await supabase
+          .from("restaurants")
+          .select("id, phone")
+          .eq("owner_id", user.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (fallbackError || !fallback) {
+          setError("Restaurant konnte nicht geladen werden.");
+          setLoading(false);
+          return;
+        }
+
+        setRestaurantId(fallback.id);
+        setPhone(fallback.phone || "");
+        setLoyaltyUnavailable(true);
         setLoading(false);
         return;
       }
 
       setRestaurantId(data.id);
       setPhone(data.phone || "");
+      setLoyaltyEnabled(Boolean(data.loyalty_enabled));
+      setLoyaltyTarget(String(data.loyalty_target || 5));
+      setLoyaltyReward(data.loyalty_reward || "");
       setLoading(false);
     }
 
@@ -86,6 +114,46 @@ export default function SettingsPage() {
 
     setPhone(trimmed);
     setSaved(true);
+  }
+
+  async function handleLoyaltySave(e: FormEvent) {
+    e.preventDefault();
+    if (restaurantId === null) return;
+
+    setLoyaltyError(null);
+    setLoyaltySaved(false);
+
+    const target = Number.parseInt(loyaltyTarget, 10);
+    if (loyaltyEnabled) {
+      if (!Number.isFinite(target) || target < 1 || target > 50) {
+        setLoyaltyError("Die Anzahl Bestellungen muss zwischen 1 und 50 liegen.");
+        return;
+      }
+      if (!loyaltyReward.trim()) {
+        setLoyaltyError("Bitte eine Belohnung angeben.");
+        return;
+      }
+    }
+
+    setLoyaltySaving(true);
+
+    const { error: updateError } = await supabase
+      .from("restaurants")
+      .update({
+        loyalty_enabled: loyaltyEnabled,
+        loyalty_target: Number.isFinite(target) ? target : 5,
+        loyalty_reward: loyaltyReward.trim() || null,
+      })
+      .eq("id", restaurantId);
+
+    setLoyaltySaving(false);
+
+    if (updateError) {
+      setLoyaltyError("Speichern fehlgeschlagen. Bitte erneut versuchen.");
+      return;
+    }
+
+    setLoyaltySaved(true);
   }
 
   async function handlePasswordChange(e: FormEvent) {
@@ -171,6 +239,79 @@ export default function SettingsPage() {
               className="min-h-12 rounded-xl bg-orange-500 text-white font-black text-base disabled:opacity-60"
             >
               {saving ? "Wird gespeichert..." : "Speichern"}
+            </button>
+          </form>
+        )}
+
+        {!loading && !loyaltyUnavailable && (
+          <form
+            onSubmit={handleLoyaltySave}
+            className="bg-white border rounded-2xl p-4 flex flex-col gap-3 mt-4"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold">Treueprogramm</h2>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={loyaltyEnabled}
+                onClick={() => setLoyaltyEnabled((v) => !v)}
+                className={`relative h-7 w-12 rounded-full transition-colors ${
+                  loyaltyEnabled ? "bg-orange-500" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${
+                    loyaltyEnabled ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+            <p className="text-xs text-gray-500">
+              Kunden sehen ihren Fortschritt auf der Bestellseite, sobald sie
+              ihre Telefonnummer eingegeben haben. Zählt alle nicht
+              abgebrochenen Bestellungen pro Telefonnummer.
+            </p>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold">
+                Bestellungen bis zur Belohnung
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={loyaltyTarget}
+                onChange={(e) => setLoyaltyTarget(e.target.value)}
+                disabled={!loyaltyEnabled}
+                className="min-h-12 rounded-xl border border-gray-300 px-4 text-base disabled:opacity-60"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold">Belohnung</span>
+              <input
+                type="text"
+                value={loyaltyReward}
+                onChange={(e) => setLoyaltyReward(e.target.value)}
+                disabled={!loyaltyEnabled}
+                placeholder="z.B. ein kostenloses Getränk"
+                className="min-h-12 rounded-xl border border-gray-300 px-4 text-base disabled:opacity-60"
+              />
+            </label>
+
+            {loyaltyError && (
+              <p className="text-sm text-red-600">{loyaltyError}</p>
+            )}
+            {loyaltySaved && !loyaltyError && (
+              <p className="text-sm text-green-600">Gespeichert.</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loyaltySaving}
+              className="min-h-12 rounded-xl bg-orange-500 text-white font-black text-base disabled:opacity-60"
+            >
+              {loyaltySaving ? "Wird gespeichert..." : "Speichern"}
             </button>
           </form>
         )}
