@@ -985,6 +985,20 @@ export default function MenuPage() {
             Sie können Gerichte auch manuell hinzufügen.
           </p>
 
+          <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl p-4 mb-5">
+            <span className="text-2xl leading-none" aria-hidden="true">
+              🥤
+            </span>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              <span className="font-bold text-gray-900">
+                Vergessen Sie die Getränke nicht:
+              </span>{" "}
+              Gäste können nur bestellen, was auf Ihrer Speisekarte
+              steht. Fügen Sie Kaffee, Softdrinks oder Säfte als eigene
+              Kategorie hinzu, damit nichts fehlt.
+            </p>
+          </div>
+
           <form onSubmit={addItem} className="space-y-3">
             <input
               value={name}
@@ -994,12 +1008,37 @@ export default function MenuPage() {
               className="w-full border rounded-xl px-4 py-3"
             />
 
-            <input
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="Kategorie, z.B. Pizza"
-              className="w-full border rounded-xl px-4 py-3"
-            />
+            <div>
+              <input
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="Kategorie, z.B. Pizza"
+                className="w-full border rounded-xl px-4 py-3"
+              />
+
+              <div className="flex flex-wrap gap-2 mt-2">
+                {[
+                  "Getränke",
+                  "Vorspeisen",
+                  "Hauptgerichte",
+                  "Desserts",
+                  "Snacks",
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => setCategory(suggestion)}
+                    className={`inline-flex items-center justify-center min-h-11 px-4 rounded-full border text-sm font-semibold transition-colors ${
+                      category === suggestion
+                        ? "bg-orange-500 border-orange-500 text-black"
+                        : "bg-white border-gray-300 text-gray-700"
+                    }`}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <input
               value={price}
