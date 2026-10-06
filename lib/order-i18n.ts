@@ -32,6 +32,9 @@ export type OrderStrings = {
   menuUnavailableText: string;
   menuLabel: string;
   otherCategory: string;
+  searchPlaceholder: string;
+  allCategories: string;
+  searchNoResults: string;
   add: (name: string) => string;
   remove: (name: string) => string;
   aiTitle: string;
@@ -98,6 +101,9 @@ const de: OrderStrings = {
   menuUnavailableText: "Bitte bestellen Sie direkt beim Personal.",
   menuLabel: "Speisekarte",
   otherCategory: "Weitere",
+  searchPlaceholder: "Speisekarte durchsuchen",
+  allCategories: "Alle",
+  searchNoResults: "Keine Treffer. Bitte anders suchen.",
   add: (n) => `${n} hinzufügen`,
   remove: (n) => `${n} entfernen`,
   aiTitle: "Einfach schreiben, was Sie möchten",
@@ -165,6 +171,9 @@ const fr: OrderStrings = {
   menuUnavailableText: "Veuillez commander directement auprès du personnel.",
   menuLabel: "Carte",
   otherCategory: "Autres",
+  searchPlaceholder: "Rechercher dans la carte",
+  allCategories: "Tout",
+  searchNoResults: "Aucun résultat. Essayez une autre recherche.",
   add: (n) => `Ajouter ${n}`,
   remove: (n) => `Retirer ${n}`,
   aiTitle: "Écrivez simplement ce que vous voulez",
@@ -232,6 +241,9 @@ const it: OrderStrings = {
   menuUnavailableText: "Si prega di ordinare direttamente al personale.",
   menuLabel: "Menù",
   otherCategory: "Altro",
+  searchPlaceholder: "Cerca nel menù",
+  allCategories: "Tutto",
+  searchNoResults: "Nessun risultato. Prova un'altra ricerca.",
   add: (n) => `Aggiungi ${n}`,
   remove: (n) => `Rimuovi ${n}`,
   aiTitle: "Scrivi semplicemente cosa desideri",
@@ -299,6 +311,9 @@ const en: OrderStrings = {
   menuUnavailableText: "Please order directly with the staff.",
   menuLabel: "Menu",
   otherCategory: "Other",
+  searchPlaceholder: "Search the menu",
+  allCategories: "All",
+  searchNoResults: "No matches. Try a different search.",
   add: (n) => `Add ${n}`,
   remove: (n) => `Remove ${n}`,
   aiTitle: "Just write what you'd like",
@@ -366,6 +381,9 @@ const ar: OrderStrings = {
   menuUnavailableText: "يرجى الطلب مباشرة من الموظفين.",
   menuLabel: "قائمة الطعام",
   otherCategory: "أخرى",
+  searchPlaceholder: "ابحث في قائمة الطعام",
+  allCategories: "الكل",
+  searchNoResults: "لا توجد نتائج. جرّب بحثاً مختلفاً.",
   add: (n) => `إضافة ${n}`,
   remove: (n) => `إزالة ${n}`,
   aiTitle: "اكتب ببساطة ما تريد",
@@ -378,13 +396,13 @@ const ar: OrderStrings = {
   aiAddedOne: (q, n) => `تمت إضافة ${q}× ${n} إلى السلة.`,
   aiNotFound: (l) => `غير موجود: ${l}`,
   aiNothing: "لم نجد أصنافاً مطابقة. جرّب كتابة الطلب بطريقة أخرى.",
-  aiError: "لم نتمكن من فهم الطلب.",
+  aiError: "لم نتمكن من فهم ��لطلب.",
   micStart: "اضغط وتكلّم",
   micStop: "إيقاف التسجيل",
   micListening: "جاري الاستماع...",
   micTranscribing: "جاري التحويل إلى نص...",
   micDenied: "لا يوجد إذن للميكروفون. يرجى كتابة طلبك.",
-  micUnsupported: "التسجيل الصوتي غير مدعوم هنا. يرجى كتابة طلبك.",
+  micUnsupported: "التسج��ل الصوتي غير مدعوم هنا. يرجى كتابة طلبك.",
   micError: "لم نتمكن من فهم الصوت. يرجى المحاولة مرة أخرى.",
   didYouMean: "هل تقصد:",
   viewCart: (c) => `عرض السلة (${c})`,

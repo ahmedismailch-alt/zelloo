@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import type { OrderStrings } from "../../lib/order-i18n";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import type { CartLine } from "./cart";
@@ -15,15 +16,117 @@ type Props = {
 };
 
 export function MenuList({ menu, cart, t, showArabic, categoryAr, onSetQuantity }: Props) {
+  const [query, setQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const categories = useMemo(() => {
+    const seen = new Set<string>();
+    const list: string[] = [];
+    for (const item of menu) {
+      const key = item.category?.trim() || "";
+      if (!seen.has(key)) {
+        seen.add(key);
+        list.push(key);
+      }
+    }
+    return list;
+  }, [menu]);
+
+  const filteredMenu = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return menu.filter((item) => {
+      if (activeCategory !== null && (item.category?.trim() || "") !== activeCategory) {
+        return false;
+      }
+      if (!q) return true;
+      const haystack = [item.name, item.nameAr, item.description]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [menu, query, activeCategory]);
+
   const groups = new Map<string, PublicMenuItem[]>();
-  for (const item of menu) {
+  for (const item of filteredMenu) {
     const key = item.category?.trim() || "";
     groups.set(key, [...(groups.get(key) || []), item]);
   }
 
   return (
-    <section aria-label={t.menuLabel} className="flex flex-col gap-6">
-      {[...groups.entries()].map(([category, items]) => (
+    <section aria-label={t.menuLabel} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
+        <label className="relative block">
+          <span className="sr-only">{t.searchPlaceholder}</span>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" strokeLinecap="round" />
+          </svg>
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t.searchPlaceholder}
+            dir="auto"
+            className="w-full h-12 rounded-2xl border bg-white pl-11 pr-4 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          />
+        </label>
+
+        {categories.length > 1 && (
+          <ul className="flex gap-2 overflow-x-auto -mx-1 px-1" dir="ltr">
+            <li>
+              <button
+                type="button"
+                onClick={() => setActiveCategory(null)}
+                aria-pressed={activeCategory === null}
+                className={`min-h-9 shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-bold ${
+                  activeCategory === null
+                    ? "bg-black text-white"
+                    : "bg-white border text-gray-600"
+                }`}
+              >
+                {t.allCategories}
+              </button>
+            </li>
+            {categories.map((category) => {
+              const active = activeCategory === category;
+              const label =
+                showArabic && category && categoryAr[category]
+                  ? categoryAr[category]
+                  : category || t.otherCategory;
+              return (
+                <li key={category || "__other"}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveCategory(category)}
+                    aria-pressed={active}
+                    dir="auto"
+                    className={`min-h-9 shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-bold ${
+                      active ? "bg-black text-white" : "bg-white border text-gray-600"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {filteredMenu.length === 0 ? (
+        <div className="bg-white border rounded-2xl p-6 text-center">
+          <p className="font-bold">{t.searchNoResults}</p>
+        </div>
+      ) : (
+      [...groups.entries()].map(([category, items]) => (
         <div key={category || "__other"} className="flex flex-col gap-3">
           {showArabic && category && categoryAr[category] ? (
             <div className="flex flex-col">
@@ -109,7 +212,7 @@ export function MenuList({ menu, cart, t, showArabic, categoryAr, onSetQuantity 
             })}
           </ul>
         </div>
-      ))}
+      )))}
     </section>
   );
 }
