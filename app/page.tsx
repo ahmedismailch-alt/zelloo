@@ -8,8 +8,8 @@ export default function Page() {
 
       <div className="max-w-[1200px] mx-auto px-6 pt-16 grid md:grid-cols-2 gap-10">
         <div>
-          <h1 className="text-[56px] font-black leading-[0.95]">Ihr Restaurant<br/>läuft automatisch.<br/>24/7.</h1>
-          <p className="text-gray-500 mt-4">Google • Instagram • Facebook • WhatsApp • 100% automatisch</p>
+  <h1 className="text-[56px] font-black leading-[0.95]">Nie mehr eine<br/>Bestellung verpassen.<br/>0% Kommission.</h1>
+  <p className="text-gray-500 mt-4">Google • Instagram • Facebook • WhatsApp • 100% automatisch</p>
 
           <div className="flex flex-wrap gap-2 mt-5">
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold bg-green-50 text-green-700 px-3 py-1.5 rounded-full">
