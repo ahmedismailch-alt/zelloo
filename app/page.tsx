@@ -10,8 +10,27 @@ export default function Page() {
         <div>
           <h1 className="text-[56px] font-black leading-[0.95]">Ihr Restaurant<br/>läuft automatisch.<br/>24/7.</h1>
           <p className="text-gray-500 mt-4">Google • Instagram • Facebook • WhatsApp • 100% automatisch</p>
+
+          <div className="flex flex-wrap gap-2 mt-5">
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold bg-green-50 text-green-700 px-3 py-1.5 rounded-full">
+              0% Kommission pro Bestellung
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold bg-green-50 text-green-700 px-3 py-1.5 rounded-full">
+              Bis zu 15 Std./Monat gespart
+            </span>
+          </div>
+
           <div className="flex gap-3 mt-6">
             <a href="/dashboard" className="bg-[#c41e24] text-white font-bold px-8 py-3 rounded-lg">Jetzt registrieren - 15 Tage gratis</a>
+          </div>
+          <p className="text-sm text-gray-500 mt-3">Ohne Kreditkarte · Jederzeit kündbar</p>
+
+          <div className="mt-6 flex items-center gap-3">
+            <div className="flex -space-x-2">
+              <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[11px] font-bold text-gray-500">Z</div>
+              <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[11px] font-bold text-gray-500">D</div>
+            </div>
+            <p className="text-sm text-gray-600">Schweizer Restaurants vertrauen bereits auf Zelloo</p>
           </div>
         </div>
 
