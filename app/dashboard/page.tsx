@@ -151,6 +151,11 @@ export default function DashboardPage() {
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
   const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
   const [dismissingMessageId, setDismissingMessageId] = useState<string | null>(null);
+  const [onboarding, setOnboarding] = useState<{
+    menuItemsCount: number;
+    totalOrders: number;
+  } | null>(null);
+  const [checklistDismissed, setChecklistDismissed] = useState(false);
 
   const knownIdsRef = useRef<Set<string> | null>(null);
   const bellRef = useRef<OrderBell | null>(null);
@@ -325,6 +330,43 @@ export default function DashboardPage() {
       cancelled = true;
     };
   }, [restaurantId]);
+
+  useEffect(() => {
+    if (restaurantId === undefined) return;
+
+    let cancelled = false;
+
+    async function loadOnboardingStatus() {
+      try {
+        const [menuItemsResult, ordersResult] = await Promise.all([
+          supabase
+            .from("menu_items")
+            .select("id", { count: "exact", head: true })
+            .eq("restaurant_id", restaurantId)
+            .eq("is_confirmed", true),
+          supabase
+            .from("orders")
+            .select("id", { count: "exact", head: true })
+            .eq("restaurant_id", restaurantId),
+        ]);
+
+        if (cancelled) return;
+
+        setOnboarding({
+          menuItemsCount: menuItemsResult.count ?? 0,
+          totalOrders: ordersResult.count ?? 0,
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    void loadOnboardingStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [restaurantId, refreshVersion]);
 
   async function dismissAdminMessage(messageId: string) {
     setDismissingMessageId(messageId);
@@ -701,6 +743,86 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+
+        {onboarding &&
+          !checklistDismissed &&
+          (onboarding.menuItemsCount === 0 ||
+            onboarding.totalOrders === 0) && (
+            <div className="mb-6 bg-white border rounded-2xl p-4">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <p className="text-sm font-black">Erste Schritte</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    So kommen die ersten Bestellungen an.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setChecklistDismissed(true)}
+                  className="shrink-0 text-xs font-semibold text-gray-400"
+                  aria-label="Erste Schritte ausblenden"
+                >
+                  Ausblenden
+                </button>
+              </div>
+
+              <ul className="flex flex-col gap-2">
+                {[
+                  {
+                    done: onboarding.menuItemsCount > 0,
+                    label: "Menü hinzufügen",
+                    href: "/menu",
+                    cta: "Zur Speisekarte",
+                  },
+                  {
+                    done: true,
+                    label: "Tisch-QR-Codes einrichten",
+                    href: "/dashboard/tables",
+                    cta: "QR-Codes ansehen",
+                    optional: true,
+                  },
+                  {
+                    done: onboarding.totalOrders > 0,
+                    label: "Erste Bestellung erhalten",
+                  },
+                ].map((step) => (
+                  <li
+                    key={step.label}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                          step.done
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-200 text-gray-500"
+                        }`}
+                        aria-hidden="true"
+                      >
+                        {step.done ? "✓" : ""}
+                      </span>
+                      <span
+                        className={`text-sm font-semibold truncate ${
+                          step.done ? "text-gray-400" : "text-black"
+                        }`}
+                      >
+                        {step.label}
+                      </span>
+                    </div>
+
+                    {!step.done && step.href && (
+                      <Link
+                        href={step.href}
+                        className="shrink-0 text-xs font-bold text-orange-600 underline"
+                      >
+                        {step.cta}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
         <div className="flex justify-between items-start gap-4 mb-6">
           <div className="min-w-0">

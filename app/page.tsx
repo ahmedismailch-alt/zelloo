@@ -236,6 +236,17 @@ export default function Page() {
           <p className="text-sm text-gray-500 mt-3">Ohne Kreditkarte · Jederzeit kündbar</p>
         </div>
       </div>
+
+      <footer className="border-t border-black/5 py-8">
+        <div className="max-w-[1200px] mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
+          <span className="font-black text-black">ZELLOO.CH</span>
+          <nav className="flex items-center gap-5">
+            <a href="/about" className="hover:text-black">Über uns</a>
+            <a href="/pricing" className="hover:text-black">Preise</a>
+            <a href="/login" className="hover:text-black">Login</a>
+          </nav>
+        </div>
+      </footer>
     </div>
   )
 }

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { OrderBell } from "../../lib/order-bell";
 
 const ADMIN_EMAIL = "ahmed.ismail.ch@gmail.com";
+const SUPPORT_POLL_INTERVAL_MS = 15000;
 
 type RestaurantRow = {
   id: number | string;
@@ -96,6 +98,29 @@ export default function AdminPage() {
   const [supportMessages, setSupportMessages] = useState<SupportMessage[]>([]);
   const [supportLoading, setSupportLoading] = useState(true);
   const [supportToken, setSupportToken] = useState<string | null>(null);
+  const [soundOn, setSoundOn] = useState(false);
+
+  const bellRef = useRef<OrderBell | null>(null);
+  const knownSupportIdsRef = useRef<Set<string> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      bellRef.current?.dispose();
+      bellRef.current = null;
+    };
+  }, []);
+
+  async function enableSound() {
+    try {
+      const bell = bellRef.current ?? new OrderBell();
+      bellRef.current = bell;
+      await bell.enable();
+      bell.ring();
+      setSoundOn(true);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -142,7 +167,11 @@ export default function AdminPage() {
         });
         const supportBody = await supportResponse.json();
         if (!cancelled && supportResponse.ok) {
-          setSupportMessages(supportBody.messages || []);
+          const messages: SupportMessage[] = supportBody.messages || [];
+          setSupportMessages(messages);
+          // Seed known IDs without ringing for messages that already
+          // existed before this admin session started.
+          knownSupportIdsRef.current = new Set(messages.map((m) => m.id));
         }
       } catch (err) {
         console.error(err);
@@ -163,6 +192,46 @@ export default function AdminPage() {
       cancelled = true;
     };
   }, [router]);
+
+  useEffect(() => {
+    if (!supportToken) return;
+
+    let cancelled = false;
+
+    async function pollSupportMessages() {
+      try {
+        const response = await fetch("/api/admin/support-messages", {
+          headers: { Authorization: `Bearer ${supportToken}` },
+        });
+        const body = await response.json();
+        if (cancelled || !response.ok) return;
+
+        const messages: SupportMessage[] = body.messages || [];
+        const known = knownSupportIdsRef.current;
+
+        if (known) {
+          const isNewUnread = (m: SupportMessage) =>
+            !m.readAt && !known.has(m.id);
+          const hasNewUnread = messages.some(isNewUnread);
+          if (hasNewUnread) bellRef.current?.ring();
+        }
+
+        knownSupportIdsRef.current = new Set(messages.map((m) => m.id));
+        setSupportMessages(messages);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    const timer = window.setInterval(() => {
+      void pollSupportMessages();
+    }, SUPPORT_POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [supportToken]);
 
   async function markSupportMessageRead(messageId: string) {
     setSupportMessages((prev) =>
@@ -262,6 +331,24 @@ export default function AdminPage() {
           <p className="text-gray-400">Wird geladen...</p>
         ) : (
           <>
+            {!supportLoading && (
+              <button
+                type="button"
+                onClick={() => void enableSound()}
+                disabled={soundOn}
+                aria-pressed={soundOn}
+                className={`w-full min-h-11 rounded-xl px-4 py-2.5 text-sm font-bold mb-4 ${
+                  soundOn
+                    ? "bg-zinc-900 border border-zinc-800 text-gray-400"
+                    : "bg-orange-500 text-black"
+                }`}
+              >
+                {soundOn
+                  ? "Ton an · benachrichtigt bei neuen Problemmeldungen"
+                  : "Ton aktivieren für Problemmeldungen"}
+              </button>
+            )}
+
             {!supportLoading && supportMessages.length > 0 && (
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden mb-6">
                 <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
