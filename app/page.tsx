@@ -32,7 +32,7 @@ export default function Page() {
   </div>
   <div className="flex items-center gap-1.5">
   <svg className="w-4 h-4 text-[#c41e24] shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" /></svg>
-  <span className="text-sm text-gray-600">0% Kommission, immer</span>
+  <span className="text-sm text-gray-600">WhatsApp-Bot nimmt Bestellungen 24/7</span>
   </div>
   </div>
         </div>
