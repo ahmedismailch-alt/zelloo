@@ -15,7 +15,17 @@ type MenuItem = {
   is_available: boolean;
   is_confirmed: boolean;
   name_translations: Record<string, string> | null;
+  image_url: string | null;
 };
+
+function isValidImageUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 function arabicNameOf(item: MenuItem) {
   const value = item.name_translations?.ar;
@@ -50,12 +60,14 @@ export default function MenuPage() {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editArabic, setEditArabic] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState("");
   const [generatingArabic, setGeneratingArabic] = useState(false);
   const [categoryAr, setCategoryAr] = useState<Record<string, string>>({});
   const [categoryArAvailable, setCategoryArAvailable] = useState(false);
@@ -466,6 +478,14 @@ export default function MenuPage() {
       return;
     }
 
+    const trimmedImageUrl = imageUrl.trim();
+
+    if (trimmedImageUrl && !isValidImageUrl(trimmedImageUrl)) {
+      setMessage("Bitte geben Sie einen gültigen Bild-Link ein (http:// oder https://).");
+      setSaving(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("menu_items")
       .insert({
@@ -476,6 +496,7 @@ export default function MenuPage() {
         currency: "CHF",
         is_available: true,
         is_confirmed: false,
+        image_url: trimmedImageUrl || null,
       })
       .select()
       .single();
@@ -491,6 +512,7 @@ export default function MenuPage() {
     setName("");
     setCategory("");
     setPrice("");
+    setImageUrl("");
 
     setMessage("Gericht wurde hinzugefügt.");
     setSaving(false);
@@ -503,6 +525,7 @@ export default function MenuPage() {
     setEditCategory(item.category || "");
     setEditPrice(item.price === null ? "" : String(item.price));
     setEditArabic(arabicNameOf(item));
+    setEditImageUrl(item.image_url || "");
     setMessage("");
   }
 
@@ -512,6 +535,7 @@ export default function MenuPage() {
     setEditCategory("");
     setEditPrice("");
     setEditArabic("");
+    setEditImageUrl("");
   }
 
   async function saveEdit(item: MenuItem) {
@@ -527,6 +551,13 @@ export default function MenuPage() {
 
     if (parsedPrice !== null && Number.isNaN(parsedPrice)) {
       setMessage("Bitte geben Sie einen gültigen Preis ein.");
+      return;
+    }
+
+    const trimmedEditImageUrl = editImageUrl.trim();
+
+    if (trimmedEditImageUrl && !isValidImageUrl(trimmedEditImageUrl)) {
+      setMessage("Bitte geben Sie einen gültigen Bild-Link ein (http:// oder https://).");
       return;
     }
 
@@ -555,6 +586,7 @@ export default function MenuPage() {
         price: parsedPrice,
         is_confirmed: nameChanged ? false : item.is_confirmed,
         name_translations: nextTranslations,
+        image_url: trimmedEditImageUrl || null,
       })
       .eq("id", item.id)
       .select()
@@ -985,6 +1017,20 @@ export default function MenuPage() {
             Sie können Gerichte auch manuell hinzufügen.
           </p>
 
+          <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl p-4 mb-5">
+            <span className="text-2xl leading-none" aria-hidden="true">
+              🥤
+            </span>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              <span className="font-bold text-gray-900">
+                Vergessen Sie die Getränke nicht:
+              </span>{" "}
+              Gäste können nur bestellen, was auf Ihrer Speisekarte
+              steht. Fügen Sie Kaffee, Softdrinks oder Säfte als eigene
+              Kategorie hinzu, damit nichts fehlt.
+            </p>
+          </div>
+
           <form onSubmit={addItem} className="space-y-3">
             <input
               value={name}
@@ -994,12 +1040,37 @@ export default function MenuPage() {
               className="w-full border rounded-xl px-4 py-3"
             />
 
-            <input
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="Kategorie, z.B. Pizza"
-              className="w-full border rounded-xl px-4 py-3"
-            />
+            <div>
+              <input
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="Kategorie, z.B. Pizza"
+                className="w-full border rounded-xl px-4 py-3"
+              />
+
+              <div className="flex flex-wrap gap-2 mt-2">
+                {[
+                  "Getränke",
+                  "Vorspeisen",
+                  "Hauptgerichte",
+                  "Desserts",
+                  "Snacks",
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => setCategory(suggestion)}
+                    className={`inline-flex items-center justify-center min-h-11 px-4 rounded-full border text-sm font-semibold transition-colors ${
+                      category === suggestion
+                        ? "bg-orange-500 border-orange-500 text-black"
+                        : "bg-white border-gray-300 text-gray-700"
+                    }`}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <input
               value={price}
@@ -1008,6 +1079,26 @@ export default function MenuPage() {
               inputMode="decimal"
               className="w-full border rounded-xl px-4 py-3"
             />
+
+            <div className="flex items-center gap-3">
+              {imageUrl.trim() && isValidImageUrl(imageUrl.trim()) ? (
+                <img
+                  src={imageUrl.trim() || "/placeholder.svg"}
+                  alt=""
+                  className="size-14 shrink-0 rounded-lg object-cover border"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : null}
+              <input
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="Bild-Link (optional), z.B. https://..."
+                type="url"
+                className="w-full border rounded-xl px-4 py-3"
+              />
+            </div>
 
             <button
               type="submit"
@@ -1218,6 +1309,29 @@ export default function MenuPage() {
                         </span>
                       </label>
 
+                      <label className="flex flex-col gap-1 text-sm font-bold">
+                        Bild-Link (optional)
+                        <div className="flex items-center gap-3">
+                          {editImageUrl.trim() && isValidImageUrl(editImageUrl.trim()) ? (
+                            <img
+                              src={editImageUrl.trim() || "/placeholder.svg"}
+                              alt=""
+                              className="size-14 shrink-0 rounded-lg object-cover border"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          ) : null}
+                          <input
+                            value={editImageUrl}
+                            onChange={(e) => setEditImageUrl(e.target.value)}
+                            placeholder="https://..."
+                            type="url"
+                            className="w-full border rounded-xl px-4 py-3 text-base font-normal"
+                          />
+                        </div>
+                      </label>
+
                       <div className="flex gap-2">
                         <button
                           onClick={() => saveEdit(item)}
@@ -1238,7 +1352,18 @@ export default function MenuPage() {
                   ) : (
                     <>
                       <div className="flex justify-between gap-4">
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex gap-3">
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url || "/placeholder.svg"}
+                              alt=""
+                              className="size-16 shrink-0 rounded-lg object-cover border"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          ) : null}
+                          <div className="min-w-0">
                           <p className="font-black text-lg text-pretty">
                             {item.name}
                           </p>
@@ -1310,6 +1435,7 @@ export default function MenuPage() {
                                   ).toFixed(2)}`}
                             </button>
                           )}
+                          </div>
                         </div>
 
                         <div className="flex flex-col items-end gap-1 shrink-0">

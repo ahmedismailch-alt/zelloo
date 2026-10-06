@@ -342,8 +342,14 @@ export function AiOrderBox({ restaurantId, t, lang, showArabic, onItems }: Props
         <button
           type="submit"
           disabled={loading || micState !== "idle" || !text.trim()}
-          className="min-h-11 rounded-xl bg-orange-500 px-4 py-3 font-bold text-black disabled:opacity-50"
+          className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-bold text-black disabled:opacity-70"
         >
+          {loading && (
+            <span
+              aria-hidden="true"
+              className="size-4 shrink-0 animate-spin rounded-full border-2 border-black/30 border-t-black"
+            />
+          )}
           {loading ? t.aiLoading : t.aiSubmit}
         </button>
       </form>

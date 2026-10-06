@@ -46,6 +46,7 @@ export type PublicMenuItem = {
   description: string | null;
   priceCents: number;
   nameAr: string | null;
+  imageUrl: string | null;
 };
 
 export function readArabicName(translations: unknown): string | null {
@@ -116,12 +117,42 @@ export async function getRestaurant(restaurantId: string) {
   return data as { id: number | string; name: string; phone: string | null } | null;
 }
 
+export async function getPopularItemNames(
+  restaurantId: string,
+  limit = 3
+): Promise<string[]> {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("orders")
+    .select("status, created_at, order_items (item_name, quantity)")
+    .eq("restaurant_id", restaurantId)
+    .neq("status", "cancelled")
+    .gte("created_at", since);
+
+  if (error) throw error;
+
+  const counts = new Map<string, number>();
+  for (const order of data || []) {
+    for (const item of (order as { order_items: { item_name: string; quantity: number }[] | null }).order_items || []) {
+      counts.set(item.item_name, (counts.get(item.item_name) || 0) + item.quantity);
+    }
+  }
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([name]) => name);
+}
+
 export async function getOrderableMenu(
   restaurantId: string
 ): Promise<PublicMenuItem[]> {
   const { data, error } = await getSupabaseAdmin()
     .from("menu_items")
-    .select("id, name, category, description, price, is_available, name_translations")
+    .select(
+      "id, name, category, description, price, is_available, name_translations, image_url"
+    )
     .eq("restaurant_id", restaurantId)
     .eq("is_confirmed", true)
     .order("category", { ascending: true })
@@ -143,5 +174,6 @@ export async function getOrderableMenu(
       description: item.description,
       priceCents: Math.round(Number(item.price) * 100),
       nameAr: readArabicName(item.name_translations),
+      imageUrl: typeof item.image_url === "string" && item.image_url.trim() ? item.image_url : null,
     }));
 }

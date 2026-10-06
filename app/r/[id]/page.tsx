@@ -3,6 +3,7 @@ import { OrderApp } from "../../../components/order/order-app";
 import {
   getCategoryTranslations,
   getOrderableMenu,
+  getPopularItemNames,
   getRestaurant,
   isValidRestaurantId,
   normalizeTable,
@@ -25,9 +26,10 @@ export default async function RestaurantOrderPage({
   const restaurant = await getRestaurant(id);
   if (!restaurant) notFound();
 
-  const [menu, categoryAr] = await Promise.all([
+  const [menu, categoryAr, popularItemNames] = await Promise.all([
     getOrderableMenu(id),
     getCategoryTranslations(id),
+    getPopularItemNames(id).catch(() => []),
   ]);
 
   return (
@@ -38,6 +40,7 @@ export default async function RestaurantOrderPage({
       table={normalizeTable(Array.isArray(table) ? table[0] : table)}
       menu={menu}
       categoryAr={categoryAr}
+      popularItemNames={popularItemNames}
     />
   );
 }

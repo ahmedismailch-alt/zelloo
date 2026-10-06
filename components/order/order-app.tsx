@@ -17,6 +17,21 @@ import { MenuList } from "./menu-list";
 
 const MAX_QUANTITY = 20;
 
+const DRINK_KEYWORDS = [
+  "getränk",
+  "getraenk",
+  "drink",
+  "boisson",
+  "bevand",
+  "beverage",
+  "مشروب",
+];
+
+function isDrinkCategory(category: string | null | undefined) {
+  const value = (category ?? "").toLowerCase();
+  return DRINK_KEYWORDS.some((keyword) => value.includes(keyword));
+}
+
 type Props = {
   restaurantId: string;
   restaurantName: string;
@@ -24,6 +39,7 @@ type Props = {
   table: string | null;
   menu: PublicMenuItem[];
   categoryAr: Record<string, string>;
+  popularItemNames?: string[];
 };
 
 export function OrderApp({
@@ -33,6 +49,7 @@ export function OrderApp({
   table,
   menu,
   categoryAr,
+  popularItemNames = [],
 }: Props) {
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [lang, setLang] = useState<OrderLang>("de");
@@ -64,6 +81,23 @@ export function OrderApp({
     [menu]
   );
 
+  const drinkItems = useMemo(
+    () => menu.filter((item) => isDrinkCategory(item.category)),
+    [menu]
+  );
+
+  const hasNonDrinkInCart = Object.keys(cart).some((id) => {
+    const item = menuById.get(id);
+    return item && !isDrinkCategory(item.category);
+  });
+
+  const hasDrinkInCart = Object.keys(cart).some((id) => {
+    const item = menuById.get(id);
+    return item && isDrinkCategory(item.category);
+  });
+
+  const showUpsell = drinkItems.length > 0 && hasNonDrinkInCart && !hasDrinkInCart;
+
   function setQuantity(id: string, quantity: number) {
     setCart((current) => {
       const next = { ...current };
@@ -74,6 +108,13 @@ export function OrderApp({
         next[id] = { quantity: clamped, note: current[id]?.note ?? null };
       }
       return next;
+    });
+  }
+
+  function setNote(id: string, note: string) {
+    setCart((current) => {
+      if (!current[id]) return current;
+      return { ...current, [id]: { ...current[id], note: note.trim() ? note : null } };
     });
   }
 
@@ -165,7 +206,37 @@ export function OrderApp({
             showArabic={lang === "ar"}
             categoryAr={categoryAr}
             onSetQuantity={setQuantity}
+            onSetNote={setNote}
+            popularItemNames={popularItemNames}
           />
+        )}
+
+        {showUpsell && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col gap-3">
+            <p className="font-bold" dir="auto">
+              {t.upsellTitle}
+            </p>
+            <ul className="flex gap-2 overflow-x-auto -mx-1 px-1" dir="ltr">
+              {drinkItems.map((item) => {
+                const label = lang === "ar" && item.nameAr ? item.nameAr : item.name;
+                return (
+                  <li key={item.id} className="shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(item.id, (cart[item.id]?.quantity ?? 0) + 1)}
+                      aria-label={t.add(label)}
+                      className="flex items-center gap-2 h-11 rounded-full border border-amber-300 bg-white pl-4 pr-3 text-sm font-bold whitespace-nowrap"
+                    >
+                      <span dir="auto">{label}</span>
+                      <span className="flex items-center justify-center size-6 rounded-full bg-black text-white text-base font-bold">
+                        +
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         )}
       </div>
 

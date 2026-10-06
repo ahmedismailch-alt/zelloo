@@ -32,8 +32,14 @@ export type OrderStrings = {
   menuUnavailableText: string;
   menuLabel: string;
   otherCategory: string;
+  searchPlaceholder: string;
+  allCategories: string;
+  searchNoResults: string;
   add: (name: string) => string;
   remove: (name: string) => string;
+  itemNotePlaceholder: string;
+  popularBadge: string;
+  upsellTitle: string;
   aiTitle: string;
   aiExample: string;
   aiLabel: string;
@@ -87,6 +93,11 @@ export type OrderStrings = {
   };
   orderNumber: (id: string, total: string) => string;
   anotherOrder: string;
+  rateTitle: string;
+  rateStar: (n: number) => string;
+  rateSubmit: string;
+  rateThanks: string;
+  rateError: string;
 };
 
 const de: OrderStrings = {
@@ -98,8 +109,14 @@ const de: OrderStrings = {
   menuUnavailableText: "Bitte bestellen Sie direkt beim Personal.",
   menuLabel: "Speisekarte",
   otherCategory: "Weitere",
+  searchPlaceholder: "Speisekarte durchsuchen",
+  allCategories: "Alle",
+  searchNoResults: "Keine Treffer. Bitte anders suchen.",
   add: (n) => `${n} hinzufügen`,
   remove: (n) => `${n} entfernen`,
+  itemNotePlaceholder: "Wunsch, z. B. ohne Zwiebeln",
+  popularBadge: "Beliebt",
+  upsellTitle: "Noch ein Getränk dazu?",
   aiTitle: "Einfach schreiben, was Sie möchten",
   aiExample: "Zum Beispiel: «2 Cappuccino und ein Gipfeli»",
   aiLabel: "Bestellung in eigenen Worten",
@@ -154,6 +171,11 @@ const de: OrderStrings = {
   },
   orderNumber: (id, t) => `Nr. #${id} · ${t} · Bezahlung an der Kasse`,
   anotherOrder: "Weitere Bestellung",
+  rateTitle: "Wie war Ihre Bestellung?",
+  rateStar: (n) => `${n} von 5 Sternen`,
+  rateSubmit: "Bewertung senden",
+  rateThanks: "Danke für Ihre Bewertung!",
+  rateError: "Bewertung konnte nicht gesendet werden.",
 };
 
 const fr: OrderStrings = {
@@ -165,8 +187,14 @@ const fr: OrderStrings = {
   menuUnavailableText: "Veuillez commander directement auprès du personnel.",
   menuLabel: "Carte",
   otherCategory: "Autres",
+  searchPlaceholder: "Rechercher dans la carte",
+  allCategories: "Tout",
+  searchNoResults: "Aucun résultat. Essayez une autre recherche.",
   add: (n) => `Ajouter ${n}`,
   remove: (n) => `Retirer ${n}`,
+  itemNotePlaceholder: "Souhait, p. ex. sans oignons",
+  popularBadge: "Populaire",
+  upsellTitle: "Une boisson en plus ?",
   aiTitle: "Écrivez simplement ce que vous voulez",
   aiExample: "Par exemple : «2 cappuccinos et un croissant»",
   aiLabel: "Commande avec vos propres mots",
@@ -221,6 +249,11 @@ const fr: OrderStrings = {
   },
   orderNumber: (id, t) => `N° #${id} · ${t} · Paiement à la caisse`,
   anotherOrder: "Nouvelle commande",
+  rateTitle: "Comment était votre commande?",
+  rateStar: (n) => `${n} sur 5 étoiles`,
+  rateSubmit: "Envoyer l'évaluation",
+  rateThanks: "Merci pour votre évaluation!",
+  rateError: "L'évaluation n'a pas pu être envoyée.",
 };
 
 const it: OrderStrings = {
@@ -232,8 +265,14 @@ const it: OrderStrings = {
   menuUnavailableText: "Si prega di ordinare direttamente al personale.",
   menuLabel: "Menù",
   otherCategory: "Altro",
+  searchPlaceholder: "Cerca nel menù",
+  allCategories: "Tutto",
+  searchNoResults: "Nessun risultato. Prova un'altra ricerca.",
   add: (n) => `Aggiungi ${n}`,
   remove: (n) => `Rimuovi ${n}`,
+  itemNotePlaceholder: "Richiesta, es. senza cipolle",
+  popularBadge: "Popolare",
+  upsellTitle: "Aggiungi una bevanda?",
   aiTitle: "Scrivi semplicemente cosa desideri",
   aiExample: "Per esempio: «2 cappuccini e un cornetto»",
   aiLabel: "Ordine con parole tue",
@@ -288,6 +327,11 @@ const it: OrderStrings = {
   },
   orderNumber: (id, t) => `N. #${id} · ${t} · Pagamento alla cassa`,
   anotherOrder: "Nuovo ordine",
+  rateTitle: "Com'è andato il tuo ordine?",
+  rateStar: (n) => `${n} su 5 stelle`,
+  rateSubmit: "Invia valutazione",
+  rateThanks: "Grazie per la tua valutazione!",
+  rateError: "Non è stato possibile inviare la valutazione.",
 };
 
 const en: OrderStrings = {
@@ -299,8 +343,14 @@ const en: OrderStrings = {
   menuUnavailableText: "Please order directly with the staff.",
   menuLabel: "Menu",
   otherCategory: "Other",
+  searchPlaceholder: "Search the menu",
+  allCategories: "All",
+  searchNoResults: "No matches. Try a different search.",
   add: (n) => `Add ${n}`,
   remove: (n) => `Remove ${n}`,
+  itemNotePlaceholder: "Request, e.g. no onions",
+  popularBadge: "Popular",
+  upsellTitle: "Add a drink?",
   aiTitle: "Just write what you'd like",
   aiExample: "For example: «2 cappuccinos and a croissant»",
   aiLabel: "Order in your own words",
@@ -355,19 +405,30 @@ const en: OrderStrings = {
   },
   orderNumber: (id, t) => `No. #${id} · ${t} · Pay at the counter`,
   anotherOrder: "New order",
+  rateTitle: "How was your order?",
+  rateStar: (n) => `${n} out of 5 stars`,
+  rateSubmit: "Send rating",
+  rateThanks: "Thanks for your rating!",
+  rateError: "Your rating could not be sent.",
 };
 
 const ar: OrderStrings = {
   languageLabel: "اللغة",
   table: (t) => `طاولة ${t}`,
-  payAtCounter: "الدفع عند الصندوق",
+  payAtCounter: "الدفع ع��د الصندوق",
   contactPhone: (phone) => `أسئلة؟ اتصل بنا: ${phone}`,
-  menuUnavailableTitle: "قائمة الطعام غير متوفرة بعد",
+  menuUnavailableTitle: "قائمة الطعام غي�� متوفرة بعد",
   menuUnavailableText: "يرجى الطلب مباشرة من الموظفين.",
   menuLabel: "قائمة الطعام",
   otherCategory: "أخرى",
+  searchPlaceholder: "ابحث في قائمة الطعام",
+  allCategories: "الكل",
+  searchNoResults: "لا توجد نتائج. جرّب بحثاً مختلفاً.",
   add: (n) => `إضافة ${n}`,
   remove: (n) => `إزالة ${n}`,
+  itemNotePlaceholder: "طلب خاص، مثلاً بدون بصل",
+  popularBadge: "الأكثر طلباً",
+  upsellTitle: "تحب تضيف مشروب؟",
   aiTitle: "اكتب ببساطة ما تريد",
   aiExample: "مثلاً: «٢ كابتشينو وكرواسون»",
   aiLabel: "اكتب طلبك بكلماتك",
@@ -378,13 +439,13 @@ const ar: OrderStrings = {
   aiAddedOne: (q, n) => `تمت إضافة ${q}× ${n} إلى السلة.`,
   aiNotFound: (l) => `غير موجود: ${l}`,
   aiNothing: "لم نجد أصنافاً مطابقة. جرّب كتابة الطلب بطريقة أخرى.",
-  aiError: "لم نتمكن من فهم الطلب.",
+  aiError: "لم نتمكن من فهم ��لطلب.",
   micStart: "اضغط وتكلّم",
   micStop: "إيقاف التسجيل",
   micListening: "جاري الاستماع...",
   micTranscribing: "جاري التحويل إلى نص...",
   micDenied: "لا يوجد إذن للميكروفون. يرجى كتابة طلبك.",
-  micUnsupported: "التسجيل الصوتي غير مدعوم هنا. يرجى كتابة طلبك.",
+  micUnsupported: "التسج��ل الصوتي غير مدعوم هنا. يرجى كتابة طلبك.",
   micError: "لم نتمكن من فهم الصوت. يرجى المحاولة مرة أخرى.",
   didYouMean: "هل تقصد:",
   viewCart: (c) => `عرض السلة (${c})`,
@@ -421,6 +482,11 @@ const ar: OrderStrings = {
   },
   orderNumber: (id, t) => `رقم #${id} · ${t} · الدفع عند الصندوق`,
   anotherOrder: "طلب جديد",
+  rateTitle: "كيف كان طلبك؟",
+  rateStar: (n) => `${n} من 5 نجوم`,
+  rateSubmit: "إرسال التقييم",
+  rateThanks: "شكراً على تقييمك!",
+  rateError: "لم نتمكن من إرسال التقييم.",
 };
 
 export const ORDER_STRINGS: Record<OrderLang, OrderStrings> = { de, fr, it, en, ar };
