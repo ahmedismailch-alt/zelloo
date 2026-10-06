@@ -40,6 +40,15 @@ type AdminMessage = {
   read_at: string | null;
 };
 
+type SupportMessage = {
+  id: string;
+  restaurantId: number | string;
+  restaurantName: string;
+  message: string;
+  createdAt: string;
+  readAt: string | null;
+};
+
 const statusLabel: Record<string, { label: string; className: string }> = {
   active: { label: "Aktiv", className: "bg-green-100 text-green-800" },
   trialing: { label: "Testphase", className: "bg-blue-100 text-blue-800" },
@@ -84,6 +93,10 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  const [supportMessages, setSupportMessages] = useState<SupportMessage[]>([]);
+  const [supportLoading, setSupportLoading] = useState(true);
+  const [supportToken, setSupportToken] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -106,7 +119,8 @@ export default function AdminPage() {
         setChecking(false);
 
         const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData.session?.access_token;
+        const token = sessionData.session?.access_token || null;
+        setSupportToken(token);
 
         const response = await fetch("/api/admin/restaurants", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -122,13 +136,24 @@ export default function AdminPage() {
 
         setSummary(body.summary);
         setRestaurants(body.restaurants || []);
+
+        const supportResponse = await fetch("/api/admin/support-messages", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const supportBody = await supportResponse.json();
+        if (!cancelled && supportResponse.ok) {
+          setSupportMessages(supportBody.messages || []);
+        }
       } catch (err) {
         console.error(err);
         if (!cancelled) {
           setError("Daten konnten nicht geladen werden.");
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setSupportLoading(false);
+        }
       }
     }
 
@@ -138,6 +163,27 @@ export default function AdminPage() {
       cancelled = true;
     };
   }, [router]);
+
+  async function markSupportMessageRead(messageId: string) {
+    setSupportMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId ? { ...m, readAt: new Date().toISOString() } : m
+      )
+    );
+
+    try {
+      await fetch("/api/admin/support-messages", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(supportToken ? { Authorization: `Bearer ${supportToken}` } : {}),
+        },
+        body: JSON.stringify({ messageId }),
+      });
+    } catch (err) {
+      console.error("Zelloo support message read error:", err);
+    }
+  }
 
   if (checking) {
     return (
@@ -216,6 +262,50 @@ export default function AdminPage() {
           <p className="text-gray-400">Wird geladen...</p>
         ) : (
           <>
+            {!supportLoading && supportMessages.length > 0 && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden mb-6">
+                <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
+                  <h2 className="font-bold">Problemmeldungen</h2>
+                  {supportMessages.some((m) => !m.readAt) && (
+                    <span className="bg-orange-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
+                      {supportMessages.filter((m) => !m.readAt).length} neu
+                    </span>
+                  )}
+                </div>
+                <div className="divide-y divide-zinc-800">
+                  {supportMessages.map((m) => (
+                    <div
+                      key={m.id}
+                      className={`p-4 flex flex-col gap-2 ${
+                        m.readAt ? "opacity-60" : ""
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-sm">
+                          {m.restaurantName}
+                        </p>
+                        <p className="text-xs text-gray-500 shrink-0">
+                          {formatDateTime(m.createdAt)}
+                        </p>
+                      </div>
+                      <p className="text-sm text-gray-300 whitespace-pre-wrap">
+                        {m.message}
+                      </p>
+                      {!m.readAt && (
+                        <button
+                          type="button"
+                          onClick={() => markSupportMessageRead(m.id)}
+                          className="self-start text-xs font-semibold text-orange-500"
+                        >
+                          Als erledigt markieren
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
               {cards.map((card) => (
                 <div

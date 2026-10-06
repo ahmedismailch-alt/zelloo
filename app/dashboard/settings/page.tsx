@@ -28,6 +28,11 @@ export default function SettingsPage() {
   const [loyaltySaved, setLoyaltySaved] = useState(false);
   const [loyaltyUnavailable, setLoyaltyUnavailable] = useState(false);
 
+  const [report, setReport] = useState("");
+  const [reportSending, setReportSending] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportSent, setReportSent] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -154,6 +159,51 @@ export default function SettingsPage() {
     }
 
     setLoyaltySaved(true);
+  }
+
+  async function handleReportSubmit(e: FormEvent) {
+    e.preventDefault();
+
+    setReportError(null);
+    setReportSent(false);
+
+    const trimmed = report.trim();
+    if (!trimmed) {
+      setReportError("Bitte beschreiben Sie das Problem.");
+      return;
+    }
+
+    setReportSending(true);
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      setReportSending(false);
+      setReportError("Nicht angemeldet.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/restaurant-messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ report: trimmed }),
+      });
+
+      if (!res.ok) throw new Error("failed");
+
+      setReport("");
+      setReportSent(true);
+    } catch {
+      setReportError("Senden fehlgeschlagen. Bitte erneut versuchen.");
+    } finally {
+      setReportSending(false);
+    }
   }
 
   async function handlePasswordChange(e: FormEvent) {
@@ -362,6 +412,45 @@ export default function SettingsPage() {
               className="min-h-12 rounded-xl border border-gray-300 bg-white font-black text-base disabled:opacity-60"
             >
               {passwordSaving ? "Wird geändert..." : "Passwort ändern"}
+            </button>
+          </form>
+        )}
+
+        {!loading && (
+          <form
+            onSubmit={handleReportSubmit}
+            className="bg-white border rounded-2xl p-4 flex flex-col gap-3 mt-4"
+          >
+            <h2 className="text-base font-bold">Problem melden</h2>
+            <p className="text-xs text-gray-500">
+              Gibt es ein Problem mit Zelloo? Beschreiben Sie es kurz — wir
+              melden uns und beheben es für Sie.
+            </p>
+
+            <textarea
+              value={report}
+              onChange={(e) => setReport(e.target.value)}
+              placeholder="z. B. Bestellungen werden nicht angezeigt..."
+              rows={4}
+              maxLength={1000}
+              className="rounded-xl border border-gray-300 px-4 py-3 text-base resize-none"
+            />
+
+            {reportError && (
+              <p className="text-sm text-red-600">{reportError}</p>
+            )}
+            {reportSent && !reportError && (
+              <p className="text-sm text-green-600">
+                Gesendet. Wir melden uns bald bei Ihnen.
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={reportSending}
+              className="min-h-12 rounded-xl border border-gray-300 bg-white font-black text-base disabled:opacity-60"
+            >
+              {reportSending ? "Wird gesendet..." : "An Zelloo senden"}
             </button>
           </form>
         )}

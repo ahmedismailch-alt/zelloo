@@ -59,9 +59,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null);
     const messageId = typeof body?.messageId === "string" ? body.messageId : null;
-    if (!messageId) {
-      return NextResponse.json({ error: "Ungültige Anfrage." }, { status: 400 });
-    }
+    const report = typeof body?.report === "string" ? body.report.trim().slice(0, 1000) : null;
 
     const supabase = getSupabaseAdmin();
 
@@ -75,6 +73,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Kein Restaurant gefunden." }, { status: 404 });
     }
 
+    // Restaurant owner reporting an issue to Zelloo support.
+    if (report) {
+      const { error } = await supabase
+        .from("admin_messages")
+        .insert({ restaurant_id: restaurant.id, message: report, sender: "restaurant" });
+
+      if (error) throw error;
+
+      return NextResponse.json({ ok: true });
+    }
+
+    // Restaurant owner marking an admin-sent message as read.
+    if (!messageId) {
+      return NextResponse.json({ error: "Ungültige Anfrage." }, { status: 400 });
+    }
+
     const { error } = await supabase
       .from("admin_messages")
       .update({ read_at: new Date().toISOString() })
@@ -85,7 +99,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Zelloo restaurant messages read error:", error);
-    return NextResponse.json({ error: "Konnte nicht als gelesen markiert werden." }, { status: 500 });
+    console.error("Zelloo restaurant messages error:", error);
+    return NextResponse.json({ error: "Anfrage fehlgeschlagen." }, { status: 500 });
   }
 }
