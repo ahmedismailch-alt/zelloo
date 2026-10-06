@@ -106,15 +106,59 @@ export function normalizeTable(value: unknown): string | null {
   return /^[A-Za-z0-9-]{1,10}$/.test(trimmed) ? trimmed : null;
 }
 
+export type RestaurantRecord = {
+  id: number | string;
+  name: string;
+  phone: string | null;
+  loyalty_enabled: boolean | null;
+  loyalty_target: number | null;
+  loyalty_reward: string | null;
+};
+
+// Falls back to loyalty-disabled if the loyalty_* columns do not exist yet.
 export async function getRestaurant(restaurantId: string) {
   const { data, error } = await getSupabaseAdmin()
     .from("restaurants")
-    .select("id, name, phone")
+    .select("id, name, phone, loyalty_enabled, loyalty_target, loyalty_reward")
     .eq("id", restaurantId)
     .maybeSingle();
 
+  if (error) {
+    const { data: fallback, error: fallbackError } = await getSupabaseAdmin()
+      .from("restaurants")
+      .select("id, name, phone")
+      .eq("id", restaurantId)
+      .maybeSingle();
+    if (fallbackError) throw fallbackError;
+    return fallback
+      ? {
+          ...fallback,
+          loyalty_enabled: false,
+          loyalty_target: null,
+          loyalty_reward: null,
+        }
+      : null;
+  }
+  return data as RestaurantRecord | null;
+}
+
+// Counts this phone's non-cancelled orders at this restaurant (loyalty progress).
+export async function getLoyaltyOrderCount(
+  restaurantId: string,
+  phone: string
+): Promise<number> {
+  const normalized = phone.trim();
+  if (!normalized) return 0;
+
+  const { count, error } = await getSupabaseAdmin()
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("restaurant_id", restaurantId)
+    .eq("customer_phone", normalized)
+    .neq("status", "cancelled");
+
   if (error) throw error;
-  return data as { id: number | string; name: string; phone: string | null } | null;
+  return count ?? 0;
 }
 
 export async function getPopularItemNames(
