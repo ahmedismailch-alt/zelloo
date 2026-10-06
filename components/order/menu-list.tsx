@@ -14,9 +14,20 @@ type Props = {
   categoryAr: Record<string, string>;
   onSetQuantity: (id: string, quantity: number) => void;
   onSetNote: (id: string, note: string) => void;
+  popularItemNames?: string[];
 };
 
-export function MenuList({ menu, cart, t, showArabic, categoryAr, onSetQuantity, onSetNote }: Props) {
+export function MenuList({
+  menu,
+  cart,
+  t,
+  showArabic,
+  categoryAr,
+  onSetQuantity,
+  onSetNote,
+  popularItemNames = [],
+}: Props) {
+  const popularSet = useMemo(() => new Set(popularItemNames), [popularItemNames]);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -163,6 +174,11 @@ export function MenuList({ menu, cart, t, showArabic, categoryAr, onSetQuantity,
                       />
                     ) : null}
                     <div className="min-w-0 flex flex-col gap-1 flex-1" dir="auto">
+                      {popularSet.has(item.name) && (
+                        <span className="self-start inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                          {t.popularBadge}
+                        </span>
+                      )}
                       {showArabic && item.nameAr ? (
                         <>
                           <p className="font-bold break-words" dir="rtl" lang="ar">
