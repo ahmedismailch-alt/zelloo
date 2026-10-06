@@ -34,25 +34,41 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-2">
           <div className="relative w-[300px]">
-            <div className="absolute -inset-6 bg-[#c41e24]/10 rounded-[48px] blur-2xl -z-10" />
-            <div className="w-[300px] bg-black p-2.5 rounded-[40px] shadow-2xl">
-              <div className="bg-white rounded-[32px] overflow-hidden">
-                <div className="flex items-center justify-between px-5 pt-3 pb-1 text-[11px] font-semibold text-black">
+            <div className="absolute -inset-8 bg-[#c41e24]/10 rounded-[56px] blur-3xl -z-10" />
+
+            {/* Floating live notification chip */}
+            <div className="absolute -left-8 top-24 z-20 bg-white rounded-xl shadow-xl border border-black/5 px-3.5 py-2.5 flex items-center gap-2.5 animate-bounce [animation-duration:2.5s]">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c41e24] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#c41e24]" />
+              </span>
+              <div className="leading-tight">
+                <div className="text-[10px] font-bold">Neue Bestellung</div>
+                <div className="text-[9px] text-gray-400">WhatsApp · jetzt</div>
+              </div>
+            </div>
+
+            <div className="w-[300px] bg-black p-2.5 rounded-[44px] shadow-2xl ring-1 ring-white/10">
+              <div className="bg-white rounded-[36px] overflow-hidden relative">
+                <div className="flex items-center justify-between px-6 pt-3.5 pb-1 text-[11px] font-semibold text-black">
                   <span>9:41</span>
-                  <div className="w-20 h-5 bg-black rounded-full" />
+                  <div className="absolute left-1/2 -translate-x-1/2 top-2 w-24 h-6 bg-black rounded-full" />
                   <span>100%</span>
                 </div>
                 <div className="bg-[#c41e24] text-white px-4 py-3.5 flex items-center justify-between">
-                  <span className="font-bold">Bestellungen</span>
+                  <div>
+                    <span className="font-bold">Bestellungen</span>
+                    <div className="text-[11px] text-white/70 -mt-0.5">Heute · 24 Bestellungen</div>
+                  </div>
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
                   </span>
                 </div>
-                <div className="p-3 bg-[#f7f7f7] space-y-2.5 min-h-[260px]">
-                  <div className="bg-white p-4 rounded-xl shadow-sm border border-black/5">
+                <div className="p-3 bg-[#f7f7f7] space-y-2.5 min-h-[280px]">
+                  <div className="bg-white p-4 rounded-xl shadow-md border border-[#c41e24]/20 ring-1 ring-[#c41e24]/10">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Neu</span>
                       <span className="text-[11px] text-gray-400">vor 12 Sek.</span>
@@ -61,13 +77,21 @@ export default function Page() {
                     <div className="text-sm text-gray-600">2x Margherita, 1x Caesar</div>
                     <div className="text-sm font-bold mt-1">CHF 34.50</div>
                   </div>
-                  <div className="bg-white p-4 rounded-xl shadow-sm border border-black/5 opacity-70">
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-black/5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">In Arbeit</span>
+                      <span className="text-[11px] text-gray-400">vor 3 Min.</span>
+                    </div>
+                    <div className="font-black mt-1.5">Abholung · #1023</div>
+                    <div className="text-sm text-gray-600">1x Prosciutto, 2x Cola</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-black/5 opacity-60">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Fertig</span>
                       <span className="text-[11px] text-gray-400">vor 6 Min.</span>
                     </div>
-                    <div className="font-black mt-1.5">Abholung · #1023</div>
-                    <div className="text-sm text-gray-600">1x Prosciutto, 2x Cola</div>
+                    <div className="font-black mt-1.5">Tisch 2 · #1022</div>
+                    <div className="text-sm text-gray-600">3x Pizza Calzone</div>
                   </div>
                 </div>
               </div>
