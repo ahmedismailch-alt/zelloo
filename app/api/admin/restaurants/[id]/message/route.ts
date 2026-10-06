@@ -3,6 +3,39 @@ import { isValidRestaurantId, requireAdmin } from "../../../../../../lib/supabas
 
 export const runtime = "nodejs";
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  if (!isValidRestaurantId(id)) {
+    return NextResponse.json({ error: "Ungültiges Restaurant." }, { status: 400 });
+  }
+
+  const auth = await requireAdmin(request);
+  if (!auth.ok) return auth.response;
+  const { supabase } = auth;
+
+  try {
+    const { data, error } = await supabase
+      .from("admin_messages")
+      .select("id, message, created_at, read_at")
+      .eq("restaurant_id", id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (error) throw error;
+
+    return NextResponse.json({ messages: data || [] });
+  } catch (error) {
+    console.error("Zelloo admin message log error:", error);
+    return NextResponse.json(
+      { error: "Verlauf konnte nicht geladen werden." },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
