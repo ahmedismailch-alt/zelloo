@@ -149,7 +149,17 @@ export function MenuList({ menu, cart, t, showArabic, categoryAr, onSetQuantity 
                   key={item.id}
                   className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-3"
                 >
-                  <div className="min-w-0 flex flex-col gap-1" dir="auto">
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl || "/placeholder.svg"}
+                      alt=""
+                      className="size-16 shrink-0 rounded-xl object-cover border"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : null}
+                  <div className="min-w-0 flex flex-col gap-1 flex-1" dir="auto">
                     {showArabic && item.nameAr ? (
                       <>
                         <p className="font-bold break-words" dir="rtl" lang="ar">
