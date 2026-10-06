@@ -37,6 +37,7 @@ export type OrderStrings = {
   searchNoResults: string;
   add: (name: string) => string;
   remove: (name: string) => string;
+  itemNotePlaceholder: string;
   aiTitle: string;
   aiExample: string;
   aiLabel: string;
@@ -106,6 +107,7 @@ const de: OrderStrings = {
   searchNoResults: "Keine Treffer. Bitte anders suchen.",
   add: (n) => `${n} hinzufügen`,
   remove: (n) => `${n} entfernen`,
+  itemNotePlaceholder: "Wunsch, z. B. ohne Zwiebeln",
   aiTitle: "Einfach schreiben, was Sie möchten",
   aiExample: "Zum Beispiel: «2 Cappuccino und ein Gipfeli»",
   aiLabel: "Bestellung in eigenen Worten",
@@ -176,6 +178,7 @@ const fr: OrderStrings = {
   searchNoResults: "Aucun résultat. Essayez une autre recherche.",
   add: (n) => `Ajouter ${n}`,
   remove: (n) => `Retirer ${n}`,
+  itemNotePlaceholder: "Souhait, p. ex. sans oignons",
   aiTitle: "Écrivez simplement ce que vous voulez",
   aiExample: "Par exemple : «2 cappuccinos et un croissant»",
   aiLabel: "Commande avec vos propres mots",
@@ -246,6 +249,7 @@ const it: OrderStrings = {
   searchNoResults: "Nessun risultato. Prova un'altra ricerca.",
   add: (n) => `Aggiungi ${n}`,
   remove: (n) => `Rimuovi ${n}`,
+  itemNotePlaceholder: "Richiesta, es. senza cipolle",
   aiTitle: "Scrivi semplicemente cosa desideri",
   aiExample: "Per esempio: «2 cappuccini e un cornetto»",
   aiLabel: "Ordine con parole tue",
@@ -316,6 +320,7 @@ const en: OrderStrings = {
   searchNoResults: "No matches. Try a different search.",
   add: (n) => `Add ${n}`,
   remove: (n) => `Remove ${n}`,
+  itemNotePlaceholder: "Request, e.g. no onions",
   aiTitle: "Just write what you'd like",
   aiExample: "For example: «2 cappuccinos and a croissant»",
   aiLabel: "Order in your own words",
@@ -386,6 +391,7 @@ const ar: OrderStrings = {
   searchNoResults: "لا توجد نتائج. جرّب بحثاً مختلفاً.",
   add: (n) => `إضافة ${n}`,
   remove: (n) => `إزالة ${n}`,
+  itemNotePlaceholder: "طلب خاص، مثلاً بدون بصل",
   aiTitle: "اكتب ببساطة ما تريد",
   aiExample: "مثلاً: «٢ كابتشينو وكرواسون»",
   aiLabel: "اكتب طلبك بكلماتك",

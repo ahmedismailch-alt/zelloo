@@ -77,6 +77,13 @@ export function OrderApp({
     });
   }
 
+  function setNote(id: string, note: string) {
+    setCart((current) => {
+      if (!current[id]) return current;
+      return { ...current, [id]: { ...current[id], note: note.trim() ? note : null } };
+    });
+  }
+
   function addParsed(items: ParsedItem[]) {
     setCart((current) => {
       const next = { ...current };
@@ -165,6 +172,7 @@ export function OrderApp({
             showArabic={lang === "ar"}
             categoryAr={categoryAr}
             onSetQuantity={setQuantity}
+            onSetNote={setNote}
           />
         )}
       </div>

@@ -13,9 +13,10 @@ type Props = {
   showArabic: boolean;
   categoryAr: Record<string, string>;
   onSetQuantity: (id: string, quantity: number) => void;
+  onSetNote: (id: string, note: string) => void;
 };
 
-export function MenuList({ menu, cart, t, showArabic, categoryAr, onSetQuantity }: Props) {
+export function MenuList({ menu, cart, t, showArabic, categoryAr, onSetQuantity, onSetNote }: Props) {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -144,78 +145,93 @@ export function MenuList({ menu, cart, t, showArabic, categoryAr, onSetQuantity 
             {items.map((item) => {
               const quantity = cart[item.id]?.quantity ?? 0;
               const label = showArabic && item.nameAr ? item.nameAr : item.name;
+              const note = cart[item.id]?.note ?? "";
               return (
                 <li
                   key={item.id}
-                  className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-3"
+                  className="bg-white border rounded-2xl p-4 flex flex-col gap-3"
                 >
-                  {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl || "/placeholder.svg"}
-                      alt=""
-                      className="size-16 shrink-0 rounded-xl object-cover border"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                  ) : null}
-                  <div className="min-w-0 flex flex-col gap-1 flex-1" dir="auto">
-                    {showArabic && item.nameAr ? (
-                      <>
-                        <p className="font-bold break-words" dir="rtl" lang="ar">
-                          {item.nameAr}
+                  <div className="flex items-center justify-between gap-3">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl || "/placeholder.svg"}
+                        alt=""
+                        className="size-16 shrink-0 rounded-xl object-cover border"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : null}
+                    <div className="min-w-0 flex flex-col gap-1 flex-1" dir="auto">
+                      {showArabic && item.nameAr ? (
+                        <>
+                          <p className="font-bold break-words" dir="rtl" lang="ar">
+                            {item.nameAr}
+                          </p>
+                          <p className="text-xs text-gray-400 break-words" dir="ltr" lang="de">
+                            {item.name}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="font-bold break-words" dir="auto">{item.name}</p>
+                      )}
+                      {item.description && (
+                        <p className="text-sm text-gray-500 leading-relaxed" dir="auto">
+                          {item.description}
                         </p>
-                        <p className="text-xs text-gray-400 break-words" dir="ltr" lang="de">
-                          {item.name}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="font-bold break-words" dir="auto">{item.name}</p>
-                    )}
-                    {item.description && (
-                      <p className="text-sm text-gray-500 leading-relaxed" dir="auto">
-                        {item.description}
+                      )}
+                      <p className="text-sm font-semibold" dir="ltr">
+                        {formatChf(item.priceCents)}
                       </p>
-                    )}
-                    <p className="text-sm font-semibold" dir="ltr">
-                      {formatChf(item.priceCents)}
-                    </p>
-                  </div>
+                    </div>
 
-                  {quantity === 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => onSetQuantity(item.id, 1)}
-                      aria-label={t.add(label)}
-                      className="shrink-0 size-11 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center"
-                    >
-                      +
-                    </button>
-                  ) : (
-                    <div
-                      dir="ltr"
-                      className="shrink-0 flex items-center gap-1 bg-orange-500 rounded-full p-1"
-                    >
+                    {quantity === 0 ? (
                       <button
                         type="button"
-                        onClick={() => onSetQuantity(item.id, quantity - 1)}
-                        aria-label={t.remove(label)}
-                        className="size-11 rounded-full bg-black/10 text-xl font-bold flex items-center justify-center"
-                      >
-                        {"−"}
-                      </button>
-                      <span className="w-6 text-center font-black" aria-live="polite">
-                        {quantity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => onSetQuantity(item.id, quantity + 1)}
+                        onClick={() => onSetQuantity(item.id, 1)}
                         aria-label={t.add(label)}
-                        className="size-11 rounded-full bg-black/10 text-xl font-bold flex items-center justify-center"
+                        className="shrink-0 size-11 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center"
                       >
                         +
                       </button>
-                    </div>
+                    ) : (
+                      <div
+                        dir="ltr"
+                        className="shrink-0 flex items-center gap-1 bg-orange-500 rounded-full p-1"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => onSetQuantity(item.id, quantity - 1)}
+                          aria-label={t.remove(label)}
+                          className="size-11 rounded-full bg-black/10 text-xl font-bold flex items-center justify-center"
+                        >
+                          {"−"}
+                        </button>
+                        <span className="w-6 text-center font-black" aria-live="polite">
+                          {quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onSetQuantity(item.id, quantity + 1)}
+                          aria-label={t.add(label)}
+                          className="size-11 rounded-full bg-black/10 text-xl font-bold flex items-center justify-center"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {quantity > 0 && (
+                    <input
+                      type="text"
+                      value={note}
+                      onChange={(event) => onSetNote(item.id, event.target.value)}
+                      placeholder={t.itemNotePlaceholder}
+                      maxLength={120}
+                      dir="auto"
+                      className="w-full h-10 rounded-xl border bg-gray-50 px-3 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
                   )}
                 </li>
               );
