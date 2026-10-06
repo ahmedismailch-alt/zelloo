@@ -117,6 +117,34 @@ export async function getRestaurant(restaurantId: string) {
   return data as { id: number | string; name: string; phone: string | null } | null;
 }
 
+export async function getPopularItemNames(
+  restaurantId: string,
+  limit = 3
+): Promise<string[]> {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("orders")
+    .select("status, created_at, order_items (item_name, quantity)")
+    .eq("restaurant_id", restaurantId)
+    .neq("status", "cancelled")
+    .gte("created_at", since);
+
+  if (error) throw error;
+
+  const counts = new Map<string, number>();
+  for (const order of data || []) {
+    for (const item of (order as { order_items: { item_name: string; quantity: number }[] | null }).order_items || []) {
+      counts.set(item.item_name, (counts.get(item.item_name) || 0) + item.quantity);
+    }
+  }
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([name]) => name);
+}
+
 export async function getOrderableMenu(
   restaurantId: string
 ): Promise<PublicMenuItem[]> {

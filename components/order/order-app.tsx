@@ -24,6 +24,7 @@ type Props = {
   table: string | null;
   menu: PublicMenuItem[];
   categoryAr: Record<string, string>;
+  popularItemNames?: string[];
 };
 
 export function OrderApp({
@@ -33,6 +34,7 @@ export function OrderApp({
   table,
   menu,
   categoryAr,
+  popularItemNames = [],
 }: Props) {
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [lang, setLang] = useState<OrderLang>("de");
@@ -173,6 +175,7 @@ export function OrderApp({
             categoryAr={categoryAr}
             onSetQuantity={setQuantity}
             onSetNote={setNote}
+            popularItemNames={popularItemNames}
           />
         )}
       </div>

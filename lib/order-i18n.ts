@@ -38,6 +38,7 @@ export type OrderStrings = {
   add: (name: string) => string;
   remove: (name: string) => string;
   itemNotePlaceholder: string;
+  popularBadge: string;
   aiTitle: string;
   aiExample: string;
   aiLabel: string;
@@ -108,6 +109,7 @@ const de: OrderStrings = {
   add: (n) => `${n} hinzufügen`,
   remove: (n) => `${n} entfernen`,
   itemNotePlaceholder: "Wunsch, z. B. ohne Zwiebeln",
+  popularBadge: "Beliebt",
   aiTitle: "Einfach schreiben, was Sie möchten",
   aiExample: "Zum Beispiel: «2 Cappuccino und ein Gipfeli»",
   aiLabel: "Bestellung in eigenen Worten",
@@ -179,6 +181,7 @@ const fr: OrderStrings = {
   add: (n) => `Ajouter ${n}`,
   remove: (n) => `Retirer ${n}`,
   itemNotePlaceholder: "Souhait, p. ex. sans oignons",
+  popularBadge: "Populaire",
   aiTitle: "Écrivez simplement ce que vous voulez",
   aiExample: "Par exemple : «2 cappuccinos et un croissant»",
   aiLabel: "Commande avec vos propres mots",
@@ -382,7 +385,7 @@ const ar: OrderStrings = {
   table: (t) => `طاولة ${t}`,
   payAtCounter: "الدفع عند الصندوق",
   contactPhone: (phone) => `أسئلة؟ اتصل بنا: ${phone}`,
-  menuUnavailableTitle: "قائمة الطعام غير متوفرة بعد",
+  menuUnavailableTitle: "قائمة الطعام غي�� متوفرة بعد",
   menuUnavailableText: "يرجى الطلب مباشرة من الموظفين.",
   menuLabel: "قائمة الطعام",
   otherCategory: "أخرى",
