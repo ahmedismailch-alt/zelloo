@@ -39,6 +39,7 @@ export type OrderStrings = {
   remove: (name: string) => string;
   itemNotePlaceholder: string;
   popularBadge: string;
+  upsellTitle: string;
   aiTitle: string;
   aiExample: string;
   aiLabel: string;
@@ -110,6 +111,7 @@ const de: OrderStrings = {
   remove: (n) => `${n} entfernen`,
   itemNotePlaceholder: "Wunsch, z. B. ohne Zwiebeln",
   popularBadge: "Beliebt",
+  upsellTitle: "Noch ein Getränk dazu?",
   aiTitle: "Einfach schreiben, was Sie möchten",
   aiExample: "Zum Beispiel: «2 Cappuccino und ein Gipfeli»",
   aiLabel: "Bestellung in eigenen Worten",
@@ -182,6 +184,7 @@ const fr: OrderStrings = {
   remove: (n) => `Retirer ${n}`,
   itemNotePlaceholder: "Souhait, p. ex. sans oignons",
   popularBadge: "Populaire",
+  upsellTitle: "Une boisson en plus ?",
   aiTitle: "Écrivez simplement ce que vous voulez",
   aiExample: "Par exemple : «2 cappuccinos et un croissant»",
   aiLabel: "Commande avec vos propres mots",
@@ -254,6 +257,7 @@ const it: OrderStrings = {
   remove: (n) => `Rimuovi ${n}`,
   itemNotePlaceholder: "Richiesta, es. senza cipolle",
   popularBadge: "Popolare",
+  upsellTitle: "Aggiungi una bevanda?",
   aiTitle: "Scrivi semplicemente cosa desideri",
   aiExample: "Per esempio: «2 cappuccini e un cornetto»",
   aiLabel: "Ordine con parole tue",
@@ -326,6 +330,7 @@ const en: OrderStrings = {
   remove: (n) => `Remove ${n}`,
   itemNotePlaceholder: "Request, e.g. no onions",
   popularBadge: "Popular",
+  upsellTitle: "Add a drink?",
   aiTitle: "Just write what you'd like",
   aiExample: "For example: «2 cappuccinos and a croissant»",
   aiLabel: "Order in your own words",
@@ -385,7 +390,7 @@ const en: OrderStrings = {
 const ar: OrderStrings = {
   languageLabel: "اللغة",
   table: (t) => `طاولة ${t}`,
-  payAtCounter: "الدفع عند الصندوق",
+  payAtCounter: "الدفع ع��د الصندوق",
   contactPhone: (phone) => `أسئلة؟ اتصل بنا: ${phone}`,
   menuUnavailableTitle: "قائمة الطعام غي�� متوفرة بعد",
   menuUnavailableText: "يرجى الطلب مباشرة من الموظفين.",
@@ -398,6 +403,7 @@ const ar: OrderStrings = {
   remove: (n) => `إزالة ${n}`,
   itemNotePlaceholder: "طلب خاص، مثلاً بدون بصل",
   popularBadge: "الأكثر طلباً",
+  upsellTitle: "تحب تضيف مشروب؟",
   aiTitle: "اكتب ببساطة ما تريد",
   aiExample: "مثلاً: «٢ كابتشينو وكرواسون»",
   aiLabel: "اكتب طلبك بكلماتك",
