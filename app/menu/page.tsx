@@ -9,6 +9,7 @@ type MenuItem = {
   id: string;
   restaurant_id: number;
   category: string | null;
+  subcategory: string | null;
   name: string;
   description: string | null;
   price: number | null;
@@ -18,6 +19,19 @@ type MenuItem = {
   name_translations: Record<string, string> | null;
   image_url: string | null;
 };
+
+const SUBCATEGORY_SUGGESTIONS: Record<string, string[]> = {
+  getränke: ["Warme Getränke", "Kalte Getränke", "Alkoholfrei", "Alkoholisch"],
+  hauptgerichte: ["Fleisch", "Vegetarisch", "Vegan", "Fisch"],
+  vorspeisen: ["Kalt", "Warm"],
+  desserts: ["Kalt", "Warm"],
+  snacks: ["Herzhaft", "Süss"],
+};
+
+function getSubcategorySuggestions(categoryValue: string): string[] {
+  const key = categoryValue.trim().toLowerCase();
+  return SUBCATEGORY_SUGGESTIONS[key] || [];
+}
 
 function isValidImageUrl(value: string): boolean {
   try {
@@ -79,6 +93,7 @@ export default function MenuPage() {
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
+  const [subcategory, setSubcategory] = useState("");
   const [price, setPrice] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -86,6 +101,7 @@ export default function MenuPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState("");
+  const [editSubcategory, setEditSubcategory] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editArabic, setEditArabic] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
@@ -575,6 +591,7 @@ export default function MenuPage() {
         restaurant_id: restaurantId,
         name: name.trim(),
         category: category.trim() || null,
+        subcategory: subcategory.trim() || null,
         price: parsedPrice,
         currency: "CHF",
         is_available: true,
@@ -594,6 +611,7 @@ export default function MenuPage() {
 
     setName("");
     setCategory("");
+    setSubcategory("");
     setPrice("");
     setImageUrl("");
 
@@ -606,6 +624,7 @@ export default function MenuPage() {
     setEditingId(item.id);
     setEditName(item.name);
     setEditCategory(item.category || "");
+    setEditSubcategory(item.subcategory || "");
     setEditPrice(item.price === null ? "" : String(item.price));
     setEditArabic(arabicNameOf(item));
     setEditImageUrl(item.image_url || "");
@@ -616,6 +635,7 @@ export default function MenuPage() {
     setEditingId(null);
     setEditName("");
     setEditCategory("");
+    setEditSubcategory("");
     setEditPrice("");
     setEditArabic("");
     setEditImageUrl("");
@@ -666,6 +686,7 @@ export default function MenuPage() {
       .update({
         name: editName.trim(),
         category: editCategory.trim() || null,
+        subcategory: editSubcategory.trim() || null,
         price: parsedPrice,
         is_confirmed: nameChanged ? false : item.is_confirmed,
         name_translations: nextTranslations,
@@ -1154,6 +1175,38 @@ export default function MenuPage() {
                 ))}
               </div>
             </div>
+
+            {getSubcategorySuggestions(category).length > 0 && (
+              <div>
+                <input
+                  value={subcategory}
+                  onChange={(e) => setSubcategory(e.target.value)}
+                  placeholder="Unterkategorie, z.B. Warme Getränke (optional)"
+                  className="w-full border rounded-xl px-4 py-3"
+                />
+
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {getSubcategorySuggestions(category).map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() =>
+                        setSubcategory((current) =>
+                          current === suggestion ? "" : suggestion
+                        )
+                      }
+                      className={`inline-flex items-center justify-center min-h-11 px-4 rounded-full border text-sm font-semibold transition-colors ${
+                        subcategory === suggestion
+                          ? "bg-orange-500 border-orange-500 text-black"
+                          : "bg-white border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <input
               value={price}
