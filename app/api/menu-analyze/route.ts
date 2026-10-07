@@ -3,6 +3,121 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+const STANDARD_CATEGORIES = [
+  "Getränke",
+  "Vorspeisen",
+  "Hauptgerichte",
+  "Desserts",
+  "Snacks",
+] as const;
+
+// Keyword groups used to normalize whatever free-text category the AI
+// extracted from the menu photo into one of our standard dashboard
+// categories. Order matters: first match wins.
+const CATEGORY_KEYWORDS: Array<{
+  category: (typeof STANDARD_CATEGORIES)[number];
+  keywords: string[];
+}> = [
+  {
+    category: "Getränke",
+    keywords: [
+      "getr",
+      "drink",
+      "beverage",
+      "cola",
+      "kaffee",
+      "coffee",
+      "tee",
+      "tea",
+      "bier",
+      "beer",
+      "wein",
+      "wine",
+      "wasser",
+      "water",
+      "saft",
+      "juice",
+      "softdrink",
+      "limonade",
+      "cocktail",
+      "aperitif",
+      "spirituosen",
+      "boisson",
+      "bevande",
+    ],
+  },
+  {
+    category: "Desserts",
+    keywords: [
+      "dessert",
+      "nachspeise",
+      "süss",
+      "suess",
+      "kuchen",
+      "cake",
+      "eis",
+      "glace",
+      "tiramisu",
+      "gelato",
+      "torte",
+      "dolci",
+    ],
+  },
+  {
+    category: "Vorspeisen",
+    keywords: [
+      "vorspeise",
+      "antipasti",
+      "starter",
+      "appetizer",
+      "salat",
+      "salad",
+      "suppe",
+      "soup",
+      "entrée",
+      "entree",
+    ],
+  },
+  {
+    category: "Snacks",
+    keywords: ["snack", "pommes", "fries", "fingerfood", "beilage", "side"],
+  },
+  {
+    category: "Hauptgerichte",
+    keywords: [
+      "hauptgericht",
+      "hauptspeise",
+      "main",
+      "pizza",
+      "pasta",
+      "burger",
+      "steak",
+      "fleisch",
+      "meat",
+      "fisch",
+      "fish",
+      "gericht",
+      "plat",
+    ],
+  },
+];
+
+function normalizeCategory(rawCategory: string | null): string | null {
+  if (!rawCategory) return rawCategory;
+
+  const normalized = rawCategory.toLowerCase();
+
+  for (const group of CATEGORY_KEYWORDS) {
+    if (group.keywords.some((keyword) => normalized.includes(keyword))) {
+      return group.category;
+    }
+  }
+
+  // No keyword match: keep the AI's original category text so the
+  // restaurant owner can still review and fix it manually.
+  return rawCategory;
+}
+
 export async function POST(request: Request) {
   try {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -147,6 +262,13 @@ REGELN:
     });
 
     const result = JSON.parse(response.output_text);
+
+    if (Array.isArray(result?.items)) {
+      result.items = result.items.map((item: { category: string | null }) => ({
+        ...item,
+        category: normalizeCategory(item.category),
+      }));
+    }
 
     return NextResponse.json(result);
   } catch (error) {
