@@ -5,6 +5,7 @@ import type { OrderStrings } from "../../lib/order-i18n";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import type { CartLine } from "./cart";
 import { formatChf } from "./format";
+import { getMenuItemFallbackImage } from "../../lib/menu-item-fallback-image";
 
 type Props = {
   menu: PublicMenuItem[];
@@ -175,25 +176,27 @@ export function MenuList({
                   className="bg-white border rounded-2xl p-4 flex flex-col gap-3"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    {item.imageUrl && !imageFailed ? (
-                      <div className="relative size-16 shrink-0">
-                        {!imageLoaded && (
-                          <span
-                            aria-hidden="true"
-                            className="absolute inset-0 animate-pulse rounded-xl bg-gray-200"
-                          />
-                        )}
-                        <img
-                          src={item.imageUrl || "/placeholder.svg"}
-                          alt=""
-                          className={`size-16 rounded-xl object-cover border transition-opacity duration-200 ${
-                            imageLoaded ? "opacity-100" : "opacity-0"
-                          }`}
-                          onLoad={() => markImageLoaded(item.id)}
-                          onError={() => markImageFailed(item.id)}
+                    <div className="relative size-16 shrink-0">
+                      {!imageLoaded && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-0 animate-pulse rounded-xl bg-gray-200"
                         />
-                      </div>
-                    ) : null}
+                      )}
+                      <img
+                        src={
+                          item.imageUrl && !imageFailed
+                            ? item.imageUrl
+                            : getMenuItemFallbackImage(item.category)
+                        }
+                        alt=""
+                        className={`size-16 rounded-xl object-cover border transition-opacity duration-200 ${
+                          imageLoaded ? "opacity-100" : "opacity-0"
+                        }`}
+                        onLoad={() => markImageLoaded(item.id)}
+                        onError={() => markImageFailed(item.id)}
+                      />
+                    </div>
                     <div className="min-w-0 flex flex-col gap-1 flex-1" dir="auto">
                       {popularSet.has(item.name) && (
                         <span className="self-start inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">

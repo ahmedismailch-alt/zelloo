@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { getMenuItemFallbackImage } from "../../lib/menu-item-fallback-image";
 
 type MenuItem = {
   id: string;
@@ -1353,16 +1354,14 @@ export default function MenuPage() {
                     <>
                       <div className="flex justify-between gap-4">
                         <div className="min-w-0 flex gap-3">
-                          {item.image_url ? (
-                            <img
-                              src={item.image_url || "/placeholder.svg"}
-                              alt=""
-                              className="size-16 shrink-0 rounded-lg object-cover border"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                              }}
-                            />
-                          ) : null}
+                          <img
+                            src={item.image_url || getMenuItemFallbackImage(item.category)}
+                            alt=""
+                            className="size-16 shrink-0 rounded-lg object-cover border"
+                            onError={(e) => {
+                              e.currentTarget.src = getMenuItemFallbackImage(item.category);
+                            }}
+                          />
                           <div className="min-w-0">
                           <p className="font-black text-lg text-pretty">
                             {item.name}
