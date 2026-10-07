@@ -76,6 +76,15 @@ export function MenuList({
     groups.set(key, [...(groups.get(key) || []), item]);
   }
 
+  function groupBySubcategory(items: PublicMenuItem[]) {
+    const subgroups = new Map<string, PublicMenuItem[]>();
+    for (const item of items) {
+      const key = item.subcategory?.trim() || "";
+      subgroups.set(key, [...(subgroups.get(key) || []), item]);
+    }
+    return [...subgroups.entries()];
+  }
+
   return (
     <section aria-label={t.menuLabel} className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
@@ -163,8 +172,15 @@ export function MenuList({
           ) : (
             <h2 className="text-lg font-black" dir="auto">{category || t.otherCategory}</h2>
           )}
+          {groupBySubcategory(items).map(([subcategory, subItems]) => (
+          <div key={subcategory || "__no_sub"} className="flex flex-col gap-2">
+            {subcategory && (
+              <h3 className="text-sm font-bold text-gray-500" dir="auto">
+                {subcategory}
+              </h3>
+            )}
           <ul className="flex flex-col gap-2">
-            {items.map((item) => {
+            {subItems.map((item) => {
               const quantity = cart[item.id]?.quantity ?? 0;
               const label = showArabic && item.nameAr ? item.nameAr : item.name;
               const note = cart[item.id]?.note ?? "";
@@ -277,6 +293,8 @@ export function MenuList({
               );
             })}
           </ul>
+          </div>
+          ))}
         </div>
       )))}
     </section>

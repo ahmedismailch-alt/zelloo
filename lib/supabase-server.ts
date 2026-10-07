@@ -43,6 +43,7 @@ export type PublicMenuItem = {
   id: string;
   name: string;
   category: string | null;
+  subcategory: string | null;
   description: string | null;
   priceCents: number;
   nameAr: string | null;
@@ -195,11 +196,12 @@ export async function getOrderableMenu(
   const { data, error } = await getSupabaseAdmin()
     .from("menu_items")
     .select(
-      "id, name, category, description, price, is_available, name_translations, image_url"
+      "id, name, category, subcategory, description, price, is_available, name_translations, image_url"
     )
     .eq("restaurant_id", restaurantId)
     .eq("is_confirmed", true)
     .order("category", { ascending: true })
+    .order("subcategory", { ascending: true })
     .order("name", { ascending: true });
 
   if (error) throw error;
@@ -215,6 +217,7 @@ export async function getOrderableMenu(
       id: String(item.id),
       name: item.name,
       category: item.category,
+      subcategory: typeof item.subcategory === "string" && item.subcategory.trim() ? item.subcategory : null,
       description: item.description,
       priceCents: Math.round(Number(item.price) * 100),
       nameAr: readArabicName(item.name_translations),
