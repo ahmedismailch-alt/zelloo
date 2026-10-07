@@ -62,6 +62,7 @@ export default function MenuPage() {
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -69,6 +70,7 @@ export default function MenuPage() {
   const [editPrice, setEditPrice] = useState("");
   const [editArabic, setEditArabic] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
+  const [uploadingEditImage, setUploadingEditImage] = useState(false);
   const [generatingArabic, setGeneratingArabic] = useState(false);
   const [categoryAr, setCategoryAr] = useState<Record<string, string>>({});
   const [categoryArAvailable, setCategoryArAvailable] = useState(false);
@@ -219,6 +221,67 @@ export default function MenuPage() {
         type: "image/jpeg",
       }
     );
+  }
+
+  async function uploadImageFile(file: File): Promise<string | null> {
+    try {
+      const compressedFile = await compressImage(file);
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("no session");
+
+      const formData = new FormData();
+      formData.append("image", compressedFile);
+
+      const response = await fetch("/api/menu-image-upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Upload fehlgeschlagen.");
+      }
+
+      return data.url as string;
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Bild konnte nicht hochgeladen werden."
+      );
+      return null;
+    }
+  }
+
+  async function handleNewImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setUploadingImage(true);
+    setMessage("");
+    const url = await uploadImageFile(file);
+    setUploadingImage(false);
+
+    if (url) setImageUrl(url);
+  }
+
+  async function handleEditImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setUploadingEditImage(true);
+    setMessage("");
+    const url = await uploadImageFile(file);
+    setUploadingEditImage(false);
+
+    if (url) setEditImageUrl(url);
   }
 
   async function analyzeMenu() {
@@ -1081,23 +1144,45 @@ export default function MenuPage() {
               className="w-full border rounded-xl px-4 py-3"
             />
 
-            <div className="flex items-center gap-3">
-              {imageUrl.trim() && isValidImageUrl(imageUrl.trim()) ? (
-                <img
-                  src={imageUrl.trim() || "/placeholder.svg"}
-                  alt=""
-                  className="size-14 shrink-0 rounded-lg object-cover border"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              ) : null}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                {imageUrl.trim() && isValidImageUrl(imageUrl.trim()) ? (
+                  <img
+                    src={imageUrl.trim() || "/placeholder.svg"}
+                    alt=""
+                    className="size-14 shrink-0 rounded-lg object-cover border"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : null}
+
+                <label className="flex-1">
+                  <div
+                    className={`flex items-center justify-center gap-2 border rounded-xl px-4 py-3 font-semibold text-sm cursor-pointer ${
+                      uploadingImage
+                        ? "bg-gray-100 text-gray-400"
+                        : "bg-orange-50 border-orange-300 text-orange-700"
+                    }`}
+                  >
+                    {uploadingImage ? "Wird hochgeladen..." : "📷 Foto vom Gericht hochladen"}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleNewImageUpload}
+                    disabled={uploadingImage}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
               <input
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="Bild-Link (optional), z.B. https://..."
+                placeholder="oder Bild-Link einfügen, z.B. https://..."
                 type="url"
-                className="w-full border rounded-xl px-4 py-3"
+                className="w-full border rounded-xl px-4 py-3 text-sm"
               />
             </div>
 
@@ -1310,28 +1395,48 @@ export default function MenuPage() {
                         </span>
                       </label>
 
-                      <label className="flex flex-col gap-1 text-sm font-bold">
-                        Bild-Link (optional)
-                        <div className="flex items-center gap-3">
-                          {editImageUrl.trim() && isValidImageUrl(editImageUrl.trim()) ? (
-                            <img
-                              src={editImageUrl.trim() || "/placeholder.svg"}
-                              alt=""
-                              className="size-14 shrink-0 rounded-lg object-cover border"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                              }}
-                            />
-                          ) : null}
-                          <input
-                            value={editImageUrl}
-                            onChange={(e) => setEditImageUrl(e.target.value)}
-                            placeholder="https://..."
-                            type="url"
-                            className="w-full border rounded-xl px-4 py-3 text-base font-normal"
-                          />
-                        </div>
-                      </label>
+              <label className="flex flex-col gap-1 text-sm font-bold">
+                Foto des Gerichts
+                <div className="flex items-center gap-3">
+                  {editImageUrl.trim() && isValidImageUrl(editImageUrl.trim()) ? (
+                    <img
+                      src={editImageUrl.trim() || "/placeholder.svg"}
+                      alt=""
+                      className="size-14 shrink-0 rounded-lg object-cover border"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : null}
+
+                  <label className="flex-1">
+                    <div
+                      className={`flex items-center justify-center gap-2 border rounded-xl px-4 py-3 font-semibold text-sm cursor-pointer ${
+                        uploadingEditImage
+                          ? "bg-gray-100 text-gray-400"
+                          : "bg-orange-50 border-orange-300 text-orange-700"
+                      }`}
+                    >
+                      {uploadingEditImage ? "Wird hochgeladen..." : "📷 Foto hochladen"}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleEditImageUpload}
+                      disabled={uploadingEditImage}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <input
+                  value={editImageUrl}
+                  onChange={(e) => setEditImageUrl(e.target.value)}
+                  placeholder="oder Bild-Link einfügen, z.B. https://..."
+                  type="url"
+                  className="w-full border rounded-xl px-4 py-3 text-sm font-normal"
+                />
+              </label>
 
                       <div className="flex gap-2">
                         <button
