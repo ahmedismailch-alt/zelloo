@@ -33,6 +33,10 @@ export default function SettingsPage() {
   const [reportError, setReportError] = useState<string | null>(null);
   const [reportSent, setReportSent] = useState(false);
 
+  const [whatsappLink, setWhatsappLink] = useState<string | null>(null);
+  const [whatsappUnavailable, setWhatsappUnavailable] = useState(false);
+  const [whatsappCopied, setWhatsappCopied] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -89,11 +93,46 @@ export default function SettingsPage() {
     }
 
     void load();
+  }, [router]);
+
+  useEffect(() => {
+    if (restaurantId === null) return;
+    let cancelled = false;
+
+    async function loadWhatsappLink() {
+      try {
+        const res = await fetch(
+          `/api/whatsapp/order-link?restaurantId=${restaurantId}`
+        );
+        if (cancelled) return;
+        if (!res.ok) {
+          setWhatsappUnavailable(true);
+          return;
+        }
+        const data = await res.json();
+        setWhatsappLink(data.link);
+      } catch {
+        if (!cancelled) setWhatsappUnavailable(true);
+      }
+    }
+
+    void loadWhatsappLink();
 
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [restaurantId]);
+
+  async function handleCopyWhatsappLink() {
+    if (!whatsappLink) return;
+    try {
+      await navigator.clipboard.writeText(whatsappLink);
+      setWhatsappCopied(true);
+      setTimeout(() => setWhatsappCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable — ignore silently, link is still shown.
+    }
+  }
 
   async function handleSave(e: FormEvent) {
     e.preventDefault();
@@ -291,6 +330,43 @@ export default function SettingsPage() {
               {saving ? "Wird gespeichert..." : "Speichern"}
             </button>
           </form>
+        )}
+
+        {!loading && !whatsappUnavailable && (
+          <div className="bg-white border rounded-2xl p-4 flex flex-col gap-3 mt-4">
+            <h2 className="text-base font-bold">WhatsApp-Bestellungen</h2>
+            <p className="text-xs text-gray-500">
+              Teilen Sie diesen Link mit Ihren Kunden. Er öffnet WhatsApp und
+              startet dort automatisch eine Bestellung für Ihr Restaurant.
+            </p>
+
+            {whatsappLink ? (
+              <>
+                <div className="rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm break-all">
+                  {whatsappLink}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyWhatsappLink}
+                    className="flex-1 min-h-12 rounded-xl border border-gray-300 bg-white font-black text-base"
+                  >
+                    {whatsappCopied ? "Kopiert!" : "Link kopieren"}
+                  </button>
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 min-h-12 rounded-xl bg-orange-500 text-white font-black text-base flex items-center justify-center"
+                  >
+                    Testen
+                  </a>
+                </div>
+              </>
+            ) : (
+              <p className="text-gray-500 text-sm">Wird geladen...</p>
+            )}
+          </div>
         )}
 
         {!loading && !loyaltyUnavailable && (
