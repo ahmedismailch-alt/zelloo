@@ -33,6 +33,25 @@ function arabicNameOf(item: MenuItem) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+const CATEGORY_NAME_EXAMPLES: Array<{ match: RegExp; example: string }> = [
+  { match: /getränk|drink|bevand|boisson|bevuta/i, example: "Coca-Cola" },
+  { match: /vorspeis|starter|antipast|entrée/i, example: "Bruschetta" },
+  { match: /pizza/i, example: "Margherita" },
+  { match: /pasta|nudel/i, example: "Spaghetti Bolognese" },
+  { match: /haupt|main|principal|plat/i, example: "Pouletgeschnetzeltes" },
+  { match: /dessert|nachspeis|dolce/i, example: "Tiramisu" },
+  { match: /snack|sides|beilage/i, example: "Pommes Frites" },
+  { match: /salat|salad|insalata/i, example: "Caesar Salat" },
+];
+
+function namePlaceholderForCategory(category: string): string {
+  const trimmed = category.trim();
+  const match = trimmed
+    ? CATEGORY_NAME_EXAMPLES.find((entry) => entry.match.test(trimmed))
+    : undefined;
+  return `Gericht, z.B. ${match ? match.example : "Margherita"}`;
+}
+
 function readCategoryMap(value: unknown): Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return Object.fromEntries(
@@ -1099,7 +1118,7 @@ export default function MenuPage() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Gericht, z.B. Margherita"
+              placeholder={namePlaceholderForCategory(category)}
               required
               className="w-full border rounded-xl px-4 py-3"
             />
@@ -1360,7 +1379,7 @@ export default function MenuPage() {
                       <input
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        placeholder="Gericht"
+                        placeholder={namePlaceholderForCategory(editCategory)}
                         className="w-full border rounded-xl px-4 py-3"
                       />
 
