@@ -62,6 +62,7 @@ export type OrderStrings = {
   micUnsupported: string;
   micError: string;
   didYouMean: string;
+  confirmChoice: string;
   viewCart: (count: number) => string;
   closeCart: string;
   nameLabel: string;
@@ -144,6 +145,7 @@ const de: OrderStrings = {
   micUnsupported: "Sprachaufnahme wird hier nicht unterstützt. Bitte schreiben Sie.",
   micError: "Wir konnten Sie nicht verstehen. Bitte nochmals versuchen.",
   didYouMean: "Meinten Sie:",
+  confirmChoice: "Bestätigen",
   viewCart: (c) => `Warenkorb ansehen (${c})`,
   closeCart: "Warenkorb schliessen",
   nameLabel: "Ihr Name (optional)",
@@ -228,6 +230,7 @@ const fr: OrderStrings = {
   micUnsupported: "L'enregistrement vocal n'est pas pris en charge ici. Veuillez écrire.",
   micError: "Nous n'avons pas pu vous comprendre. Veuillez réessayer.",
   didYouMean: "Vouliez-vous dire :",
+  confirmChoice: "Confirmer",
   viewCart: (c) => `Voir le panier (${c})`,
   closeCart: "Fermer le panier",
   nameLabel: "Votre nom (facultatif)",
@@ -312,6 +315,7 @@ const it: OrderStrings = {
   micUnsupported: "La registrazione vocale non è supportata qui. Scrivi il tuo ordine.",
   micError: "Non siamo riusciti a capirti. Riprova.",
   didYouMean: "Intendevi:",
+  confirmChoice: "Conferma",
   viewCart: (c) => `Vedi carrello (${c})`,
   closeCart: "Chiudi carrello",
   nameLabel: "Il tuo nome (facoltativo)",
@@ -396,6 +400,7 @@ const en: OrderStrings = {
   micUnsupported: "Voice recording isn't supported here. Please type your order.",
   micError: "We couldn't understand you. Please try again.",
   didYouMean: "Did you mean:",
+  confirmChoice: "Confirm",
   viewCart: (c) => `View cart (${c})`,
   closeCart: "Close cart",
   nameLabel: "Your name (optional)",
@@ -480,6 +485,7 @@ const ar: OrderStrings = {
   micUnsupported: "التسج��ل الصوتي غير مدعوم هنا. يرجى كتابة طلبك.",
   micError: "لم نتمكن من فهم الصوت. يرجى المحاولة مرة أخرى.",
   didYouMean: "هل تقصد:",
+  confirmChoice: "تأكيد",
   viewCart: (c) => `عرض السلة (${c})`,
   closeCart: "إغلاق السلة",
   nameLabel: "اسمك (اختياري)",

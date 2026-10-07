@@ -133,14 +133,15 @@ export function AiOrderBox({ restaurantId, t, lang, showArabic, onItems }: Props
       const data = await response.json().catch(() => ({}));
       const spoken = typeof data.text === "string" ? data.text.trim() : "";
       if (!response.ok || !spoken) throw new Error(t.micError);
-      setText((current) =>
-        (current.trim() ? `${current.trim()} ${spoken}` : spoken).slice(0, 500)
-      );
+      const combined = (text.trim() ? `${text.trim()} ${spoken}` : spoken).slice(0, 500);
+      setText(combined);
+      setMicState("idle");
+      void submit(undefined, combined);
+      return;
     } catch {
       setError(t.micError);
-    } finally {
-      setMicState("idle");
     }
+    setMicState("idle");
   }
 
   function stopRecording() {
@@ -209,9 +210,9 @@ export function AiOrderBox({ restaurantId, t, lang, showArabic, onItems }: Props
     else if (micState === "idle") void startRecording();
   }
 
-  async function submit(event?: FormEvent) {
+  async function submit(event?: FormEvent, overrideText?: string) {
     event?.preventDefault();
-    const value = text.trim();
+    const value = (overrideText ?? text).trim();
     if (!value || loading) return;
 
     setLoading(true);
@@ -372,7 +373,7 @@ export function AiOrderBox({ restaurantId, t, lang, showArabic, onItems }: Props
                 <button
                   type="button"
                   onClick={() => pickSuggestion(index, option)}
-                  className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border-2 border-black bg-white px-4 py-3 text-start"
+                  className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border-2 border-black bg-white px-4 py-3 text-start active:bg-orange-50"
                 >
                   <span className="flex min-w-0 flex-col">
                     <span className="font-bold text-pretty" dir="auto">{labelFor(option)}</span>
@@ -382,8 +383,24 @@ export function AiOrderBox({ restaurantId, t, lang, showArabic, onItems }: Props
                       </span>
                     )}
                   </span>
-                  <span className="shrink-0 text-sm font-bold" dir="ltr">
-                    {formatChf(option.priceCents)}
+                  <span className="flex shrink-0 items-center gap-2" dir="ltr">
+                    <span className="text-sm font-bold">{formatChf(option.priceCents)}</span>
+                    <span className="flex size-6 items-center justify-center rounded-full bg-orange-500 text-white">
+                      <svg
+                        aria-hidden="true"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                    </span>
+                    <span className="sr-only">{t.confirmChoice}</span>
                   </span>
                 </button>
               </li>

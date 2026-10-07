@@ -187,8 +187,8 @@ export function MenuList({
               const quantity = cart[item.id]?.quantity ?? 0;
               const label = showArabic && item.nameAr ? item.nameAr : item.name;
               const note = cart[item.id]?.note ?? "";
-              const imageLoaded = loadedImages.has(item.id);
-              const imageFailed = failedImages.has(item.id);
+              const usingRealPhoto = Boolean(item.imageUrl) && !failedImages.has(item.id);
+              const imageLoaded = !usingRealPhoto || loadedImages.has(item.id);
               return (
                 <li
                   key={item.id}
@@ -204,8 +204,8 @@ export function MenuList({
                       )}
                       <img
                         src={
-                          item.imageUrl && !imageFailed
-                            ? item.imageUrl
+                          usingRealPhoto
+                            ? (item.imageUrl as string)
                             : getMenuItemFallbackImage(item.category)
                         }
                         alt=""
