@@ -6,6 +6,7 @@ import type { PublicMenuItem } from "../../lib/supabase-server";
 import type { CartLine } from "./cart";
 import { formatChf } from "./format";
 import { getMenuItemFallbackImage } from "../../lib/menu-item-fallback-image";
+import { sortCategoriesByMenuOrder } from "../../lib/menu-category-order";
 
 type Props = {
   menu: PublicMenuItem[];
@@ -52,7 +53,7 @@ export function MenuList({
         list.push(key);
       }
     }
-    return list;
+    return sortCategoriesByMenuOrder(list);
   }, [menu]);
 
   const filteredMenu = useMemo(() => {
@@ -158,7 +159,9 @@ export function MenuList({
           <p className="font-bold">{t.searchNoResults}</p>
         </div>
       ) : (
-      [...groups.entries()].map(([category, items]) => (
+      sortCategoriesByMenuOrder([...groups.keys()])
+        .map((category) => [category, groups.get(category)!] as const)
+        .map(([category, items]) => (
         <div key={category || "__other"} className="flex flex-col gap-3">
           {showArabic && category && categoryAr[category] ? (
             <div className="flex flex-col">
