@@ -34,6 +34,11 @@ export default function PrivacyPage() {
                 Artikel, Zeitstempel, optionale Sprachnachrichten zur Texterkennung der Bestellung.
               </li>
               <li>
+                <span className="font-semibold">WhatsApp-Bestellungen:</span> Bei Bestellungen über WhatsApp
+                bearbeiten wir Ihre Telefonnummer, Ihre Nachrichten (Text oder Sprachnachricht), Ihren Namen und
+                gegebenenfalls Ihre Lieferadresse, um die Bestellung dem Restaurant zu übermitteln.
+              </li>
+              <li>
                 <span className="font-semibold">Technische Daten:</span> IP-Adresse, Browsertyp und Geräteinformationen
                 zur Sicherstellung des Betriebs und der Sicherheit.
               </li>
@@ -61,6 +66,10 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <span className="font-semibold">Vercel</span> – Hosting der Webanwendung.
+              </li>
+              <li>
+                <span className="font-semibold">Twilio / WhatsApp (Meta)</span> – Empfang und Versand von
+                WhatsApp-Nachrichten bei Bestellungen über WhatsApp.
               </li>
               <li>
                 <span className="font-semibold">OpenAI</span> – Texterkennung bei Sprachbestellungen (Audio wird
