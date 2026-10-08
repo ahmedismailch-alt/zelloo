@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { OrderBell } from "../../lib/order-bell";
+import { DashboardShell } from "../../components/dashboard/dashboard-shell";
 
 type Restaurant = {
   id: number | string;
@@ -673,7 +674,8 @@ export default function DashboardPage() {
 
   return (
     <>
-    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 print:hidden">
+    <DashboardShell restaurantName={restaurantName} />
+    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 md:pl-[17rem] print:hidden print:md:pl-0">
       {hasPending && (
         <div
           role="alert"
