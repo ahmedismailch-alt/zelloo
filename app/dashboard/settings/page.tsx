@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
+import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -280,7 +281,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-6">
+    <>
+    <DashboardShell />
+    <main className="min-h-screen bg-gray-50 px-4 py-6 md:pl-[17rem]">
       <div className="max-w-md mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -532,5 +535,6 @@ export default function SettingsPage() {
         )}
       </div>
     </main>
+    </>
   );
 }

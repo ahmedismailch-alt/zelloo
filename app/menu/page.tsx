@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { getMenuItemFallbackImage } from "../../lib/menu-item-fallback-image";
+import { DashboardShell } from "../../components/dashboard/dashboard-shell";
 
 type MenuItem = {
   id: string;
@@ -921,7 +922,9 @@ export default function MenuPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f8f9fb] text-black p-5">
+    <>
+    <DashboardShell restaurantName={restaurantName} />
+    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 md:pl-[17rem]">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-start gap-4 mb-8">
           <div>
@@ -1680,5 +1683,6 @@ export default function MenuPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }

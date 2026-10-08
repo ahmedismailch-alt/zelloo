@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import { StatsBars } from "../../../components/dashboard/stats-bars";
+import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import {
   computeStats,
   formatChf,
@@ -146,7 +147,9 @@ export default function StatsPage() {
   const hasOrders = stats.orderCount > 0;
 
   return (
-    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 pb-12">
+    <>
+    <DashboardShell restaurantName={restaurant.name} />
+    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 md:pl-[17rem] pb-12">
       <div className="max-w-3xl mx-auto">
         <Link href="/dashboard" className="inline-flex items-center min-h-11 text-sm font-semibold text-gray-600">
           {"← Zurück zum Dashboard"}
@@ -257,5 +260,6 @@ export default function StatsPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }
