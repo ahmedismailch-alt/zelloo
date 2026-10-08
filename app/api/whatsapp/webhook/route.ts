@@ -5,7 +5,14 @@ import {
   getSupabaseAdmin,
 } from "../../../../lib/supabase-server";
 import { parseOrderText } from "../../../../lib/order-ai";
-import { extractRestaurantCode, sendWhatsAppMessage } from "../../../../lib/whatsapp";
+import {
+  extractRestaurantCode,
+  getWebhookUrl,
+  isSupportedVoiceType,
+  isValidTwilioSignature,
+  sendWhatsAppMessage,
+  transcribeVoiceNote,
+} from "../../../../lib/whatsapp";
 
 export const runtime = "nodejs";
 
@@ -71,14 +78,51 @@ async function clearSession(phone: string) {
   await getSupabaseAdmin().from("whatsapp_sessions").delete().eq("phone", phone);
 }
 
+// Twilio retries webhooks, so each MessageSid is claimed once. If the table is
+// missing the bot keeps working without duplicate protection.
+async function claimMessage(messageSid: string): Promise<boolean> {
+  if (!messageSid) return true;
+  const { error } = await getSupabaseAdmin()
+    .from("whatsapp_processed_messages")
+    .insert({ message_sid: messageSid });
+  if (!error) return true;
+  if (error.code === "23505") return false;
+  console.error("Zelloo WhatsApp dedupe error:", error.message);
+  return true;
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
-    const from = String(formData.get("From") || "");
-    const body = String(formData.get("Body") || "").trim();
-    const phone = from.replace("whatsapp:", "").trim();
 
-    if (!phone || !body) {
+    const params: Record<string, string> = {};
+    for (const [key, value] of formData.entries()) {
+      if (typeof value === "string") params[key] = value;
+    }
+
+    if (
+      !isValidTwilioSignature(
+        getWebhookUrl(request),
+        params,
+        request.headers.get("x-twilio-signature")
+      )
+    ) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
+    const from = params.From || "";
+    let body = (params.Body || "").trim();
+    const phone = from.replace("whatsapp:", "").trim();
+    const mediaUrl = params.MediaUrl0 || "";
+    const mediaType = params.MediaContentType0 || "";
+    const isVoice =
+      Number(params.NumMedia || 0) > 0 && Boolean(mediaUrl) && isSupportedVoiceType(mediaType);
+
+    if (!phone || (!body && !isVoice)) {
+      return new NextResponse(null, { status: 200 });
+    }
+
+    if (!(await claimMessage(params.MessageSid || ""))) {
       return new NextResponse(null, { status: 200 });
     }
 
@@ -119,6 +163,25 @@ export async function POST(request: Request) {
         "Bitte nutzen Sie den Bestelllink Ihres Restaurants, um eine Bestellung zu starten."
       );
       return new NextResponse(null, { status: 200 });
+    }
+
+    if (isVoice && !body) {
+      try {
+        const vocabulary =
+          session.step === "collecting"
+            ? (await getOrderableMenu(session.restaurant_id)).map((item) => item.name)
+            : [];
+        body = await transcribeVoiceNote(mediaUrl, mediaType, vocabulary);
+      } catch (error) {
+        console.error("Zelloo WhatsApp voice error:", error);
+      }
+      if (!body) {
+        await sendWhatsAppMessage(
+          phone,
+          "Die Sprachnachricht konnte nicht verstanden werden. Bitte schreiben Sie Ihre Bestellung als Text."
+        );
+        return new NextResponse(null, { status: 200 });
+      }
     }
 
     const lower = body.toLowerCase();
