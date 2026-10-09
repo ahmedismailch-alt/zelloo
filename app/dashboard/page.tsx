@@ -876,24 +876,24 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-5">
           {cards.map((card) => (
             <div
               key={card.label}
               className={`bg-white border rounded-2xl ${
-                card.compact ? "p-3" : "p-4"
+                card.compact ? "p-3" : "p-4 md:p-6"
               }`}
             >
               <p
                 className={`text-gray-500 ${
-                  card.compact ? "text-xs" : "text-sm"
+                  card.compact ? "text-xs" : "text-sm md:text-base"
                 }`}
               >
                 {card.label}
               </p>
               <p
                 className={`font-black mt-1 ${
-                  card.compact ? "text-lg" : "text-2xl mt-2"
+                  card.compact ? "text-lg" : "text-2xl md:text-4xl mt-2"
                 }`}
               >
                 {card.value}
@@ -906,7 +906,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <section className="bg-white border rounded-2xl p-4 mb-6 max-w-2xl mx-auto w-full">
+        <section className="bg-white border rounded-2xl p-4 md:p-6 mb-6 w-full">
           <div className="flex justify-between items-center gap-3 mb-2">
             <h2 className="text-lg font-black">Bestellungen</h2>
 
