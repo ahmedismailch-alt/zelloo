@@ -143,6 +143,24 @@ export async function getRestaurant(restaurantId: string) {
   return data as RestaurantRecord | null;
 }
 
+// Returns true if the accepting_orders column does not exist yet, so orders
+// keep working until the SQL migration has been run.
+export async function isAcceptingOrders(
+  restaurantId: string | number
+): Promise<boolean> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("restaurants")
+    .select("accepting_orders")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Zelloo accepting_orders unavailable:", error.message);
+    return true;
+  }
+  return data?.accepting_orders !== false;
+}
+
 // Counts this phone's non-cancelled orders at this restaurant (loyalty progress).
 export async function getLoyaltyOrderCount(
   restaurantId: string,

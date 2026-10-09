@@ -86,6 +86,10 @@ export type OrderStrings = {
   statusLabel: string;
   steps: { new: string; accepted: string; preparing: string; ready: string };
   badgeSent: string;
+  pausedTitle: string;
+  pausedText: string;
+  pausedError: string;
+  prepTime: (minutes: number) => string;
   badgeReady: string;
   badgeCancelled: string;
   headline: {
@@ -170,6 +174,11 @@ const de: OrderStrings = {
   statusLabel: "Bestellstatus",
   steps: { new: "Eingegangen", accepted: "Angenommen", preparing: "In Zubereitung", ready: "Bereit" },
   badgeSent: "BESTELLUNG GESENDET",
+  pausedTitle: "Bestellungen derzeit pausiert",
+  pausedText:
+    "Das Restaurant nimmt im Moment keine Bestellungen an. Bitte versuchen Sie es später erneut.",
+  pausedError: "Das Restaurant nimmt gerade keine Bestellungen an.",
+  prepTime: (minutes) => `Fertig in ca. ${minutes} Min.`,
   badgeReady: "BEREIT",
   badgeCancelled: "STORNIERT",
   headline: {
@@ -255,6 +264,11 @@ const fr: OrderStrings = {
   statusLabel: "Statut de la commande",
   steps: { new: "Reçue", accepted: "Accept��e", preparing: "En préparation", ready: "Prête" },
   badgeSent: "COMMANDE ENVOYÉE",
+  pausedTitle: "Commandes en pause",
+  pausedText:
+    "Le restaurant n'accepte pas de commandes pour le moment. Veuillez réessayer plus tard.",
+  pausedError: "Le restaurant n'accepte pas de commandes pour le moment.",
+  prepTime: (minutes) => `Prête dans environ ${minutes} min`,
   badgeReady: "PRÊTE",
   badgeCancelled: "ANNULÉE",
   headline: {
@@ -340,6 +354,11 @@ const it: OrderStrings = {
   statusLabel: "Stato dell'ordine",
   steps: { new: "Ricevuto", accepted: "Accettato", preparing: "In preparazione", ready: "Pronto" },
   badgeSent: "ORDINE INVIATO",
+  pausedTitle: "Ordini in pausa",
+  pausedText:
+    "Il ristorante al momento non accetta ordini. Riprovi più tardi.",
+  pausedError: "Il ristorante al momento non accetta ordini.",
+  prepTime: (minutes) => `Pronto tra circa ${minutes} min`,
   badgeReady: "PRONTO",
   badgeCancelled: "ANNULLATO",
   headline: {
@@ -425,6 +444,11 @@ const en: OrderStrings = {
   statusLabel: "Order status",
   steps: { new: "Received", accepted: "Accepted", preparing: "Preparing", ready: "Ready" },
   badgeSent: "ORDER SENT",
+  pausedTitle: "Orders are paused",
+  pausedText:
+    "The restaurant is not taking orders right now. Please try again later.",
+  pausedError: "The restaurant is not taking orders right now.",
+  prepTime: (minutes) => `Ready in about ${minutes} min`,
   badgeReady: "READY",
   badgeCancelled: "CANCELLED",
   headline: {
@@ -509,6 +533,10 @@ const ar: OrderStrings = {
   statusLabel: "حالة الطلب",
   steps: { new: "تم الاستلام", accepted: "تم القبول", preparing: "قيد التحضير", ready: "جاهز" },
   badgeSent: "تم إرسال الطلب",
+  pausedTitle: "الطلبات متوقفة مؤقتاً",
+  pausedText: "المطعم لا يستقبل طلبات حالياً. يرجى المحاولة لاحقاً.",
+  pausedError: "المطعم لا يستقبل طلبات حالياً.",
+  prepTime: (minutes) => `جاهز خلال حوالي ${minutes} دقيقة`,
   badgeReady: "جاهز",
   badgeCancelled: "ملغى",
   headline: {

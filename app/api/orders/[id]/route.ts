@@ -21,15 +21,37 @@ export async function GET(
   }
 
   try {
-    const { data, error } = await getSupabaseAdmin()
+    const supabase = getSupabaseAdmin();
+
+    // Falls back to status only if the prep_minutes column does not exist yet.
+    let prepMinutes: number | null = null;
+    let status: string | null = null;
+
+    const withPrep = await supabase
       .from("orders")
-      .select("status")
+      .select("status, prep_minutes")
       .eq("id", id)
       .eq("restaurant_id", restaurantId)
       .maybeSingle();
 
-    if (error) throw error;
-    if (!data) {
+    if (!withPrep.error) {
+      status = withPrep.data?.status ?? null;
+      prepMinutes =
+        typeof withPrep.data?.prep_minutes === "number"
+          ? withPrep.data.prep_minutes
+          : null;
+    } else {
+      const plain = await supabase
+        .from("orders")
+        .select("status")
+        .eq("id", id)
+        .eq("restaurant_id", restaurantId)
+        .maybeSingle();
+      if (plain.error) throw plain.error;
+      status = plain.data?.status ?? null;
+    }
+
+    if (!status) {
       return NextResponse.json(
         { error: "Bestellung nicht gefunden." },
         { status: 404 }
@@ -37,7 +59,7 @@ export async function GET(
     }
 
     return NextResponse.json(
-      { status: data.status },
+      { status, prepMinutes },
       { headers: { "Cache-Control": "no-store" } }
     );
   } catch (error) {

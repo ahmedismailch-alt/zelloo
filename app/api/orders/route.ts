@@ -3,6 +3,7 @@ import {
   getOrderableMenu,
   getRestaurant,
   getSupabaseAdmin,
+  isAcceptingOrders,
   isValidRestaurantId,
   normalizeTable,
 } from "../../../lib/supabase-server";
@@ -96,6 +97,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Restaurant nicht gefunden." },
         { status: 404 }
+      );
+    }
+
+    if (!(await isAcceptingOrders(restaurant.id))) {
+      return NextResponse.json(
+        { error: "Das Restaurant nimmt gerade keine Bestellungen an.", code: "paused" },
+        { status: 403 }
       );
     }
 

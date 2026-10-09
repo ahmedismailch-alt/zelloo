@@ -35,6 +35,7 @@ function isDrinkCategory(category: string | null | undefined) {
 
 type Props = {
   restaurantId: string;
+  acceptingOrders?: boolean;
   restaurantName: string;
   restaurantPhone: string | null;
   table: string | null;
@@ -45,6 +46,7 @@ type Props = {
 
 export function OrderApp({
   restaurantId,
+  acceptingOrders = true,
   restaurantName,
   restaurantPhone,
   table,
@@ -243,13 +245,25 @@ export function OrderApp({
       </header>
 
       <div className="max-w-xl mx-auto flex flex-col gap-6 px-4 pt-5 pb-40">
-        <AiOrderBox
-          restaurantId={restaurantId}
-          t={t}
-          lang={lang}
-          showArabic={lang === "ar"}
-          onItems={addParsed}
-        />
+        {!acceptingOrders && (
+          <div
+            role="status"
+            className="bg-amber-50 border border-amber-300 rounded-2xl p-4"
+          >
+            <p className="font-black text-amber-900">{t.pausedTitle}</p>
+            <p className="text-sm text-amber-900/80 mt-1">{t.pausedText}</p>
+          </div>
+        )}
+
+        {acceptingOrders && (
+          <AiOrderBox
+            restaurantId={restaurantId}
+            t={t}
+            lang={lang}
+            showArabic={lang === "ar"}
+            onItems={addParsed}
+          />
+        )}
 
         {menu.length === 0 ? (
           <div className="bg-white border rounded-2xl p-6 text-center">
@@ -257,16 +271,21 @@ export function OrderApp({
             <p className="text-sm text-gray-500 mt-2">{t.menuUnavailableText}</p>
           </div>
         ) : (
-          <MenuList
-            menu={menu}
-            cart={cart}
-            t={t}
-            showArabic={lang === "ar"}
-            categoryAr={categoryAr}
-            onSetQuantity={setQuantity}
-            onSetNote={setNote}
-            popularItemNames={popularItemNames}
-          />
+          <div
+            inert={!acceptingOrders}
+            className={acceptingOrders ? undefined : "opacity-60"}
+          >
+            <MenuList
+              menu={menu}
+              cart={cart}
+              t={t}
+              showArabic={lang === "ar"}
+              categoryAr={categoryAr}
+              onSetQuantity={setQuantity}
+              onSetNote={setNote}
+              popularItemNames={popularItemNames}
+            />
+          </div>
         )}
 
         {showUpsell && (

@@ -3,6 +3,7 @@ import {
   getOrderableMenu,
   getRestaurant,
   getSupabaseAdmin,
+  isAcceptingOrders,
 } from "../../../../lib/supabase-server";
 import { parseOrderText } from "../../../../lib/order-ai";
 import {
@@ -134,6 +135,14 @@ export async function POST(request: Request) {
         await sendWhatsAppMessage(
           phone,
           "Dieses Restaurant wurde nicht gefunden. Bitte nutzen Sie den Bestelllink Ihres Restaurants."
+        );
+        return new NextResponse(null, { status: 200 });
+      }
+
+      if (!(await isAcceptingOrders(restaurant.id))) {
+        await sendWhatsAppMessage(
+          phone,
+          `${restaurant.name} nimmt im Moment keine Bestellungen an. Bitte versuchen Sie es später erneut.`
         );
         return new NextResponse(null, { status: 200 });
       }
@@ -312,6 +321,15 @@ export async function POST(request: Request) {
         if (!restaurant) {
           await clearSession(phone);
           await sendWhatsAppMessage(phone, "Restaurant nicht gefunden. Bitte erneut starten.");
+          return new NextResponse(null, { status: 200 });
+        }
+
+        if (!(await isAcceptingOrders(restaurant.id))) {
+          await clearSession(phone);
+          await sendWhatsAppMessage(
+            phone,
+            `${restaurant.name} nimmt im Moment keine Bestellungen an. Bitte versuchen Sie es später erneut.`
+          );
           return new NextResponse(null, { status: 200 });
         }
 

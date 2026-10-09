@@ -68,6 +68,7 @@ export function Cart({
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState<{ id: string; totalCents: number } | null>(null);
   const [orderStatus, setOrderStatus] = useState<OrderStatus>("new");
+  const [prepMinutes, setPrepMinutes] = useState<number | null>(null);
   const [rating, setRating] = useState<number | null>(null);
   const [ratingSent, setRatingSent] = useState(false);
   const [ratingError, setRatingError] = useState(false);
@@ -149,9 +150,15 @@ export function Cart({
           { cache: "no-store" }
         );
         if (response.ok) {
-          const data = (await response.json()) as { status: OrderStatus };
+          const data = (await response.json()) as {
+            status: OrderStatus;
+            prepMinutes?: number | null;
+          };
           if (cancelled) return;
           setOrderStatus(data.status);
+          setPrepMinutes(
+            typeof data.prepMinutes === "number" ? data.prepMinutes : null
+          );
           if (data.status === "completed" || data.status === "cancelled") {
             return;
           }
@@ -218,10 +225,11 @@ export function Cart({
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(t.sendError);
+        throw new Error(data?.code === "paused" ? t.pausedError : t.sendError);
       }
 
       setOrderStatus("new");
+      setPrepMinutes(null);
       setConfirmed({ id: String(data.orderId), totalCents: data.totalCents });
       setNotes("");
       onOrdered();
@@ -255,6 +263,12 @@ export function Cart({
             {isCancelled ? t.badgeCancelled : isReady ? t.badgeReady : t.badgeSent}
           </p>
           <p className="text-2xl font-black text-balance">{statusHeadline(orderStatus, t)}</p>
+          {prepMinutes !== null &&
+            (orderStatus === "accepted" || orderStatus === "preparing") && (
+              <p className="text-base font-bold text-orange-400">
+                {t.prepTime(prepMinutes)}
+              </p>
+            )}
 
           {!isCancelled && (
             <ol className="flex gap-1 mt-2" aria-label={t.statusLabel}>

@@ -96,6 +96,8 @@ const statusBadge: Record<OrderStatus, string> = {
   cancelled: "bg-red-100 text-red-800",
 };
 
+const PREP_MINUTE_OPTIONS = [10, 15, 20, 30];
+
 const POLL_INTERVAL_MS = 10000;
 const HIGHLIGHT_MS = 8000;
 const BELL_REPEAT_MS = 3000;
@@ -151,6 +153,9 @@ export default function DashboardPage() {
   const [soundOn, setSoundOn] = useState(false);
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
+  const [acceptingOrders, setAcceptingOrders] = useState(true);
+  const [togglingAccepting, setTogglingAccepting] = useState(false);
+  const [prepMinutes, setPrepMinutes] = useState(15);
   const [view, setView] = useState<"active" | "history">("active");
   const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
   const [dismissingMessageId, setDismissingMessageId] = useState<string | null>(null);
@@ -303,6 +308,30 @@ export default function DashboardPage() {
   }, [router]);
 
   const restaurantId = restaurant?.id;
+
+  useEffect(() => {
+    if (restaurantId === undefined) return;
+
+    let cancelled = false;
+
+    async function loadAcceptingOrders() {
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("accepting_orders")
+        .eq("id", restaurantId)
+        .maybeSingle();
+
+      // The column may not exist yet; keep the default (open) in that case.
+      if (cancelled || error || !data) return;
+      setAcceptingOrders(data.accepting_orders !== false);
+    }
+
+    void loadAcceptingOrders();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [restaurantId]);
 
   useEffect(() => {
     if (restaurantId === undefined) return;
@@ -504,7 +533,36 @@ export default function DashboardPage() {
     };
   }, [restaurantId, refreshVersion]);
 
-  async function changeStatus(order: Order, nextStatus: OrderStatus) {
+  async function toggleAcceptingOrders() {
+    if (restaurantId === undefined || togglingAccepting) return;
+
+    const next = !acceptingOrders;
+    setTogglingAccepting(true);
+    setActionError("");
+
+    try {
+      const { error } = await supabase
+        .from("restaurants")
+        .update({ accepting_orders: next })
+        .eq("id", restaurantId);
+
+      if (error) throw error;
+      setAcceptingOrders(next);
+    } catch (error) {
+      console.error(error);
+      setActionError(
+        "Bestellannahme konnte nicht geändert werden. Bitte versuchen Sie es erneut."
+      );
+    } finally {
+      setTogglingAccepting(false);
+    }
+  }
+
+  async function changeStatus(
+    order: Order,
+    nextStatus: OrderStatus,
+    prep?: number
+  ) {
     if (
       restaurantId === undefined ||
       savingId ||
@@ -517,14 +575,24 @@ export default function DashboardPage() {
     setActionError("");
 
     try {
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: nextStatus })
-        .eq("id", order.id)
-        .eq("restaurant_id", restaurantId)
-        .eq("status", order.status)
-        .select("id, status")
-        .single();
+      const runUpdate = (values: Record<string, unknown>) =>
+        supabase
+          .from("orders")
+          .update(values)
+          .eq("id", order.id)
+          .eq("restaurant_id", restaurantId)
+          .eq("status", order.status)
+          .select("id, status")
+          .single();
+
+      let { error } = await runUpdate(
+        prep ? { status: nextStatus, prep_minutes: prep } : { status: nextStatus }
+      );
+
+      // prep_minutes column may not exist yet; still save the status.
+      if (error && prep) {
+        ({ error } = await runUpdate({ status: nextStatus }));
+      }
 
       if (error) throw error;
 
@@ -728,13 +796,37 @@ export default function DashboardPage() {
                 {!soundOn && " · Ton ist aus"}
               </p>
             </div>
+            <div
+              role="radiogroup"
+              aria-label="Zubereitungszeit"
+              className="flex items-center gap-2"
+            >
+              <span className="text-xs font-bold shrink-0">Fertig in</span>
+              {PREP_MINUTE_OPTIONS.map((minutes) => (
+                <button
+                  key={minutes}
+                  type="button"
+                  role="radio"
+                  aria-checked={prepMinutes === minutes}
+                  onClick={() => setPrepMinutes(minutes)}
+                  className={`flex-1 min-h-11 rounded-lg text-sm font-black ${
+                    prepMinutes === minutes
+                      ? "bg-white text-red-700"
+                      : "bg-red-700 text-white border border-white/40"
+                  }`}
+                >
+                  {minutes} Min
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               disabled={savingId !== null}
               onClick={() =>
                 void changeStatus(
                   pendingOrders[pendingOrders.length - 1],
-                  "accepted"
+                  "accepted",
+                  prepMinutes
                 )
               }
               className="w-full min-h-12 rounded-xl bg-white text-red-700 font-black text-lg px-4 py-3 disabled:opacity-60"
@@ -887,6 +979,38 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+
+        <button
+          type="button"
+          role="switch"
+          aria-checked={acceptingOrders}
+          disabled={togglingAccepting}
+          onClick={() => void toggleAcceptingOrders()}
+          className={`w-full md:w-auto flex items-center justify-between gap-4 min-h-12 rounded-xl border px-4 py-2 mb-4 md:mb-6 text-sm font-bold disabled:opacity-60 ${
+            acceptingOrders
+              ? "bg-green-50 border-green-300 text-green-900"
+              : "bg-amber-50 border-amber-400 text-amber-900"
+          }`}
+        >
+          <span>
+            Bestellannahme:{" "}
+            <span className="font-black">
+              {acceptingOrders ? "Offen" : "Pausiert"}
+            </span>
+          </span>
+          <span
+            aria-hidden="true"
+            className={`relative inline-block h-6 w-11 rounded-full ${
+              acceptingOrders ? "bg-green-600" : "bg-gray-400"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
+                acceptingOrders ? "left-[1.4rem]" : "left-0.5"
+              }`}
+            />
+          </span>
+        </button>
 
         {(ordersError || actionError) && (
           <div
@@ -1168,6 +1292,34 @@ export default function DashboardPage() {
                   </p>
                 )}
 
+                {order.status === "new" && (
+                  <div
+                    role="radiogroup"
+                    aria-label="Zubereitungszeit"
+                    className="flex items-center gap-2 mt-4"
+                  >
+                    <span className="text-xs font-bold text-gray-500 shrink-0">
+                      Fertig in
+                    </span>
+                    {PREP_MINUTE_OPTIONS.map((minutes) => (
+                      <button
+                        key={minutes}
+                        type="button"
+                        role="radio"
+                        aria-checked={prepMinutes === minutes}
+                        onClick={() => setPrepMinutes(minutes)}
+                        className={`flex-1 min-h-11 rounded-lg text-sm font-bold border ${
+                          prepMinutes === minutes
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-black border-gray-300"
+                        }`}
+                      >
+                        {minutes} Min
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex gap-2 mt-4">
                   {nextStep[order.status] && (
                     <button
@@ -1176,7 +1328,8 @@ export default function DashboardPage() {
                       onClick={() =>
                         void changeStatus(
                           order,
-                          nextStep[order.status]!.status
+                          nextStep[order.status]!.status,
+                          order.status === "new" ? prepMinutes : undefined
                         )
                       }
                       className={`flex-[2] min-h-12 rounded-xl font-black text-base px-3 py-2.5 disabled:opacity-50 ${
