@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Logo } from "@/components/logo";
 
 type NavItem = {
   href: string;
@@ -111,9 +112,7 @@ export function DashboardShell({ restaurantName }: { restaurantName?: string }) 
       className="hidden md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:w-64 md:flex-col md:border-r md:border-black/10 md:bg-white"
     >
       <div className="flex h-16 items-center gap-2 border-b border-black/10 px-6">
-        <span className="text-lg font-black tracking-tight text-black">
-          zelloo
-        </span>
+        <Logo size="sm" className="text-black" />
       </div>
 
       {restaurantName && (
