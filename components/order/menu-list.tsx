@@ -16,6 +16,7 @@ type Props = {
   categoryAr: Record<string, string>;
   onSetQuantity: (id: string, quantity: number) => void;
   onSetNote: (id: string, note: string) => void;
+  onPickOptions: (item: PublicMenuItem) => void;
   popularItemNames?: string[];
 };
 
@@ -27,6 +28,7 @@ export function MenuList({
   categoryAr,
   onSetQuantity,
   onSetNote,
+  onPickOptions,
   popularItemNames = [],
 }: Props) {
   const popularSet = useMemo(() => new Set(popularItemNames), [popularItemNames]);
@@ -75,6 +77,12 @@ export function MenuList({
   for (const item of filteredMenu) {
     const key = item.category?.trim() || "";
     groups.set(key, [...(groups.get(key) || []), item]);
+  }
+
+  function quantityOf(itemId: string) {
+    return Object.values(cart)
+      .filter((line) => line.menuItemId === itemId)
+      .reduce((sum, line) => sum + line.quantity, 0);
   }
 
   function groupBySubcategory(items: PublicMenuItem[]) {
@@ -184,7 +192,8 @@ export function MenuList({
             )}
           <ul className="flex flex-col gap-2">
             {subItems.map((item) => {
-              const quantity = cart[item.id]?.quantity ?? 0;
+              const hasOptions = item.options.length > 0;
+              const quantity = quantityOf(item.id);
               const label = showArabic && item.nameAr ? item.nameAr : item.name;
               const note = cart[item.id]?.note ?? "";
               const usingRealPhoto = Boolean(item.imageUrl) && !failedImages.has(item.id);
@@ -244,7 +253,24 @@ export function MenuList({
                       </p>
                     </div>
 
-                    {quantity === 0 ? (
+                    {hasOptions ? (
+                      <button
+                        type="button"
+                        onClick={() => onPickOptions(item)}
+                        aria-label={t.add(label)}
+                        className="relative shrink-0 size-11 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center"
+                      >
+                        +
+                        {quantity > 0 && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute -top-1 -right-1 min-w-5 h-5 rounded-full bg-orange-500 px-1 text-xs font-black text-black flex items-center justify-center"
+                          >
+                            {quantity}
+                          </span>
+                        )}
+                      </button>
+                    ) : quantity === 0 ? (
                       <button
                         type="button"
                         onClick={() => onSetQuantity(item.id, 1)}
@@ -281,7 +307,7 @@ export function MenuList({
                     )}
                   </div>
 
-                  {quantity > 0 && (
+                  {quantity > 0 && !hasOptions && (
                     <input
                       type="text"
                       value={note}

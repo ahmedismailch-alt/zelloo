@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { OperationsSettings } from "../../../components/dashboard/operations-settings";
+import { ChannelStatus } from "../../../components/dashboard/channel-status";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -365,6 +367,18 @@ export default function SettingsPage() {
               {saving ? "Wird gespeichert..." : "Speichern"}
             </button>
           </form>
+        )}
+
+        {!loading && restaurantId !== null && (
+          <>
+            <OperationsSettings restaurantId={restaurantId} />
+            <ChannelStatus
+              restaurantId={restaurantId}
+              whatsappConnected={
+                whatsappUnavailable ? false : whatsappLink ? true : null
+              }
+            />
+          </>
         )}
 
         {!loading && !whatsappUnavailable && (

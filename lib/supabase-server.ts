@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { parseOptionGroups, type OptionGroup } from "./menu-options";
+import {
+  DEFAULT_SETTINGS,
+  canOrder,
+  getAvailability,
+  parseOpeningHours,
+  type Availability,
+  type RestaurantSettings,
+} from "./restaurant-settings";
 
 // Only Zelloo's own account may use admin-only endpoints.
 export const ADMIN_EMAIL = "ahmed.ismail.ch@gmail.com";
@@ -48,6 +57,7 @@ export type PublicMenuItem = {
   priceCents: number;
   nameAr: string | null;
   imageUrl: string | null;
+  options: OptionGroup[];
 };
 
 export function readArabicName(translations: unknown): string | null {
@@ -143,6 +153,66 @@ export async function getRestaurant(restaurantId: string) {
   return data as RestaurantRecord | null;
 }
 
+function readCents(value: unknown) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : 0;
+}
+
+// Falls back to progressively fewer columns so the site keeps working until
+// every SQL migration has been run.
+export async function getRestaurantSettings(
+  restaurantId: string | number
+): Promise<RestaurantSettings> {
+  const supabase = getSupabaseAdmin();
+
+  const full = await supabase
+    .from("restaurants")
+    .select(
+      "accepting_orders, busy, opening_hours, delivery_fee_cents, delivery_min_order_cents, delivery_zones"
+    )
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  if (!full.error) {
+    const row = full.data;
+    return {
+      accepting: row?.accepting_orders !== false,
+      busy: row?.busy === true,
+      openingHours: parseOpeningHours(row?.opening_hours),
+      deliveryFeeCents: readCents(row?.delivery_fee_cents),
+      deliveryMinCents: readCents(row?.delivery_min_order_cents),
+      deliveryZones:
+        typeof row?.delivery_zones === "string" ? row.delivery_zones : "",
+    };
+  }
+
+  const basic = await supabase
+    .from("restaurants")
+    .select("accepting_orders")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  if (basic.error) {
+    console.error("Zelloo settings unavailable:", basic.error.message);
+    return DEFAULT_SETTINGS;
+  }
+  return { ...DEFAULT_SETTINGS, accepting: basic.data?.accepting_orders !== false };
+}
+
+export async function getOrderAvailability(
+  restaurantId: string | number
+): Promise<{ availability: Availability; settings: RestaurantSettings }> {
+  const settings = await getRestaurantSettings(restaurantId);
+  return { availability: getAvailability(settings), settings };
+}
+
+export async function isAcceptingOrders(
+  restaurantId: string | number
+): Promise<boolean> {
+  const { availability } = await getOrderAvailability(restaurantId);
+  return canOrder(availability);
+}
+
 // Counts this phone's non-cancelled orders at this restaurant (loyalty progress).
 export async function getLoyaltyOrderCount(
   restaurantId: string,
@@ -193,20 +263,28 @@ export async function getPopularItemNames(
 export async function getOrderableMenu(
   restaurantId: string
 ): Promise<PublicMenuItem[]> {
-  const { data, error } = await getSupabaseAdmin()
-    .from("menu_items")
-    .select(
-      "id, name, category, subcategory, description, price, is_available, name_translations, image_url"
-    )
-    .eq("restaurant_id", restaurantId)
-    .eq("is_confirmed", true)
-    .order("category", { ascending: true })
-    .order("subcategory", { ascending: true })
-    .order("name", { ascending: true });
+  const baseColumns =
+    "id, name, category, subcategory, description, price, is_available, name_translations, image_url";
 
-  if (error) throw error;
+  function query(columns: string) {
+    return getSupabaseAdmin()
+      .from("menu_items")
+      .select(columns)
+      .eq("restaurant_id", restaurantId)
+      .eq("is_confirmed", true)
+      .order("category", { ascending: true })
+      .order("subcategory", { ascending: true })
+      .order("name", { ascending: true });
+  }
 
-  return (data || [])
+  // The options column may not exist until the SQL migration has been run.
+  let result = await query(`${baseColumns}, options`);
+  if (result.error) result = await query(baseColumns);
+  if (result.error) throw result.error;
+
+  const rows = (result.data || []) as unknown as Record<string, any>[];
+
+  return rows
     .filter(
       (item) =>
         item.is_available !== false &&
@@ -222,5 +300,6 @@ export async function getOrderableMenu(
       priceCents: Math.round(Number(item.price) * 100),
       nameAr: readArabicName(item.name_translations),
       imageUrl: typeof item.image_url === "string" && item.image_url.trim() ? item.image_url : null,
+      options: parseOptionGroups(item.options),
     }));
 }

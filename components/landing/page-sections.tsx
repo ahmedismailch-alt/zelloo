@@ -2,6 +2,7 @@
 
 import { Logo } from "@/components/logo";
 import { AnimatedJourney } from "@/components/landing/animated-journey"
+import { Faq } from "./faq"
 import { heroCopy, pageCopy, useLang } from "./language-switcher"
 
 export function PageSections() {
@@ -118,6 +119,8 @@ export function PageSections() {
           </div>
         </div>
       </div>
+
+      <Faq />
 
       {/* Final CTA */}
       <div className="py-16">

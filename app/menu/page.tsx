@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { getMenuItemFallbackImage } from "../../lib/menu-item-fallback-image";
 import { DashboardShell } from "../../components/dashboard/dashboard-shell";
+import { OptionsEditor } from "../../components/menu/options-editor";
+import { parseOptionGroups, type OptionGroup } from "../../lib/menu-options";
 
 type MenuItem = {
   id: string;
@@ -20,6 +22,7 @@ type MenuItem = {
   is_confirmed: boolean;
   name_translations: Record<string, string> | null;
   image_url: string | null;
+  options?: unknown;
 };
 
 const SUBCATEGORY_SUGGESTIONS: Record<string, string[]> = {
@@ -107,6 +110,7 @@ export default function MenuPage() {
   const [editPrice, setEditPrice] = useState("");
   const [editArabic, setEditArabic] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
+  const [editOptions, setEditOptions] = useState<OptionGroup[]>([]);
   const [uploadingEditImage, setUploadingEditImage] = useState(false);
   const [generatingArabic, setGeneratingArabic] = useState(false);
   const [categoryAr, setCategoryAr] = useState<Record<string, string>>({});
@@ -632,6 +636,7 @@ export default function MenuPage() {
     setEditPrice(item.price === null ? "" : String(item.price));
     setEditArabic(arabicNameOf(item));
     setEditImageUrl(item.image_url || "");
+    setEditOptions(parseOptionGroups(item.options));
     setMessage("");
   }
 
@@ -643,6 +648,7 @@ export default function MenuPage() {
     setEditPrice("");
     setEditArabic("");
     setEditImageUrl("");
+    setEditOptions([]);
   }
 
   async function saveEdit(item: MenuItem) {
@@ -685,20 +691,33 @@ export default function MenuPage() {
       nextTranslations.ar = arabicInput;
     }
 
-    const { data, error } = await supabase
+    const cleanedOptions = parseOptionGroups(editOptions);
+    const baseUpdate = {
+      name: editName.trim(),
+      category: editCategory.trim() || null,
+      subcategory: editSubcategory.trim() || null,
+      price: parsedPrice,
+      is_confirmed: nameChanged ? false : item.is_confirmed,
+      name_translations: nextTranslations,
+      image_url: trimmedEditImageUrl || null,
+    };
+    const optionsChanged =
+      JSON.stringify(cleanedOptions) !== JSON.stringify(parseOptionGroups(item.options));
+
+    let { data, error } = await supabase
       .from("menu_items")
-      .update({
-        name: editName.trim(),
-        category: editCategory.trim() || null,
-        subcategory: editSubcategory.trim() || null,
-        price: parsedPrice,
-        is_confirmed: nameChanged ? false : item.is_confirmed,
-        name_translations: nextTranslations,
-        image_url: trimmedEditImageUrl || null,
-      })
+      .update(optionsChanged ? { ...baseUpdate, options: cleanedOptions } : baseUpdate)
       .eq("id", item.id)
       .select()
       .single();
+
+    if (error && optionsChanged) {
+      setMessage(
+        "Optionen konnten nicht gespeichert werden. Bitte die Datenbank-Aktualisierung ausführen."
+      );
+      setSaving(false);
+      return;
+    }
 
     if (error) {
       setMessage("Änderung konnte nicht gespeichert werden.");
@@ -1586,6 +1605,8 @@ export default function MenuPage() {
                   className="w-full border rounded-xl px-4 py-3 text-sm font-normal"
                 />
               </label>
+
+              <OptionsEditor value={editOptions} onChange={setEditOptions} />
 
                       <div className="flex gap-2">
                         <button

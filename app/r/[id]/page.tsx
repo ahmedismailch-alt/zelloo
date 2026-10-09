@@ -5,6 +5,7 @@ import {
   getOrderableMenu,
   getPopularItemNames,
   getRestaurant,
+  getOrderAvailability,
   isValidRestaurantId,
   normalizeTable,
 } from "../../../lib/supabase-server";
@@ -26,15 +27,22 @@ export default async function RestaurantOrderPage({
   const restaurant = await getRestaurant(id);
   if (!restaurant) notFound();
 
-  const [menu, categoryAr, popularItemNames] = await Promise.all([
-    getOrderableMenu(id),
-    getCategoryTranslations(id),
-    getPopularItemNames(id).catch(() => []),
-  ]);
+  const [menu, categoryAr, popularItemNames, { availability, settings }] =
+    await Promise.all([
+      getOrderableMenu(id),
+      getCategoryTranslations(id),
+      getPopularItemNames(id).catch(() => []),
+      getOrderAvailability(id),
+    ]);
 
   return (
     <OrderApp
       restaurantId={id}
+      availability={availability}
+      delivery={{
+        feeCents: settings.deliveryFeeCents,
+        minCents: settings.deliveryMinCents,
+      }}
       restaurantName={restaurant.name}
       restaurantPhone={restaurant.phone}
       table={normalizeTable(Array.isArray(table) ? table[0] : table)}
