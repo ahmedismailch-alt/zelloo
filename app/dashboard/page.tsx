@@ -673,6 +673,10 @@ export default function DashboardPage() {
     matchesFilter(order, orderFilter)
   );
 
+  const openOrders = sortedOrders.filter(
+    (order) => order.status !== "completed" && order.status !== "cancelled"
+  );
+
   return (
     <>
     <DashboardShell restaurantName={restaurantName} />
@@ -930,12 +934,9 @@ export default function DashboardPage() {
           >
             {filterOptions.map((option) => {
               const active = orderFilter === option.value;
-              const count =
-                option.value === "all"
-                  ? sortedOrders.length
-                  : sortedOrders.filter((order) =>
-                      matchesFilter(order, option.value)
-                    ).length;
+              const count = openOrders.filter((order) =>
+                matchesFilter(order, option.value)
+              ).length;
               return (
                 <button
                   key={option.value}
