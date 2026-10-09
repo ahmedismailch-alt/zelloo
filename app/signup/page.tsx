@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -47,8 +48,8 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
 
         <div className="mb-8">
-          <h1 className="text-4xl font-bold">
-            ZELLOO
+          <h1>
+            <Logo size="lg" />
           </h1>
 
           <p className="text-gray-400 mt-2">

@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
@@ -38,8 +39,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
 
         <div className="mb-8">
-          <h1 className="text-4xl font-black">
-            ZELLOO
+          <h1>
+            <Logo size="lg" />
           </h1>
 
           <p className="text-gray-400 mt-2">

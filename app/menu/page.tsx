@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
@@ -928,7 +929,7 @@ export default function MenuPage() {
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-start gap-4 mb-8">
           <div>
-            <p className="text-sm font-bold text-orange-500">ZELLOO</p>
+            <Logo size="sm" className="text-orange-500" />
 
             <h1 className="text-3xl font-black mt-1">Speisekarte</h1>
 
@@ -1459,7 +1460,7 @@ export default function MenuPage() {
                         <input
                           value={editArabic}
                           onChange={(e) => setEditArabic(e.target.value)}
-                          placeholder="z. B. بيتزا مارغريتا"
+                          placeholder="z. B. بيتزا مار��ريتا"
                           dir="rtl"
                           lang="ar"
                           maxLength={120}

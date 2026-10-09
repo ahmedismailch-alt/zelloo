@@ -1,5 +1,6 @@
 "use client"
 
+import { Logo } from "@/components/logo";
 import { AnimatedJourney } from "@/components/landing/animated-journey"
 import { heroCopy, pageCopy, useLang } from "./language-switcher"
 
@@ -136,7 +137,7 @@ export function PageSections() {
       <footer className="border-t border-black/5 py-8">
         <div className="max-w-[1200px] mx-auto px-6 flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
-            <span className="font-black text-black">ZELLOO.CH</span>
+            <Logo size="sm" label="ZELLOO.CH" className="text-black" />
             <nav className="flex flex-wrap items-center justify-center gap-5">
               <a href="/about" className="hover:text-black">
                 {p.footerAbout}

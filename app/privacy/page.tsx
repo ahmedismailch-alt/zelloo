@@ -1,11 +1,12 @@
+import { Logo } from "@/components/logo";
 import Link from "next/link"
 
 export default function PrivacyPage() {
   return (
     <div className="bg-white min-h-screen">
       <div className="max-w-[760px] mx-auto px-6 py-10">
-        <Link href="/" className="font-black text-xl">
-          ZELLOO.CH
+        <Link href="/" aria-label="ZELLOO.CH">
+          <Logo size="md" label="ZELLOO.CH" />
         </Link>
 
         <h1 className="text-3xl sm:text-4xl font-black mt-8 mb-2 text-balance">Datenschutzerklärung</h1>

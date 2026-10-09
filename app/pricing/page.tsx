@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -67,7 +68,7 @@ export default function PricingPage() {
             ← Zurück zur Auswahl
           </button>
 
-          <p className="text-sm font-bold text-orange-500">ZELLOO</p>
+          <Logo size="sm" className="text-orange-500" />
           <h1 className="text-2xl font-black mt-1 mb-6">
             {plan ? `Abonnieren – ${plan.name}` : "Abonnieren"}
           </h1>
@@ -81,7 +82,7 @@ export default function PricingPage() {
   return (
     <main className="min-h-screen bg-black text-white p-5">
       <div className="max-w-md mx-auto">
-        <p className="text-sm font-bold text-orange-500">ZELLOO</p>
+        <Logo size="sm" className="text-orange-500" />
         <h1 className="text-3xl font-black mt-1">Preise</h1>
         <p className="text-gray-400 mt-2 leading-relaxed">
           Ein Preis, keine Provision pro Bestellung. Jederzeit kündbar.

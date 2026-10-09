@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { useEffect, useMemo, useState } from "react";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import {
@@ -188,9 +189,7 @@ export function OrderApp({
           <div className="flex flex-col gap-1">
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col gap-1">
-                <p className="text-xs font-bold tracking-widest text-orange-500" dir="ltr">
-                  ZELLOO
-                </p>
+                <Logo size="sm" className="text-orange-500" />
                 <h1 className="text-3xl font-black text-balance break-words">
                   {restaurantName}
                 </h1>
