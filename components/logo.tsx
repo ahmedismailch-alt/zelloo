@@ -17,15 +17,14 @@ export function Logo({ size = "md", label = "ZELLOO", className = "" }: LogoProp
 
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`} dir="ltr">
-      <span className="inline-flex shrink-0 items-center justify-center rounded-lg bg-white p-0.5">
-        <Image
-          src="/images/zelloo-logo-icon.png"
-          alt={label ? "" : "Zelloo"}
-          width={mark}
-          height={Math.round((mark * 462) / 512)}
-          priority
-        />
-      </span>
+      <Image
+        src="/images/zelloo-logo-icon.png"
+        alt={label ? "" : "Zelloo"}
+        width={mark}
+        height={Math.round((mark * 462) / 512)}
+        className="shrink-0"
+        priority
+      />
       {label ? <span className={`font-black tracking-tight ${text}`}>{label}</span> : null}
     </span>
   );
