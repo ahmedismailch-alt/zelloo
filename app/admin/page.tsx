@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -303,7 +304,7 @@ export default function AdminPage() {
       <div className="max-w-5xl mx-auto">
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
-            <p className="text-sm font-bold text-orange-500">ZELLOO</p>
+            <Logo size="sm" className="text-orange-500" />
             <h1 className="text-2xl font-black mt-1">Admin · Übersicht</h1>
             <p className="text-gray-400 mt-1 text-sm">
               Nur für den Zelloo-Betreiber sichtbar.

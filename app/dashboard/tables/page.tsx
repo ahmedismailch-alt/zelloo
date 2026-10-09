@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -142,7 +143,7 @@ export default function TablesPage() {
             {"← Zurück zum Dashboard"}
           </Link>
 
-          <p className="text-sm font-bold text-orange-500 mt-2">ZELLOO</p>
+          <Logo size="sm" className="mt-2 text-orange-500" />
           <h1 className="text-3xl font-black mt-1 text-balance">
             QR-Codes für Tische
           </h1>

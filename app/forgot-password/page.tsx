@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
@@ -40,7 +41,9 @@ export default function ForgotPasswordPage() {
     <main className="min-h-screen bg-black text-white flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="mb-8">
-          <h1 className="text-4xl font-black">ZELLOO</h1>
+          <h1>
+            <Logo size="lg" />
+          </h1>
           <p className="text-gray-400 mt-2">RESTAURANT · AI</p>
         </div>
 

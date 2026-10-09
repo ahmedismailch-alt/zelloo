@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -287,7 +288,7 @@ export default function SettingsPage() {
       <div className="max-w-md mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <p className="text-sm font-bold text-orange-500">ZELLOO</p>
+            <Logo size="sm" className="text-orange-500" />
             <h1 className="text-2xl font-black mt-1">Einstellungen</h1>
           </div>
           <Link
