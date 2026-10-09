@@ -82,7 +82,7 @@ const nextStep: Partial<
   Record<OrderStatus, { status: OrderStatus; label: string }>
 > = {
   new: { status: "accepted", label: "Annehmen" },
-  accepted: { status: "preparing", label: "Zubereitung starten" },
+  accepted: { status: "ready", label: "Bereit" },
   preparing: { status: "ready", label: "Bereit" },
   ready: { status: "completed", label: "Abschliessen" },
 };
@@ -151,6 +151,7 @@ export default function DashboardPage() {
   const [soundOn, setSoundOn] = useState(false);
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
+  const [view, setView] = useState<"active" | "history">("active");
   const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
   const [dismissingMessageId, setDismissingMessageId] = useState<string | null>(null);
   const [onboarding, setOnboarding] = useState<{
@@ -631,11 +632,19 @@ export default function DashboardPage() {
     setPrintingOrder(order);
   }
 
+  const revenueToday = stats ? formatMoney(stats.revenue_today_cents) : "—";
+  const revenueTodayShort = stats
+    ? new Intl.NumberFormat("de-CH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(Number(stats.revenue_today_cents) / 100)
+    : "—";
+
   const cards: {
     label: string;
+    mobileLabel?: string;
     value: string;
-    compact?: boolean;
-    hint?: string;
+    mobileValue?: string;
   }[] = [
     {
       label: "Neue Bestellungen",
@@ -645,18 +654,31 @@ export default function DashboardPage() {
       label: "Bestellungen heute",
       value: stats ? String(stats.orders_today) : "—",
     },
+    {
+      label: "Umsatz heute",
+      mobileLabel: "Umsatz (CHF)",
+      value: revenueToday,
+      mobileValue: revenueTodayShort,
+    },
   ];
 
-  const revenueToday = stats ? formatMoney(stats.revenue_today_cents) : "—";
+  const isOpenStatus = (status: OrderStatus) =>
+    status !== "completed" && status !== "cancelled";
 
-  // Orders already arrive newest-first; a stable sort keeps that order
-  // within each group while bringing "new" orders to the top so staff
-  // never miss one among older, already-handled orders.
-  const sortedOrders = [...orders].sort((a, b) => {
-    if (a.status === "new" && b.status !== "new") return -1;
-    if (a.status !== "new" && b.status === "new") return 1;
-    return 0;
-  });
+  // Orders already arrive newest-first; a stable sort by status group keeps
+  // that order inside each group and shows the work in the order it needs
+  // doing: new, then in preparation, then ready, then finished.
+  const statusRank: Record<OrderStatus, number> = {
+    new: 0,
+    accepted: 1,
+    preparing: 1,
+    ready: 2,
+    completed: 3,
+    cancelled: 3,
+  };
+  const sortedOrders = [...orders].sort(
+    (a, b) => statusRank[a.status] - statusRank[b.status]
+  );
 
   const matchesFilter = (order: Order, filter: OrderFilter) => {
     if (filter === "table") return Boolean(order.table_number);
@@ -669,18 +691,21 @@ export default function DashboardPage() {
     return true;
   };
 
-  const filteredOrders = sortedOrders.filter((order) =>
-    matchesFilter(order, orderFilter)
+  const openOrders = sortedOrders.filter((order) =>
+    isOpenStatus(order.status)
+  );
+  const historyOrders = sortedOrders.filter(
+    (order) => !isOpenStatus(order.status)
   );
 
-  const openOrders = sortedOrders.filter(
-    (order) => order.status !== "completed" && order.status !== "cancelled"
+  const visibleOrders = (view === "active" ? openOrders : historyOrders).filter(
+    (order) => matchesFilter(order, orderFilter)
   );
 
   return (
     <>
     <DashboardShell restaurantName={restaurantName} />
-    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 md:pl-[17rem] print:hidden print:md:pl-0">
+    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 pb-24 md:pb-5 md:pl-[17rem] print:hidden print:md:pl-0">
       {hasPending && (
         <div
           role="alert"
@@ -831,42 +856,35 @@ export default function DashboardPage() {
             </div>
           )}
 
-        <div className="flex justify-between items-start gap-4 mb-6">
+        <div className="flex justify-between items-start gap-4 mb-4 md:mb-6">
           <div className="min-w-0">
-            <Logo size="sm" className="text-orange-500" />
+            <div className="hidden md:block">
+              <Logo size="sm" className="text-orange-500" />
+            </div>
 
-            <h1 className="text-2xl font-black mt-1 break-words">
+            <h1 className="text-xl md:text-2xl font-black md:mt-1 break-words">
               {restaurant.name}
             </h1>
 
-            <p className="text-gray-500 mt-1 break-all text-sm">{email}</p>
+            <p className="hidden md:block text-gray-500 mt-1 break-all text-sm">
+              {email}
+            </p>
           </div>
 
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex gap-2">
-              <Link
-                href="/dashboard/settings"
-                className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
-              >
-                Einstellungen
-              </Link>
+          <div className="hidden md:flex gap-2">
+            <Link
+              href="/dashboard/settings"
+              className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
+            >
+              Einstellungen
+            </Link>
 
-              <button
-                onClick={handleLogout}
-                className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
-              >
-                Abmelden
-              </button>
-            </div>
-
-            <div className="bg-white border rounded-xl px-3 py-1.5 text-right">
-              <p className="text-[10px] leading-tight text-gray-500">
-                Umsatz Heute
-              </p>
-              <p className="text-sm font-black leading-tight">
-                {revenueToday}
-              </p>
-            </div>
+            <button
+              onClick={handleLogout}
+              className="border border-gray-300 bg-white rounded-xl px-4 py-2 text-sm font-semibold"
+            >
+              Abmelden
+            </button>
           </div>
         </div>
 
@@ -880,38 +898,30 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-5">
+        <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-5">
           {cards.map((card) => (
             <div
               key={card.label}
-              className={`bg-white border rounded-2xl ${
-                card.compact ? "p-3" : "p-4 md:p-6"
-              }`}
+              className="bg-white border rounded-xl md:rounded-2xl p-2.5 md:p-6"
             >
-              <p
-                className={`text-gray-500 ${
-                  card.compact ? "text-xs" : "text-sm md:text-base"
-                }`}
-              >
-                {card.label}
+              <p className="text-[11px] leading-tight md:text-base text-gray-500">
+                <span className="md:hidden">
+                  {card.mobileLabel ?? card.label}
+                </span>
+                <span className="hidden md:inline">{card.label}</span>
               </p>
-              <p
-                className={`font-black mt-1 ${
-                  card.compact ? "text-lg" : "text-2xl md:text-4xl mt-2"
-                }`}
-              >
-                {card.value}
+              <p className="font-black mt-1 md:mt-2 text-xl md:text-4xl break-words">
+                <span className="md:hidden">
+                  {card.mobileValue ?? card.value}
+                </span>
+                <span className="hidden md:inline">{card.value}</span>
               </p>
-
-              {card.hint && (
-                <p className="text-xs text-gray-500 mt-2">{card.hint}</p>
-              )}
             </div>
           ))}
         </div>
 
-        <section className="bg-white border rounded-2xl p-4 md:p-6 mb-6 w-full">
-          <div className="flex justify-between items-center gap-3 mb-2">
+        <section className="bg-white border rounded-2xl p-3 md:p-6 mb-6 w-full">
+          <div className="flex justify-between items-center gap-3 mb-3">
             <h2 className="text-lg font-black">Bestellungen</h2>
 
             <button
@@ -923,64 +933,130 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="hidden md:block text-sm text-gray-500 mb-4">
             Letzte 50 Bestellungen · Aktualisierung alle 10 Sekunden
           </p>
 
+          {soundOn ? (
+            <div className="flex items-center gap-2 min-h-11 rounded-xl bg-green-50 border border-green-200 px-3 mb-3">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-5 w-5 shrink-0 text-green-800"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 10v4h3l5 4V6L7 10H4Zm12.5 2a3.5 3.5 0 0 0-2-3.15v6.3a3.5 3.5 0 0 0 2-3.15Zm-2-6.7v1.9a6 6 0 0 1 0 9.6v1.9a8 8 0 0 0 0-13.4Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <p className="text-sm font-bold text-green-800">Ton aktiv</p>
+              <p className="hidden md:block text-xs text-green-800/80">
+                Klingelt bis zur Annahme
+              </p>
+              <button
+                type="button"
+                onClick={() => bellRef.current?.ring()}
+                className="ml-auto min-h-9 rounded-lg border border-green-300 bg-white px-3 text-xs font-bold text-green-800 active:bg-green-100"
+              >
+                Testen
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void enableSound()}
+              className="w-full min-h-11 rounded-xl px-4 py-2.5 font-bold mb-3 bg-orange-500 text-black"
+            >
+              Ton aktivieren
+            </button>
+          )}
+
           <div
             role="tablist"
-            aria-label="Bestellungen filtern"
-            className="flex gap-2 overflow-x-auto -mx-1 px-1 mb-5"
+            aria-label="Ansicht"
+            className="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1 mb-3"
           >
-            {filterOptions.map((option) => {
-              const active = orderFilter === option.value;
-              const count = openOrders.filter((order) =>
-                matchesFilter(order, option.value)
-              ).length;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setOrderFilter(option.value)}
-                  className={`shrink-0 min-h-9 rounded-full pl-3 pr-2 py-1 text-xs font-bold flex items-center gap-1.5 ${
-                    active
-                      ? "bg-black text-white"
-                      : "bg-white border border-gray-300 text-gray-700"
-                  }`}
-                >
-                  {option.label}
+            {(
+              [
+                ["active", "Aktiv"],
+                ["history", "Verlauf"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="tab"
+                aria-selected={view === value}
+                onClick={() => setView(value)}
+                className={`min-h-10 rounded-lg text-sm font-bold flex items-center justify-center gap-2 ${
+                  view === value
+                    ? "bg-white text-black shadow-sm"
+                    : "text-gray-500"
+                }`}
+              >
+                {label}
+                {value === "active" && (
                   <span
                     className={`inline-flex min-w-5 h-5 items-center justify-center rounded-full px-1.5 text-xs font-black text-white ${
-                      count > 0 ? "bg-orange-500" : "bg-gray-300"
+                      openOrders.length > 0 ? "bg-orange-500" : "bg-gray-300"
                     }`}
                   >
-                    {count}
+                    {openOrders.length}
                   </span>
-                </button>
-              );
-            })}
+                )}
+              </button>
+            ))}
           </div>
 
-          <button
-            type="button"
-            onClick={() => void enableSound()}
-            disabled={soundOn}
-            aria-pressed={soundOn}
-            className={`w-full min-h-11 rounded-xl px-4 py-3 font-bold mb-5 ${
-              soundOn
-                ? "bg-green-50 text-green-800 border border-green-200"
-                : "bg-orange-500 text-black"
-            }`}
-          >
-            {soundOn
-              ? "Ton an · Klingelt bis zur Annahme"
-              : "Ton aktivieren"}
-          </button>
+          <div className="relative mb-3">
+            <div
+              role="tablist"
+              aria-label="Bestellungen filtern"
+              className="flex gap-1.5 overflow-x-auto pr-6"
+            >
+              {filterOptions.map((option) => {
+                const active = orderFilter === option.value;
+                const count = openOrders.filter((order) =>
+                  matchesFilter(order, option.value)
+                ).length;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setOrderFilter(option.value)}
+                    className={`shrink-0 min-h-9 rounded-full pl-2.5 py-1 text-xs font-bold flex items-center gap-1 ${
+                      view === "active" ? "pr-1.5" : "pr-2.5"
+                    } ${
+                      active
+                        ? "bg-black text-white"
+                        : "bg-white border border-gray-300 text-gray-700"
+                    }`}
+                  >
+                    {option.label}
+                    {view === "active" && (
+                      <span
+                        className={`inline-flex min-w-5 h-5 items-center justify-center rounded-full px-1.5 text-xs font-black text-white ${
+                          count > 0 ? "bg-orange-500" : "bg-gray-300"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-white to-transparent md:hidden"
+            />
+          </div>
 
           {soundOn && (
-            <p className="text-xs text-gray-500 -mt-3 mb-5">
+            <p className="hidden md:block text-xs text-gray-500 mb-3">
               Bildschirm bleibt an. Lautstärke am Gerät auf Maximum stellen.
             </p>
           )}
@@ -998,17 +1074,25 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {ordersLoaded && orders.length > 0 && filteredOrders.length === 0 && (
+          {ordersLoaded && orders.length > 0 && visibleOrders.length === 0 && (
             <div className="border border-dashed rounded-xl p-6 text-center">
-              <p className="font-bold">Keine Bestellungen in dieser Kategorie</p>
+              <p className="font-bold">
+                {view === "active"
+                  ? "Keine offenen Bestellungen"
+                  : "Keine abgeschlossenen Bestellungen"}
+              </p>
               <p className="text-sm text-gray-500 mt-2">
-                Versuchen Sie einen anderen Filter.
+                {orderFilter === "all"
+                  ? view === "active"
+                    ? "Neue Bestellungen erscheinen hier."
+                    : "Erledigte und stornierte Bestellungen erscheinen hier."
+                  : "Versuchen Sie einen anderen Filter."}
               </p>
             </div>
           )}
 
           <div className="space-y-3">
-            {filteredOrders.map((order) => (
+            {visibleOrders.map((order) => (
               <article
                 key={order.id}
                 className={`border rounded-xl p-3 transition-colors ${
@@ -1084,54 +1168,58 @@ export default function DashboardPage() {
                   </p>
                 )}
 
-                {(nextStep[order.status] ||
-                  order.status === "new" ||
-                  order.status === "accepted") && (
-                  <div className="flex gap-2 mt-4">
-                    {nextStep[order.status] && (
-                      <button
-                        type="button"
-                        disabled={savingId !== null}
-                        onClick={() =>
-                          void changeStatus(
-                            order,
-                            nextStep[order.status]!.status
-                          )
+                <div className="flex gap-2 mt-4">
+                  {nextStep[order.status] && (
+                    <button
+                      type="button"
+                      disabled={savingId !== null}
+                      onClick={() =>
+                        void changeStatus(
+                          order,
+                          nextStep[order.status]!.status
+                        )
+                      }
+                      className={`flex-[2] min-h-12 rounded-xl font-black text-base px-3 py-2.5 disabled:opacity-50 ${
+                        order.status === "new"
+                          ? "bg-orange-500 text-black"
+                          : "bg-black text-white"
+                      }`}
+                    >
+                      {nextStep[order.status]!.label}
+                    </button>
+                  )}
+                  {isOpenStatus(order.status) && (
+                    <button
+                      type="button"
+                      disabled={savingId !== null}
+                      onClick={() => {
+                        const question =
+                          order.status === "new"
+                            ? "Bestellung ablehnen?"
+                            : "Bestellung stornieren?";
+                        if (window.confirm(question)) {
+                          void changeStatus(order, "cancelled");
                         }
-                        className="flex-1 min-h-11 rounded-xl bg-black text-white font-bold text-sm px-3 py-2.5 disabled:opacity-50"
-                      >
-                        {nextStep[order.status]!.label}
-                      </button>
-                    )}
-                    {order.status !== "completed" &&
-                      order.status !== "cancelled" && (
-                        <button
-                          type="button"
-                          disabled={savingId !== null}
-                          onClick={() => {
-                            if (window.confirm("Bestellung stornieren?")) {
-                              void changeStatus(order, "cancelled");
-                            }
-                          }}
-                          className="min-h-11 rounded-xl border border-red-200 text-red-700 font-semibold text-sm px-3 py-2.5 disabled:opacity-50"
-                        >
-                          Stornieren
-                        </button>
-                      )}
-                  </div>
-                )}
-
+                      }}
+                      className="flex-1 min-h-12 rounded-xl border border-red-200 text-red-700 font-semibold text-sm px-3 py-2.5 disabled:opacity-50"
+                    >
+                      {order.status === "new" ? "Ablehnen" : "Stornieren"}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => printOrder(order)}
-                    className="w-full min-h-11 rounded-xl border border-gray-300 text-black font-semibold text-sm px-3 py-2.5 mt-2 active:bg-gray-100"
+                    className={`min-h-12 rounded-xl border border-gray-300 text-black font-semibold text-sm px-3 py-2.5 active:bg-gray-100 ${
+                      isOpenStatus(order.status) ? "" : "flex-1"
+                    }`}
                   >
                     Drucken
                   </button>
+                </div>
 
-                <details className="mt-3">
-                  <summary className="text-sm text-gray-500 cursor-pointer min-h-11 flex items-center">
-                    Status manuell ändern
+                <details className="mt-1">
+                  <summary className="text-xs text-gray-400 cursor-pointer min-h-9 flex items-center">
+                    Mehr
                   </summary>
                 <label className="block text-sm font-semibold mt-2">
                   Status

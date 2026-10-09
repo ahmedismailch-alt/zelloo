@@ -128,6 +128,7 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [panel, setPanel] = useState<"add" | "photo" | null>(null);
 
   useEffect(() => {
     async function loadMenu() {
@@ -618,6 +619,7 @@ export default function MenuPage() {
     setImageUrl("");
 
     setMessage("Gericht wurde hinzugefügt.");
+    setPanel(null);
     setSaving(false);
     void requestArabicNames([String(data.id)], { silent: true });
   }
@@ -925,27 +927,66 @@ export default function MenuPage() {
   return (
     <>
     <DashboardShell restaurantName={restaurantName} />
-    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 md:pl-[17rem]">
+    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 pb-24 md:pb-5 md:pl-[17rem]">
       <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-start gap-4 mb-8">
+        <div className="flex justify-between items-start gap-4 mb-4">
           <div>
             <Logo size="sm" className="text-orange-500" />
 
-            <h1 className="text-3xl font-black mt-1">Speisekarte</h1>
+            <h1 className="text-2xl md:text-3xl font-black mt-1">Speisekarte</h1>
 
             <p className="text-gray-500 mt-1">{restaurantName}</p>
           </div>
 
           <button
             onClick={() => router.push("/dashboard")}
-            className="bg-black text-white px-4 py-2 rounded-xl font-semibold"
+            className="hidden md:block bg-black text-white px-4 py-2 rounded-xl font-semibold"
           >
             Dashboard
           </button>
         </div>
 
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <button
+            type="button"
+            aria-pressed={panel === "add"}
+            onClick={() => setPanel(panel === "add" ? null : "add")}
+            className={`min-h-11 rounded-xl px-3 text-sm font-bold border ${
+              panel === "add"
+                ? "bg-orange-500 border-orange-500 text-black"
+                : "bg-white border-gray-300 text-black"
+            }`}
+          >
+            Gericht hinzufügen
+          </button>
+          <button
+            type="button"
+            aria-pressed={panel === "photo"}
+            onClick={() => setPanel(panel === "photo" ? null : "photo")}
+            className={`min-h-11 rounded-xl px-3 text-sm font-bold border ${
+              panel === "photo"
+                ? "bg-orange-500 border-orange-500 text-black"
+                : "bg-white border-gray-300 text-black"
+            }`}
+          >
+            Karte per Foto
+          </button>
+        </div>
+
+        {restaurantId && (
+          <a
+            href={`/r/${restaurantId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center min-h-11 mb-6 border border-gray-300 bg-white rounded-xl px-4 text-sm font-semibold"
+          >
+            Kundenmenü ansehen
+          </a>
+        )}
+
         {/* AI PHOTO UPLOAD */}
 
+        {(panel === "photo" || menuImages.length > 0 || analyzing) && (
         <div className="bg-black text-white rounded-2xl p-5 mb-6">
           <p className="text-sm text-orange-500 font-bold">ZELLOO AI</p>
 
@@ -1023,6 +1064,7 @@ export default function MenuPage() {
             </div>
           )}
         </div>
+        )}
 
         {/* AI REVIEW */}
 
@@ -1116,44 +1158,42 @@ export default function MenuPage() {
 
         {/* MANUAL ADD */}
 
+        {panel === "add" && (
         <div className="bg-white border rounded-2xl p-5 mb-6">
           <h2 className="text-xl font-black">
             Gericht manuell hinzufügen
           </h2>
 
           <p className="text-sm text-gray-500 mt-1 mb-5">
-            Sie können Gerichte auch manuell hinzufügen.
+            Vergessen Sie die Getränke nicht: Gäste können nur bestellen, was
+            auf Ihrer Speisekarte steht.
           </p>
 
-          <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl p-4 mb-5">
-            <span className="text-2xl leading-none" aria-hidden="true">
-              🥤
-            </span>
-            <p className="text-sm text-gray-700 leading-relaxed">
-              <span className="font-bold text-gray-900">
-                Vergessen Sie die Getränke nicht:
-              </span>{" "}
-              Gäste können nur bestellen, was auf Ihrer Speisekarte
-              steht. Fügen Sie Kaffee, Softdrinks oder Säfte als eigene
-              Kategorie hinzu, damit nichts fehlt.
-            </p>
-          </div>
-
-          <form onSubmit={addItem} className="space-y-3">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={namePlaceholderForCategory(category)}
-              required
-              className="w-full border rounded-xl px-4 py-3"
-            />
+          <form onSubmit={addItem} className="space-y-4">
+            <div>
+              <label htmlFor="new-item-name" className="block text-sm font-semibold mb-1">
+                Name des Gerichts
+              </label>
+              <input
+                id="new-item-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={namePlaceholderForCategory(category)}
+                required
+                className="w-full border rounded-xl px-4 py-3 text-base"
+              />
+            </div>
 
             <div>
+              <label htmlFor="new-item-category" className="block text-sm font-semibold mb-1">
+                Kategorie
+              </label>
               <input
+                id="new-item-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="Kategorie, z.B. Pizza"
-                className="w-full border rounded-xl px-4 py-3"
+                placeholder="z.B. Pizza"
+                className="w-full border rounded-xl px-4 py-3 text-base"
               />
 
               <div className="flex flex-wrap gap-2 mt-2">
@@ -1182,11 +1222,15 @@ export default function MenuPage() {
 
             {getSubcategorySuggestions(category).length > 0 && (
               <div>
+                <label htmlFor="new-item-subcategory" className="block text-sm font-semibold mb-1">
+                  Unterkategorie (optional)
+                </label>
                 <input
+                  id="new-item-subcategory"
                   value={subcategory}
                   onChange={(e) => setSubcategory(e.target.value)}
-                  placeholder="Unterkategorie, z.B. Warme Getränke (optional)"
-                  className="w-full border rounded-xl px-4 py-3"
+                  placeholder="z.B. Warme Getränke"
+                  className="w-full border rounded-xl px-4 py-3 text-base"
                 />
 
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -1212,36 +1256,48 @@ export default function MenuPage() {
               </div>
             )}
 
-            <input
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="Preis, z.B. 18.50"
-              inputMode="decimal"
-              className="w-full border rounded-xl px-4 py-3"
-            />
+            <div>
+              <label htmlFor="new-item-price" className="block text-sm font-semibold mb-1">
+                Preis CHF
+              </label>
+              <input
+                id="new-item-price"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="z.B. 18.50"
+                inputMode="decimal"
+                className="w-full border rounded-xl px-4 py-3 text-base"
+              />
+            </div>
 
             <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                {imageUrl.trim() && isValidImageUrl(imageUrl.trim()) ? (
-                  <img
-                    src={imageUrl.trim() || "/placeholder.svg"}
-                    alt=""
-                    className="size-14 shrink-0 rounded-lg object-cover border"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                ) : null}
+              <p className="text-sm font-semibold">Foto (optional)</p>
 
+              {imageUrl.trim() && isValidImageUrl(imageUrl.trim()) && (
+                <img
+                  src={imageUrl.trim()}
+                  alt="Vorschau des Gerichts"
+                  className="w-full h-40 rounded-xl object-cover border"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              )}
+
+              <div className="flex gap-2">
                 <label className="flex-1">
                   <div
-                    className={`flex items-center justify-center gap-2 border rounded-xl px-4 py-3 font-semibold text-sm cursor-pointer ${
+                    className={`flex items-center justify-center min-h-11 border rounded-xl px-4 font-semibold text-sm cursor-pointer ${
                       uploadingImage
                         ? "bg-gray-100 text-gray-400"
                         : "bg-orange-50 border-orange-300 text-orange-700"
                     }`}
                   >
-                    {uploadingImage ? "Wird hochgeladen..." : "📷 Foto vom Gericht hochladen"}
+                    {uploadingImage
+                      ? "Wird hochgeladen..."
+                      : imageUrl.trim()
+                        ? "Foto ändern"
+                        : "Foto hochladen"}
                   </div>
                   <input
                     type="file"
@@ -1251,26 +1307,43 @@ export default function MenuPage() {
                     className="hidden"
                   />
                 </label>
+
+                {imageUrl.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl("")}
+                    className="min-h-11 border border-gray-300 rounded-xl px-4 text-sm font-semibold text-red-700"
+                  >
+                    Entfernen
+                  </button>
+                )}
               </div>
 
-              <input
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="oder Bild-Link einfügen, z.B. https://..."
-                type="url"
-                className="w-full border rounded-xl px-4 py-3 text-sm"
-              />
+              <details className="text-sm">
+                <summary className="cursor-pointer min-h-11 flex items-center text-gray-600">
+                  Link statt Foto verwenden
+                </summary>
+                <input
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://..."
+                  type="url"
+                  aria-label="Bild-Link"
+                  className="w-full border rounded-xl px-4 py-3 text-base mt-1"
+                />
+              </details>
             </div>
 
             <button
               type="submit"
               disabled={saving}
-              className="w-full bg-orange-500 text-black font-bold p-3 rounded-xl disabled:opacity-50"
+              className="w-full min-h-11 bg-orange-500 text-black font-bold p-3 rounded-xl disabled:opacity-50"
             >
               {saving ? "Wird gespeichert..." : "Gericht hinzufügen"}
             </button>
           </form>
         </div>
+        )}
 
         {message && (
           <div className="bg-white border rounded-xl p-4 mb-6">

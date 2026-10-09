@@ -133,7 +133,7 @@ export default function TablesPage() {
   return (
     <>
     <DashboardShell restaurantName={restaurant.name} />
-    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 md:pl-[17rem] print:bg-white print:p-0 print:md:pl-0">
+    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 pb-24 md:pb-5 md:pl-[17rem] print:bg-white print:p-0 print:md:pl-0">
       <div className="max-w-5xl mx-auto">
         <div className="print:hidden">
           <Link
