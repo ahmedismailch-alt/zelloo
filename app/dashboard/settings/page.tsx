@@ -11,6 +11,8 @@ export default function SettingsPage() {
   const router = useRouter();
   const [restaurantId, setRestaurantId] = useState<number | string | null>(null);
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +56,8 @@ export default function SettingsPage() {
         router.replace("/login");
         return;
       }
+
+      setEmail(user.email || "");
 
       const { data, error: readError } = await supabase
         .from("restaurants")
@@ -281,10 +285,20 @@ export default function SettingsPage() {
     setPasswordSaved(true);
   }
 
+  async function handleLogout() {
+    setLoggingOut(true);
+    const { error: signOutError } = await supabase.auth.signOut();
+    if (signOutError) {
+      setLoggingOut(false);
+      return;
+    }
+    router.replace("/login");
+  }
+
   return (
     <>
     <DashboardShell />
-    <main className="min-h-screen bg-gray-50 px-4 py-6 md:pl-[17rem]">
+    <main className="min-h-screen bg-gray-50 px-4 py-6 pb-24 md:pb-6 md:pl-[17rem]">
       <div className="max-w-md mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -298,6 +312,23 @@ export default function SettingsPage() {
             Zurück
           </Link>
         </div>
+
+        {email && (
+          <div className="bg-white border rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs text-gray-500">Angemeldet als</p>
+              <p className="text-sm font-semibold break-all">{email}</p>
+            </div>
+            <button
+              type="button"
+              disabled={loggingOut}
+              onClick={() => void handleLogout()}
+              className="shrink-0 min-h-11 border border-gray-300 bg-white rounded-xl px-4 text-sm font-semibold disabled:opacity-60"
+            >
+              {loggingOut ? "..." : "Abmelden"}
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <p className="text-gray-500 text-sm">Wird geladen...</p>

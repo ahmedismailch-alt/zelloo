@@ -150,7 +150,7 @@ export default function StatsPage() {
   return (
     <>
     <DashboardShell restaurantName={restaurant.name} />
-    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 md:pl-[17rem] pb-12">
+    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 md:pl-[17rem] pb-24 md:pb-12">
       <div className="max-w-3xl mx-auto">
         <Link href="/dashboard" className="inline-flex items-center min-h-11 text-sm font-semibold text-gray-600">
           {"← Zurück zum Dashboard"}
