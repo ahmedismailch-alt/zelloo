@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import type { OrderStrings } from "../../lib/order-i18n";
+import type { OrderLang, OrderStrings } from "../../lib/order-i18n";
+import { DemoResult, type DemoSummary } from "./demo-result";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import { optionsKey, resolveSelection } from "../../lib/menu-options";
 import { formatChf } from "./format";
@@ -55,9 +56,11 @@ type Props = {
   cart: Record<string, CartLine>;
   menuById: Map<string, PublicMenuItem>;
   t: OrderStrings;
+  lang: OrderLang;
   dir: "ltr" | "rtl";
   showArabic: boolean;
   delivery: DeliveryInfo;
+  isDemo?: boolean;
   onSetQuantity: (key: string, quantity: number) => void;
   onOrdered: () => void;
 };
@@ -68,12 +71,15 @@ export function Cart({
   cart,
   menuById,
   t,
+  lang,
   dir,
   showArabic,
   delivery,
+  isDemo = false,
   onSetQuantity,
   onOrdered,
 }: Props) {
+  const [demoSummary, setDemoSummary] = useState<DemoSummary | null>(null);
   const labelFor = (item: PublicMenuItem) =>
     showArabic && item.nameAr ? item.nameAr : item.name;
   const [open, setOpen] = useState(false);
@@ -292,6 +298,18 @@ export function Cart({
 
       setOrderStatus("new");
       setPrepMinutes(null);
+      if (isDemo) {
+        setDemoSummary({
+          orderId: String(data.orderId),
+          totalCents: data.totalCents,
+          orderType: table ? "pickup" : orderType,
+          table,
+          lines: lines.map((line) => ({
+            name: [labelFor(line.item), ...line.optionNames].join(", "),
+            quantity: line.quantity,
+          })),
+        });
+      }
       setConfirmed({ id: String(data.orderId), totalCents: data.totalCents });
       setNotes("");
       onOrdered();
@@ -300,6 +318,20 @@ export function Cart({
     } finally {
       setSending(false);
     }
+  }
+
+  if (confirmed && isDemo && demoSummary) {
+    return (
+      <DemoResult
+        summary={demoSummary}
+        lang={lang}
+        onClose={() => {
+          setConfirmed(null);
+          setDemoSummary(null);
+          setOpen(false);
+        }}
+      />
+    );
   }
 
   if (confirmed) {

@@ -27,6 +27,14 @@ import { canOrder, type Availability } from "../../lib/restaurant-settings";
 
 const MAX_QUANTITY = 20;
 
+const DEMO_BANNER: Record<OrderLang, string> = {
+  de: "Demo: keine echte Bestellung",
+  fr: "Démo : pas de vraie commande",
+  it: "Demo: nessun ordine reale",
+  en: "Demo: not a real order",
+  ar: "تجريبي: مو طلب حقيقي",
+};
+
 const DRINK_KEYWORDS = [
   "getränk",
   "getraenk",
@@ -44,6 +52,7 @@ function isDrinkCategory(category: string | null | undefined) {
 
 type Props = {
   restaurantId: string;
+  isDemo?: boolean;
   availability?: Availability;
   delivery?: DeliveryInfo;
   restaurantName: string;
@@ -56,6 +65,7 @@ type Props = {
 
 export function OrderApp({
   restaurantId,
+  isDemo = false,
   availability = "open",
   delivery = { feeCents: 0, minCents: 0 },
   restaurantName,
@@ -254,6 +264,14 @@ export function OrderApp({
 
   return (
     <main lang={lang} dir={dir} className="min-h-screen bg-[#f8f9fb] text-black">
+      {isDemo && (
+        <p
+          role="note"
+          className="bg-orange-500 px-4 py-2 text-center text-sm font-bold text-black"
+        >
+          {DEMO_BANNER[lang]}
+        </p>
+      )}
       <header className="bg-black text-white px-5 pt-6 pb-6">
         <div className="max-w-xl mx-auto flex flex-col gap-4">
           <nav aria-label={t.languageLabel}>
@@ -450,9 +468,11 @@ export function OrderApp({
         cart={cart}
         menuById={menuById}
         t={t}
+        lang={lang}
         dir={dir}
         showArabic={lang === "ar"}
         delivery={delivery}
+        isDemo={isDemo}
         onSetQuantity={setQuantity}
         onOrdered={() => {
           setCart({});

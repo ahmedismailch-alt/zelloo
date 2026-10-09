@@ -28,9 +28,15 @@ export function HeroContent() {
           </span>
         </div>
 
-        <div className="flex gap-3 mt-6">
+        <div className="flex flex-wrap gap-3 mt-6">
           <a href="/dashboard" className="bg-[#c41e24] text-white font-bold px-8 py-3 rounded-lg min-h-11 flex items-center">
             {t.cta}
+          </a>
+          <a
+            href="/demo"
+            className="border border-black text-black font-bold px-8 py-3 rounded-lg min-h-11 flex items-center"
+          >
+            {t.demo}
           </a>
         </div>
         <p className="text-sm text-gray-500 mt-3">{t.ctaNote}</p>

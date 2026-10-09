@@ -4,8 +4,10 @@ import {
   getOrderAvailability,
   getRestaurant,
   getSupabaseAdmin,
+  isDemoRestaurant,
   isValidRestaurantId,
   normalizeTable,
+  pruneDemoOrders,
 } from "../../../lib/supabase-server";
 import {
   formatItemNameWithOptions,
@@ -129,6 +131,16 @@ export async function POST(request: Request) {
         { error: "Restaurant nicht gefunden." },
         { status: 404 }
       );
+    }
+
+    if (await isDemoRestaurant(restaurant.id)) {
+      const limitReached = await pruneDemoOrders(restaurant.id);
+      if (limitReached) {
+        return NextResponse.json(
+          { error: "Die Demo ist gerade ausgelastet. Bitte später erneut versuchen." },
+          { status: 429 }
+        );
+      }
     }
 
     const { availability, settings } = await getOrderAvailability(restaurant.id);
