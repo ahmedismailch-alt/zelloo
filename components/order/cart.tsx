@@ -3,9 +3,25 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { OrderStrings } from "../../lib/order-i18n";
 import type { PublicMenuItem } from "../../lib/supabase-server";
+import { optionsKey, resolveSelection } from "../../lib/menu-options";
 import { formatChf } from "./format";
 
-export type CartLine = { quantity: number; note: string | null };
+export type CartLine = {
+  menuItemId: string;
+  options: string[];
+  quantity: number;
+  note: string | null;
+};
+
+export type DeliveryInfo = { feeCents: number; minCents: number };
+
+export function cartLineKey(menuItemId: string, options: string[]) {
+  return options.length > 0 ? `${menuItemId}::${optionsKey(options)}` : menuItemId;
+}
+
+export function lastOrderStorageKey(restaurantId: string) {
+  return `zelloo-last-order-${restaurantId}`;
+}
 
 type OrderStatus =
   | "new"
@@ -41,7 +57,8 @@ type Props = {
   t: OrderStrings;
   dir: "ltr" | "rtl";
   showArabic: boolean;
-  onSetQuantity: (id: string, quantity: number) => void;
+  delivery: DeliveryInfo;
+  onSetQuantity: (key: string, quantity: number) => void;
   onOrdered: () => void;
 };
 
@@ -53,6 +70,7 @@ export function Cart({
   t,
   dir,
   showArabic,
+  delivery,
   onSetQuantity,
   onOrdered,
 }: Props) {
@@ -178,14 +196,30 @@ export function Cart({
   }, [confirmedId, restaurantId]);
 
   const lines = Object.entries(cart)
-    .map(([id, line]) => ({ id, ...line, item: menuById.get(id) }))
-    .filter((line) => line.item);
+    .map(([key, line]) => {
+      const item = menuById.get(line.menuItemId);
+      if (!item) return null;
+      const selection = resolveSelection(item.options, line.options);
+      return {
+        key,
+        ...line,
+        item,
+        optionNames: selection.ok ? selection.choices.map((choice) => choice.name) : [],
+        unitCents: item.priceCents + (selection.ok ? selection.extraCents : 0),
+      };
+    })
+    .filter((line): line is NonNullable<typeof line> => line !== null);
 
   const count = lines.reduce((sum, line) => sum + line.quantity, 0);
-  const estimatedCents = lines.reduce(
-    (sum, line) => sum + line.quantity * (line.item?.priceCents ?? 0),
+  const subtotalCents = lines.reduce(
+    (sum, line) => sum + line.quantity * line.unitCents,
     0
   );
+  const isDelivery = !table && orderType === "delivery";
+  const deliveryFeeCents = isDelivery ? delivery.feeCents : 0;
+  const estimatedCents = subtotalCents + deliveryFeeCents;
+  const belowMinimum =
+    isDelivery && delivery.minCents > 0 && subtotalCents < delivery.minCents;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -198,6 +232,11 @@ export function Cart({
 
     if (!table && orderType === "delivery" && !address.trim()) {
       setError(t.missingAddressError);
+      return;
+    }
+
+    if (belowMinimum) {
+      setError(t.minOrderError(formatChf(delivery.minCents)));
       return;
     }
 
@@ -217,15 +256,38 @@ export function Cart({
           customerAddress: table ? "" : orderType === "delivery" ? address : "",
           notes,
           items: lines.map((line) => ({
-            menuItemId: line.id,
+            menuItemId: line.menuItemId,
             quantity: line.quantity,
             note: line.note,
+            options: line.options,
           })),
         }),
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.code === "paused" ? t.pausedError : t.sendError);
+        const messages: Record<string, string> = {
+          paused: t.pausedError,
+          closed: t.closedError,
+          zone: t.zoneError,
+          min_order: t.minOrderError(formatChf(delivery.minCents)),
+        };
+        throw new Error(messages[data?.code as string] ?? t.sendError);
+      }
+
+      try {
+        window.localStorage.setItem(
+          lastOrderStorageKey(restaurantId),
+          JSON.stringify(
+            lines.map((line) => ({
+              menuItemId: line.menuItemId,
+              options: line.options,
+              quantity: line.quantity,
+              note: line.note,
+            }))
+          )
+        );
+      } catch {
+        // Storage can be blocked; reordering is a convenience only.
       }
 
       setOrderStatus("new");
@@ -371,21 +433,29 @@ export function Cart({
           <form onSubmit={submit} className="flex flex-col gap-4 max-h-[65vh] overflow-y-auto">
             <ul className="flex flex-col gap-2">
               {lines.map((line) => (
-                <li key={line.id} className="flex items-center justify-between gap-3 border-b pb-2">
+                <li key={line.key} className="flex items-center justify-between gap-3 border-b pb-2">
                   <div className="min-w-0 flex flex-col">
-                    <span className="font-semibold break-words" dir="auto">{labelFor(line.item!)}</span>
-                    {showArabic && line.item!.nameAr && (
+                    <span className="font-semibold break-words" dir="auto">{labelFor(line.item)}</span>
+                    {showArabic && line.item.nameAr && (
                       <span className="text-xs text-gray-400 break-words" dir="ltr" lang="de">
-                        {line.item!.name}
+                        {line.item.name}
+                      </span>
+                    )}
+                    {line.optionNames.length > 0 && (
+                      <span className="text-sm text-gray-600 break-words" dir="auto">
+                        {line.optionNames.join(", ")}
                       </span>
                     )}
                     {line.note && <span className="text-sm text-gray-500">{line.note}</span>}
+                    <span className="text-sm font-semibold" dir="ltr">
+                      {formatChf(line.unitCents * line.quantity)}
+                    </span>
                   </div>
                   <div className="shrink-0 flex items-center gap-1" dir="ltr">
                     <button
                       type="button"
-                      onClick={() => onSetQuantity(line.id, line.quantity - 1)}
-                      aria-label={t.remove(labelFor(line.item!))}
+                      onClick={() => onSetQuantity(line.key, line.quantity - 1)}
+                      aria-label={t.remove(labelFor(line.item))}
                       className="size-11 rounded-full border text-xl font-bold"
                     >
                       {"−"}
@@ -393,8 +463,8 @@ export function Cart({
                     <span className="w-6 text-center font-black">{line.quantity}</span>
                     <button
                       type="button"
-                      onClick={() => onSetQuantity(line.id, line.quantity + 1)}
-                      aria-label={t.add(labelFor(line.item!))}
+                      onClick={() => onSetQuantity(line.key, line.quantity + 1)}
+                      aria-label={t.add(labelFor(line.item))}
                       className="size-11 rounded-full border text-xl font-bold"
                     >
                       +
@@ -440,6 +510,19 @@ export function Cart({
                   </button>
                 </div>
               </div>
+            )}
+
+            {isDelivery && delivery.minCents > 0 && (
+              <p
+                role="status"
+                className={`text-sm rounded-xl p-3 ${
+                  belowMinimum
+                    ? "bg-amber-50 text-amber-900 border border-amber-300"
+                    : "bg-gray-50 text-gray-600"
+                }`}
+              >
+                {t.deliveryMinInfo(formatChf(delivery.minCents))}
+              </p>
             )}
 
             {!table && orderType === "delivery" && (
@@ -508,6 +591,23 @@ export function Cart({
                 className="rounded-xl border p-3 text-base font-normal"
               />
             </label>
+
+            <dl className="flex flex-col gap-1 rounded-xl bg-gray-50 p-3 text-sm">
+              <div className="flex justify-between gap-3">
+                <dt>{t.subtotalLabel}</dt>
+                <dd dir="ltr">{formatChf(subtotalCents)}</dd>
+              </div>
+              {isDelivery && (
+                <div className="flex justify-between gap-3">
+                  <dt>{t.deliveryFeeLabel}</dt>
+                  <dd dir="ltr">{formatChf(deliveryFeeCents)}</dd>
+                </div>
+              )}
+              <div className="flex justify-between gap-3 border-t pt-1 font-black">
+                <dt>Total</dt>
+                <dd dir="ltr">{formatChf(estimatedCents)}</dd>
+              </div>
+            </dl>
 
             <p className="text-xs text-gray-500">
               {t.finalPriceInfo}

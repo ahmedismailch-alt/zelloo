@@ -90,6 +90,25 @@ export type OrderStrings = {
   pausedText: string;
   pausedError: string;
   prepTime: (minutes: number) => string;
+  busyNotice: string;
+  closedTitle: string;
+  closedText: string;
+  closedError: string;
+  chooseOptions: string;
+  requiredOption: string;
+  optionalOption: string;
+  pickOne: string;
+  pickAny: string;
+  addToCart: (price: string) => string;
+  optionsMissingError: string;
+  subtotalLabel: string;
+  deliveryFeeLabel: string;
+  deliveryMinInfo: (min: string) => string;
+  minOrderError: (min: string) => string;
+  zoneError: string;
+  reorderButton: string;
+  reorderAdded: string;
+  reorderUnavailable: string;
   badgeReady: string;
   badgeCancelled: string;
   headline: {
@@ -179,6 +198,25 @@ const de: OrderStrings = {
     "Das Restaurant nimmt im Moment keine Bestellungen an. Bitte versuchen Sie es später erneut.",
   pausedError: "Das Restaurant nimmt gerade keine Bestellungen an.",
   prepTime: (minutes) => `Fertig in ca. ${minutes} Min.`,
+  busyNotice: "Aktuell viel los – die Zubereitung kann etwas länger dauern.",
+  closedTitle: "Restaurant derzeit geschlossen",
+  closedText: "Das Restaurant ist gerade ausserhalb der Öffnungszeiten. Bitte versuchen Sie es später erneut.",
+  closedError: "Das Restaurant ist derzeit geschlossen.",
+  chooseOptions: "Optionen wählen",
+  requiredOption: "Pflicht",
+  optionalOption: "Optional",
+  pickOne: "Eine Auswahl",
+  pickAny: "Mehrfachauswahl möglich",
+  addToCart: (p) => `In den Warenkorb · ${p}`,
+  optionsMissingError: "Bitte alle Pflichtoptionen wählen.",
+  subtotalLabel: "Zwischensumme",
+  deliveryFeeLabel: "Liefergebühr",
+  deliveryMinInfo: (m) => `Mindestbestellwert für Lieferung: ${m}`,
+  minOrderError: (m) => `Mindestbestellwert für Lieferung: ${m}`,
+  zoneError: "Wir liefern leider nicht an diese Adresse.",
+  reorderButton: "Letzte Bestellung wiederholen",
+  reorderAdded: "Letzte Bestellung wurde in den Warenkorb gelegt.",
+  reorderUnavailable: "Einige Artikel der letzten Bestellung sind nicht mehr verfügbar.",
   badgeReady: "BEREIT",
   badgeCancelled: "STORNIERT",
   headline: {
@@ -269,6 +307,25 @@ const fr: OrderStrings = {
     "Le restaurant n'accepte pas de commandes pour le moment. Veuillez réessayer plus tard.",
   pausedError: "Le restaurant n'accepte pas de commandes pour le moment.",
   prepTime: (minutes) => `Prête dans environ ${minutes} min`,
+  busyNotice: "Beaucoup de monde en ce moment – la préparation peut prendre un peu plus de temps.",
+  closedTitle: "Restaurant actuellement fermé",
+  closedText: "Le restaurant est en dehors de ses heures d'ouverture. Veuillez réessayer plus tard.",
+  closedError: "Le restaurant est actuellement fermé.",
+  chooseOptions: "Choisir les options",
+  requiredOption: "Obligatoire",
+  optionalOption: "Facultatif",
+  pickOne: "Un seul choix",
+  pickAny: "Plusieurs choix possibles",
+  addToCart: (p) => `Ajouter au panier · ${p}`,
+  optionsMissingError: "Veuillez choisir toutes les options obligatoires.",
+  subtotalLabel: "Sous-total",
+  deliveryFeeLabel: "Frais de livraison",
+  deliveryMinInfo: (m) => `Commande minimum pour la livraison : ${m}`,
+  minOrderError: (m) => `Commande minimum pour la livraison : ${m}`,
+  zoneError: "Nous ne livrons malheureusement pas à cette adresse.",
+  reorderButton: "Répéter la dernière commande",
+  reorderAdded: "La dernière commande a été ajoutée au panier.",
+  reorderUnavailable: "Certains articles de la dernière commande ne sont plus disponibles.",
   badgeReady: "PRÊTE",
   badgeCancelled: "ANNULÉE",
   headline: {
@@ -359,6 +416,25 @@ const it: OrderStrings = {
     "Il ristorante al momento non accetta ordini. Riprovi più tardi.",
   pausedError: "Il ristorante al momento non accetta ordini.",
   prepTime: (minutes) => `Pronto tra circa ${minutes} min`,
+  busyNotice: "Molto lavoro in questo momento – la preparazione potrebbe richiedere più tempo.",
+  closedTitle: "Ristorante attualmente chiuso",
+  closedText: "Il ristorante è fuori orario di apertura. Riprova più tardi.",
+  closedError: "Il ristorante è attualmente chiuso.",
+  chooseOptions: "Scegli le opzioni",
+  requiredOption: "Obbligatorio",
+  optionalOption: "Facoltativo",
+  pickOne: "Una sola scelta",
+  pickAny: "Scelta multipla possibile",
+  addToCart: (p) => `Aggiungi al carrello · ${p}`,
+  optionsMissingError: "Scegli tutte le opzioni obbligatorie.",
+  subtotalLabel: "Subtotale",
+  deliveryFeeLabel: "Costo di consegna",
+  deliveryMinInfo: (m) => `Ordine minimo per la consegna: ${m}`,
+  minOrderError: (m) => `Ordine minimo per la consegna: ${m}`,
+  zoneError: "Purtroppo non consegniamo a questo indirizzo.",
+  reorderButton: "Ripeti l'ultimo ordine",
+  reorderAdded: "L'ultimo ordine è stato aggiunto al carrello.",
+  reorderUnavailable: "Alcuni articoli dell'ultimo ordine non sono più disponibili.",
   badgeReady: "PRONTO",
   badgeCancelled: "ANNULLATO",
   headline: {
@@ -449,6 +525,25 @@ const en: OrderStrings = {
     "The restaurant is not taking orders right now. Please try again later.",
   pausedError: "The restaurant is not taking orders right now.",
   prepTime: (minutes) => `Ready in about ${minutes} min`,
+  busyNotice: "We are very busy right now – preparation may take a little longer.",
+  closedTitle: "Restaurant currently closed",
+  closedText: "The restaurant is outside its opening hours. Please try again later.",
+  closedError: "The restaurant is currently closed.",
+  chooseOptions: "Choose options",
+  requiredOption: "Required",
+  optionalOption: "Optional",
+  pickOne: "Choose one",
+  pickAny: "You can choose several",
+  addToCart: (p) => `Add to cart · ${p}`,
+  optionsMissingError: "Please choose all required options.",
+  subtotalLabel: "Subtotal",
+  deliveryFeeLabel: "Delivery fee",
+  deliveryMinInfo: (m) => `Minimum order for delivery: ${m}`,
+  minOrderError: (m) => `Minimum order for delivery: ${m}`,
+  zoneError: "Sorry, we do not deliver to this address.",
+  reorderButton: "Repeat last order",
+  reorderAdded: "Your last order was added to the cart.",
+  reorderUnavailable: "Some items from your last order are no longer available.",
   badgeReady: "READY",
   badgeCancelled: "CANCELLED",
   headline: {
@@ -537,6 +632,25 @@ const ar: OrderStrings = {
   pausedText: "المطعم لا يستقبل طلبات حالياً. يرجى المحاولة لاحقاً.",
   pausedError: "المطعم لا يستقبل طلبات حالياً.",
   prepTime: (minutes) => `جاهز خلال حوالي ${minutes} دقيقة`,
+  busyNotice: "المطعم مزدحم حالياً، وقد يستغرق التحضير وقتاً أطول.",
+  closedTitle: "المطعم مغلق حالياً",
+  closedText: "المطعم خارج ساعات العمل. يرجى المحاولة لاحقاً.",
+  closedError: "المطعم مغلق حالياً.",
+  chooseOptions: "اختيار الخيارات",
+  requiredOption: "إلزامي",
+  optionalOption: "اختياري",
+  pickOne: "اختيار واحد",
+  pickAny: "يمكن اختيار أكثر من واحد",
+  addToCart: (p) => `أضف إلى السلة · ${p}`,
+  optionsMissingError: "يرجى اختيار كل الخيارات الإلزامية.",
+  subtotalLabel: "المجموع الفرعي",
+  deliveryFeeLabel: "رسوم التوصيل",
+  deliveryMinInfo: (m) => `الحد الأدنى للطلب للتوصيل: ${m}`,
+  minOrderError: (m) => `الحد الأدنى للطلب للتوصيل: ${m}`,
+  zoneError: "للأسف لا نوصّل إلى هذا العنوان.",
+  reorderButton: "إعادة الطلب السابق",
+  reorderAdded: "تمت إضافة طلبك السابق إلى السلة.",
+  reorderUnavailable: "بعض أصناف طلبك السابق لم تعد متوفرة.",
   badgeReady: "جاهز",
   badgeCancelled: "ملغى",
   headline: {

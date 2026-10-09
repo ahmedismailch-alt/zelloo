@@ -155,6 +155,9 @@ export default function DashboardPage() {
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
   const [acceptingOrders, setAcceptingOrders] = useState(true);
   const [togglingAccepting, setTogglingAccepting] = useState(false);
+  const [busyMode, setBusyMode] = useState(false);
+  const [togglingBusy, setTogglingBusy] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
   const [prepMinutes, setPrepMinutes] = useState(15);
   const [view, setView] = useState<"active" | "history">("active");
   const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
@@ -315,15 +318,27 @@ export default function DashboardPage() {
     let cancelled = false;
 
     async function loadAcceptingOrders() {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("restaurants")
-        .select("accepting_orders")
+        .select("accepting_orders, busy")
         .eq("id", restaurantId)
         .maybeSingle();
+
+      // The busy column may not exist yet; fall back to accepting_orders only.
+      if (error) {
+        const fallback = await supabase
+          .from("restaurants")
+          .select("accepting_orders")
+          .eq("id", restaurantId)
+          .maybeSingle();
+        data = fallback.data ? { ...fallback.data, busy: false } : null;
+        error = fallback.error;
+      }
 
       // The column may not exist yet; keep the default (open) in that case.
       if (cancelled || error || !data) return;
       setAcceptingOrders(data.accepting_orders !== false);
+      setBusyMode(data.busy === true);
     }
 
     void loadAcceptingOrders();
@@ -332,6 +347,11 @@ export default function DashboardPage() {
       cancelled = true;
     };
   }, [restaurantId]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowTick(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (restaurantId === undefined) return;
@@ -556,6 +576,36 @@ export default function DashboardPage() {
     } finally {
       setTogglingAccepting(false);
     }
+  }
+
+  async function toggleBusyMode() {
+    if (restaurantId === undefined || togglingBusy) return;
+
+    const next = !busyMode;
+    setTogglingBusy(true);
+    setActionError("");
+
+    try {
+      const { error } = await supabase
+        .from("restaurants")
+        .update({ busy: next })
+        .eq("id", restaurantId);
+
+      if (error) throw error;
+      setBusyMode(next);
+    } catch (error) {
+      console.error(error);
+      setActionError(
+        "Der Status „Viel los“ konnte nicht geändert werden. Bitte versuchen Sie es erneut."
+      );
+    } finally {
+      setTogglingBusy(false);
+    }
+  }
+
+  function waitingMinutes(createdAt: string) {
+    const minutes = Math.floor((nowTick - new Date(createdAt).getTime()) / 60000);
+    return Math.max(minutes, 0);
   }
 
   async function changeStatus(
@@ -980,37 +1030,69 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <button
-          type="button"
-          role="switch"
-          aria-checked={acceptingOrders}
-          disabled={togglingAccepting}
-          onClick={() => void toggleAcceptingOrders()}
-          className={`w-full md:w-auto flex items-center justify-between gap-4 min-h-12 rounded-xl border px-4 py-2 mb-4 md:mb-6 text-sm font-bold disabled:opacity-60 ${
-            acceptingOrders
-              ? "bg-green-50 border-green-300 text-green-900"
-              : "bg-amber-50 border-amber-400 text-amber-900"
-          }`}
-        >
-          <span>
-            Bestellannahme:{" "}
-            <span className="font-black">
-              {acceptingOrders ? "Offen" : "Pausiert"}
-            </span>
-          </span>
-          <span
-            aria-hidden="true"
-            className={`relative inline-block h-6 w-11 rounded-full ${
-              acceptingOrders ? "bg-green-600" : "bg-gray-400"
+        <div className="flex flex-col md:flex-row gap-2 md:gap-3 mb-4 md:mb-6">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={acceptingOrders}
+            disabled={togglingAccepting}
+            onClick={() => void toggleAcceptingOrders()}
+            className={`w-full md:w-auto flex items-center justify-between gap-4 min-h-12 rounded-xl border px-4 py-2 text-sm font-bold disabled:opacity-60 ${
+              acceptingOrders
+                ? "bg-green-50 border-green-300 text-green-900"
+                : "bg-amber-50 border-amber-400 text-amber-900"
             }`}
           >
+            <span>
+              Bestellannahme:{" "}
+              <span className="font-black">
+                {acceptingOrders ? "Offen" : "Pausiert"}
+              </span>
+            </span>
             <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-                acceptingOrders ? "left-[1.4rem]" : "left-0.5"
+              aria-hidden="true"
+              className={`relative inline-block h-6 w-11 rounded-full ${
+                acceptingOrders ? "bg-green-600" : "bg-gray-400"
               }`}
-            />
-          </span>
-        </button>
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
+                  acceptingOrders ? "left-[1.4rem]" : "left-0.5"
+                }`}
+              />
+            </span>
+          </button>
+
+          <button
+            type="button"
+            role="switch"
+            aria-checked={busyMode}
+            disabled={togglingBusy || !acceptingOrders}
+            onClick={() => void toggleBusyMode()}
+            className={`w-full md:w-auto flex items-center justify-between gap-4 min-h-12 rounded-xl border px-4 py-2 text-sm font-bold disabled:opacity-50 ${
+              busyMode
+                ? "bg-orange-50 border-orange-400 text-orange-900"
+                : "bg-white border-gray-300 text-gray-800"
+            }`}
+          >
+            <span>
+              Viel los:{" "}
+              <span className="font-black">{busyMode ? "Ja" : "Nein"}</span>
+            </span>
+            <span
+              aria-hidden="true"
+              className={`relative inline-block h-6 w-11 rounded-full ${
+                busyMode ? "bg-orange-500" : "bg-gray-400"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
+                  busyMode ? "left-[1.4rem]" : "left-0.5"
+                }`}
+              />
+            </span>
+          </button>
+        </div>
 
         {(ordersError || actionError) && (
           <div
@@ -1231,6 +1313,22 @@ export default function DashboardPage() {
                       #{order.id.slice(0, 8)} · {formatDate(order.created_at)}
                     </p>
 
+                    {(order.status === "new" ||
+                      order.status === "accepted" ||
+                      order.status === "preparing") && (
+                      <p
+                        className={`text-xs font-bold mt-1 ${
+                          waitingMinutes(order.created_at) >= 10
+                            ? "text-red-700"
+                            : "text-orange-700"
+                        }`}
+                      >
+                        {waitingMinutes(order.created_at) < 1
+                          ? "Gerade eingegangen"
+                          : `Wartet seit ${waitingMinutes(order.created_at)} Min.`}
+                      </p>
+                    )}
+
                     <h3 className="font-bold mt-1 text-sm">{order.customer_name}</h3>
 
                     <p className="text-sm text-gray-500 mt-1">
@@ -1284,6 +1382,20 @@ export default function DashboardPage() {
                       )}
                     </li>
                   ))}
+                  {order.order_type === "delivery" &&
+                    (() => {
+                      const itemsTotal = (order.order_items || []).reduce(
+                        (sum, item) => sum + item.quantity * item.unit_price_cents,
+                        0
+                      );
+                      const fee = order.total_cents - itemsTotal;
+                      return fee > 0 ? (
+                        <li className="text-sm flex justify-between gap-3 text-gray-600">
+                          <span>Liefergebühr</span>
+                          <span className="whitespace-nowrap">{formatMoney(fee)}</span>
+                        </li>
+                      ) : null;
+                    })()}
                 </ul>
 
                 {order.notes && (

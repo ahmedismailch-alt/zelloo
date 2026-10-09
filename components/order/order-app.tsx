@@ -13,8 +13,17 @@ import {
   type OrderLang,
 } from "../../lib/order-i18n";
 import { AiOrderBox, type ParsedItem } from "./ai-order-box";
-import { Cart, type CartLine } from "./cart";
+import {
+  Cart,
+  cartLineKey,
+  lastOrderStorageKey,
+  type CartLine,
+  type DeliveryInfo,
+} from "./cart";
 import { MenuList } from "./menu-list";
+import { OptionsSheet } from "./options-sheet";
+import { hasRequiredOptions } from "../../lib/menu-options";
+import { canOrder, type Availability } from "../../lib/restaurant-settings";
 
 const MAX_QUANTITY = 20;
 
@@ -35,7 +44,8 @@ function isDrinkCategory(category: string | null | undefined) {
 
 type Props = {
   restaurantId: string;
-  acceptingOrders?: boolean;
+  availability?: Availability;
+  delivery?: DeliveryInfo;
   restaurantName: string;
   restaurantPhone: string | null;
   table: string | null;
@@ -46,7 +56,8 @@ type Props = {
 
 export function OrderApp({
   restaurantId,
-  acceptingOrders = true,
+  availability = "open",
+  delivery = { feeCents: 0, minCents: 0 },
   restaurantName,
   restaurantPhone,
   table,
@@ -57,6 +68,37 @@ export function OrderApp({
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [lang, setLang] = useState<OrderLang>("de");
   const [shareCopied, setShareCopied] = useState(false);
+  const [pendingItem, setPendingItem] = useState<PublicMenuItem | null>(null);
+  const [savedOrder, setSavedOrder] = useState<CartLine[]>([]);
+  const [reorderNotice, setReorderNotice] = useState("");
+  const acceptingOrders = canOrder(availability);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(lastOrderStorageKey(restaurantId));
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(parsed)) return;
+      const lines: CartLine[] = [];
+      for (const entry of parsed.slice(0, 30)) {
+        if (!entry || typeof entry !== "object") continue;
+        const line = entry as Record<string, unknown>;
+        if (typeof line.menuItemId !== "string") continue;
+        const quantity = Number(line.quantity);
+        if (!Number.isInteger(quantity) || quantity < 1) continue;
+        lines.push({
+          menuItemId: line.menuItemId,
+          options: Array.isArray(line.options)
+            ? line.options.filter((id): id is string => typeof id === "string")
+            : [],
+          quantity: Math.min(quantity, MAX_QUANTITY),
+          note: typeof line.note === "string" ? line.note : null,
+        });
+      }
+      setSavedOrder(lines);
+    } catch {
+      // Storage can be blocked or corrupt; reordering is optional.
+    }
+  }, [restaurantId]);
 
   useEffect(() => {
     let saved: string | null = null;
@@ -90,29 +132,71 @@ export function OrderApp({
     [menu]
   );
 
-  const hasNonDrinkInCart = Object.keys(cart).some((id) => {
-    const item = menuById.get(id);
+  const hasNonDrinkInCart = Object.values(cart).some((line) => {
+    const item = menuById.get(line.menuItemId);
     return item && !isDrinkCategory(item.category);
   });
 
-  const hasDrinkInCart = Object.keys(cart).some((id) => {
-    const item = menuById.get(id);
+  const hasDrinkInCart = Object.values(cart).some((line) => {
+    const item = menuById.get(line.menuItemId);
     return item && isDrinkCategory(item.category);
   });
 
   const showUpsell = drinkItems.length > 0 && hasNonDrinkInCart && !hasDrinkInCart;
 
-  function setQuantity(id: string, quantity: number) {
+  function setQuantity(key: string, quantity: number) {
     setCart((current) => {
       const next = { ...current };
       const clamped = Math.min(Math.max(quantity, 0), MAX_QUANTITY);
       if (clamped === 0) {
-        delete next[id];
+        delete next[key];
       } else {
-        next[id] = { quantity: clamped, note: current[id]?.note ?? null };
+        const existing = current[key];
+        next[key] = {
+          menuItemId: existing?.menuItemId ?? key,
+          options: existing?.options ?? [],
+          quantity: clamped,
+          note: existing?.note ?? null,
+        };
       }
       return next;
     });
+  }
+
+  function addWithOptions(item: PublicMenuItem, options: string[]) {
+    const key = cartLineKey(item.id, options);
+    setCart((current) => ({
+      ...current,
+      [key]: {
+        menuItemId: item.id,
+        options,
+        quantity: Math.min((current[key]?.quantity ?? 0) + 1, MAX_QUANTITY),
+        note: current[key]?.note ?? null,
+      },
+    }));
+    setPendingItem(null);
+  }
+
+  function reorderLast() {
+    const next: Record<string, CartLine> = {};
+    let skipped = false;
+    for (const line of savedOrder) {
+      const item = menuById.get(line.menuItemId);
+      if (!item) {
+        skipped = true;
+        continue;
+      }
+      const validOptions = line.options.filter((id) =>
+        item.options.some((group) => group.choices.some((choice) => choice.id === id))
+      );
+      if (validOptions.length !== line.options.length && hasRequiredOptions(item.options)) {
+        skipped = true;
+        continue;
+      }
+      next[cartLineKey(item.id, validOptions)] = { ...line, options: validOptions };
+    }
+    setCart(next);
+    setReorderNotice(skipped ? t.reorderUnavailable : t.reorderAdded);
   }
 
   function setNote(id: string, note: string) {
@@ -123,18 +207,27 @@ export function OrderApp({
   }
 
   function addParsed(items: ParsedItem[]) {
+    const needsOptions: PublicMenuItem[] = [];
     setCart((current) => {
       const next = { ...current };
       for (const item of items) {
-        if (!menuById.has(item.menuItemId)) continue;
+        const menuItem = menuById.get(item.menuItemId);
+        if (!menuItem) continue;
+        if (hasRequiredOptions(menuItem.options)) {
+          needsOptions.push(menuItem);
+          continue;
+        }
         const existing = next[item.menuItemId];
         next[item.menuItemId] = {
+          menuItemId: item.menuItemId,
+          options: [],
           quantity: Math.min((existing?.quantity ?? 0) + item.quantity, MAX_QUANTITY),
           note: item.note ?? existing?.note ?? null,
         };
       }
       return next;
     });
+    if (needsOptions[0]) setPendingItem(needsOptions[0]);
   }
 
   async function shareRestaurant() {
@@ -250,9 +343,38 @@ export function OrderApp({
             role="status"
             className="bg-amber-50 border border-amber-300 rounded-2xl p-4"
           >
-            <p className="font-black text-amber-900">{t.pausedTitle}</p>
-            <p className="text-sm text-amber-900/80 mt-1">{t.pausedText}</p>
+            <p className="font-black text-amber-900">
+              {availability === "closed" ? t.closedTitle : t.pausedTitle}
+            </p>
+            <p className="text-sm text-amber-900/80 mt-1">
+              {availability === "closed" ? t.closedText : t.pausedText}
+            </p>
           </div>
+        )}
+
+        {availability === "busy" && (
+          <div
+            role="status"
+            className="bg-orange-50 border border-orange-300 rounded-2xl p-4 text-sm font-semibold text-orange-900"
+          >
+            {t.busyNotice}
+          </div>
+        )}
+
+        {acceptingOrders && savedOrder.length > 0 && Object.keys(cart).length === 0 && (
+          <button
+            type="button"
+            onClick={reorderLast}
+            className="min-h-12 rounded-2xl border border-black bg-white px-4 py-3 font-bold"
+          >
+            {t.reorderButton}
+          </button>
+        )}
+
+        {reorderNotice && (
+          <p role="status" className="text-sm font-semibold text-gray-700">
+            {reorderNotice}
+          </p>
         )}
 
         {acceptingOrders && (
@@ -283,6 +405,7 @@ export function OrderApp({
               categoryAr={categoryAr}
               onSetQuantity={setQuantity}
               onSetNote={setNote}
+              onPickOptions={setPendingItem}
               popularItemNames={popularItemNames}
             />
           </div>
@@ -300,7 +423,11 @@ export function OrderApp({
                   <li key={item.id} className="shrink-0">
                     <button
                       type="button"
-                      onClick={() => setQuantity(item.id, (cart[item.id]?.quantity ?? 0) + 1)}
+                      onClick={() =>
+                        item.options.length > 0
+                          ? setPendingItem(item)
+                          : setQuantity(item.id, (cart[item.id]?.quantity ?? 0) + 1)
+                      }
                       aria-label={t.add(label)}
                       className="flex items-center gap-2 h-11 rounded-full border border-amber-300 bg-white pl-4 pr-3 text-sm font-bold whitespace-nowrap"
                     >
@@ -325,9 +452,23 @@ export function OrderApp({
         t={t}
         dir={dir}
         showArabic={lang === "ar"}
+        delivery={delivery}
         onSetQuantity={setQuantity}
-        onOrdered={() => setCart({})}
+        onOrdered={() => {
+          setCart({});
+          setReorderNotice("");
+        }}
       />
+
+      {pendingItem && (
+        <OptionsSheet
+          item={pendingItem}
+          t={t}
+          showArabic={lang === "ar"}
+          onConfirm={(options) => addWithOptions(pendingItem, options)}
+          onClose={() => setPendingItem(null)}
+        />
+      )}
     </main>
   );
 }
