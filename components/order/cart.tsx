@@ -304,6 +304,9 @@ export function Cart({
           totalCents: data.totalCents,
           orderType: table ? "pickup" : orderType,
           table,
+          customerName: name.trim(),
+          customerPhone: phone.trim(),
+          customerAddress: orderType === "delivery" ? address.trim() : "",
           lines: lines.map((line) => ({
             name: [labelFor(line.item), ...line.optionNames].join(", "),
             quantity: line.quantity,

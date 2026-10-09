@@ -64,8 +64,8 @@ REGELN:
 3. Die Bestellung kann auf Deutsch, Schweizerdeutsch, Französisch, Italienisch, Englisch oder Arabisch (auch arabische Dialekte und arabische Schrift, z. B. "بدي ٢ كالزوني" = 2× Calzone) sein. Arabisch-indische Ziffern (٠١٢٣٤٥٦٧٨٩) und Zahlwörter in allen Sprachen sind Mengen.
 4. Ohne Mengenangabe ist die Menge 1. Maximale Menge pro Artikel: ${MAX_QUANTITY}.
 5. Gäste schreiben oft ungenau: Tippfehler (z. B. "Galzone" = "Calzone", "Margarita" = "Margherita"), nur ein Teil des Namens (z. B. "Hawaii" statt "Pizza Hawaii"), ohne Kategorie, in Mundart oder anderer Sprache. Ordne solche Wünsche trotzdem den passenden Menüartikeln zu, anhand von Klang, Schreibweise und Bedeutung.
-6. Passt ein Wunsch zu GENAU EINEM Menüartikel, füge ihn in "items" hinzu.
-7. Passt ein Wunsch zu MEHREREN Menüartikeln (z. B. "Calzone" passt zu "Pizza Calzone" und "Pizza Kebab Calzone"), wähle NICHT selbst. Schreibe ihn in "suggestions" mit dem Originaltext, der Menge und den IDs aller passenden Artikel (maximal 6, die besten zuerst).
+6. Entspricht ein Wunsch EXAKT dem Namen eines Menüartikels (gleiche Schreibweise, Gross-/Kleinschreibung egal) und ist eindeutig, füge ihn in "items" hinzu.
+7. Ist der Wunsch nicht exakt geschrieben (Tippfehler, Teilname, andere Sprache, Klangähnlichkeit) oder passt er zu MEHREREN Menüartikeln (z. B. "Calzone" passt zu "Pizza Calzone" und "Pizza Kebab Calzone"), wähle NICHT selbst. Schreibe ihn in "suggestions" mit dem Originaltext, der Menge und den IDs aller passenden Artikel (auch wenn es nur ein einziger Artikel ist; maximal 6, die besten zuerst), damit der Gast per Tipp bestätigt.
 8. Nur wenn wirklich kein Menüartikel ähnlich ist, schreibe den Wunsch in "not_found".
 9. Sonderwünsche (z. B. "ohne Zwiebeln") gehören in "note" des passenden Artikels, sonst null. Schreibe "note" immer kurz auf Deutsch, damit das Personal sie versteht.
 10. Manche Artikel haben "name_ar" (Name in arabischer Schrift). Gäste können den Namen auch so schreiben.

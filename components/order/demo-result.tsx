@@ -9,6 +9,9 @@ export type DemoSummary = {
   totalCents: number;
   orderType: "pickup" | "delivery";
   table: string | null;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
   lines: { name: string; quantity: number }[];
 };
 
@@ -31,6 +34,8 @@ type Copy = {
   pickup: string;
   delivery: string;
   tableLabel: (table: string) => string;
+  customerLabel: string;
+  addressLabel: string;
   cta: string;
   again: string;
   note: string;
@@ -59,6 +64,8 @@ const COPY: Record<OrderLang, Copy> = {
     pickup: "Abholung",
     delivery: "Lieferung",
     tableLabel: (table) => `Tisch ${table}`,
+    customerLabel: "Kunde",
+    addressLabel: "Lieferadresse",
     cta: "Jetzt registrieren - 15 Tage gratis",
     again: "Nochmal ausprobieren",
     note: "Demo: keine echte Bestellung, es wird nichts zubereitet.",
@@ -85,6 +92,8 @@ const COPY: Record<OrderLang, Copy> = {
     pickup: "À emporter",
     delivery: "Livraison",
     tableLabel: (table) => `Table ${table}`,
+    customerLabel: "Client",
+    addressLabel: "Adresse de livraison",
     cta: "S'inscrire maintenant - 15 jours gratuits",
     again: "Essayer encore",
     note: "Démo : pas de vraie commande, rien n'est préparé.",
@@ -111,6 +120,8 @@ const COPY: Record<OrderLang, Copy> = {
     pickup: "Ritiro",
     delivery: "Consegna",
     tableLabel: (table) => `Tavolo ${table}`,
+    customerLabel: "Cliente",
+    addressLabel: "Indirizzo di consegna",
     cta: "Registrati ora - 15 giorni gratis",
     again: "Riprova",
     note: "Demo: nessun ordine reale, non viene preparato nulla.",
@@ -137,6 +148,8 @@ const COPY: Record<OrderLang, Copy> = {
     pickup: "Pickup",
     delivery: "Delivery",
     tableLabel: (table) => `Table ${table}`,
+    customerLabel: "Customer",
+    addressLabel: "Delivery address",
     cta: "Sign up now - 15 days free",
     again: "Try again",
     note: "Demo: not a real order, nothing is being prepared.",
@@ -163,6 +176,8 @@ const COPY: Record<OrderLang, Copy> = {
     pickup: "استلام",
     delivery: "توصيل",
     tableLabel: (table) => `طاولة ${table}`,
+    customerLabel: "الزبون",
+    addressLabel: "عنوان التوصيل",
     cta: "سجّل الآن - 15 يوم مجاناً",
     again: "جرّب مرة ثانية",
     note: "تجريبي: مو طلب حقيقي، ما في شي عم يتحضّر.",
@@ -240,6 +255,18 @@ export function DemoResult({
                 </span>
               </div>
               <p className="font-black">{placeLabel}</p>
+              {(summary.customerName || summary.customerPhone) && (
+                <p className="text-sm" dir="auto">
+                  <span className="font-bold">{t.customerLabel}: </span>
+                  {[summary.customerName, summary.customerPhone].filter(Boolean).join(" · ")}
+                </p>
+              )}
+              {summary.orderType === "delivery" && summary.customerAddress && (
+                <p className="text-sm" dir="auto">
+                  <span className="font-bold">{t.addressLabel}: </span>
+                  {summary.customerAddress}
+                </p>
+              )}
               <ul className="flex flex-col gap-1 text-sm" dir="auto">
                 {summary.lines.map((line, index) => (
                   <li key={`${line.name}-${index}`}>
