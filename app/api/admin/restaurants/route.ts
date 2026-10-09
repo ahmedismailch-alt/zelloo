@@ -12,16 +12,29 @@ export async function GET(request: Request) {
     if (!auth.ok) return auth.response;
     const { supabase } = auth;
 
-    const { data, error } = await supabase
+    const columns =
+      "id, name, email, owner_id, stripe_subscription_id, subscription_status, subscription_plan, current_period_end";
+
+    let { data, error } = await supabase
       .from("restaurants")
-      .select(
-        "id, name, email, owner_id, stripe_subscription_id, subscription_status, subscription_plan, current_period_end"
-      )
+      .select(`${columns}, is_demo`)
       .order("name", { ascending: true });
+
+    if (error) {
+      // is_demo column missing (SQL not run yet): fall back to the plain list.
+      const fallback = await supabase
+        .from("restaurants")
+        .select(columns)
+        .order("name", { ascending: true });
+      data = fallback.data as typeof data;
+      error = fallback.error;
+    }
 
     if (error) throw error;
 
-    const restaurants = data || [];
+    const restaurants = (data || []).filter(
+      (restaurant) => !(restaurant as { is_demo?: boolean }).is_demo
+    );
     const activeStatuses = new Set(["active", "trialing"]);
 
     const summary = {

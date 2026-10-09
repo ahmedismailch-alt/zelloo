@@ -153,6 +153,52 @@ export async function getRestaurant(restaurantId: string) {
   return data as RestaurantRecord | null;
 }
 
+// False until the is_demo SQL migration has been run.
+export async function isDemoRestaurant(
+  restaurantId: string | number
+): Promise<boolean> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("restaurants")
+    .select("is_demo")
+    .eq("id", restaurantId)
+    .maybeSingle();
+  if (error) return false;
+  return data?.is_demo === true;
+}
+
+export const DEMO_MAX_ORDERS_PER_HOUR = 60;
+export const DEMO_ORDER_TTL_HOURS = 3;
+
+// Demo orders are throwaway: remove old ones on every new demo order and cap the volume.
+export async function pruneDemoOrders(restaurantId: string | number) {
+  const supabase = getSupabaseAdmin();
+  const cutoff = new Date(
+    Date.now() - DEMO_ORDER_TTL_HOURS * 60 * 60 * 1000
+  ).toISOString();
+
+  const { data: old } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("restaurant_id", restaurantId)
+    .lt("created_at", cutoff)
+    .limit(200);
+
+  const ids = (old || []).map((row) => row.id);
+  if (ids.length > 0) {
+    await supabase.from("order_items").delete().in("order_id", ids);
+    await supabase.from("orders").delete().in("id", ids);
+  }
+
+  const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("restaurant_id", restaurantId)
+    .gte("created_at", hourAgo);
+
+  return (count ?? 0) >= DEMO_MAX_ORDERS_PER_HOUR;
+}
+
 function readCents(value: unknown) {
   const number = Number(value);
   return Number.isInteger(number) && number > 0 ? number : 0;

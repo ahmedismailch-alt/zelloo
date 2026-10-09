@@ -21,6 +21,7 @@ export const heroCopy: Record<
     badge1: string
     badge2: string
     cta: string
+    demo: string
     ctaNote: string
     check1: string
     check2: string
@@ -32,6 +33,7 @@ export const heroCopy: Record<
     badge1: "0% Kommission pro Bestellung",
     badge2: "Bis zu 15 Std./Monat gespart",
     cta: "Jetzt registrieren - 15 Tage gratis",
+    demo: "Zelloo ausprobieren",
     ctaNote: "Ohne Kreditkarte · Jederzeit kündbar",
     check1: "In 10 Minuten eingerichtet",
     check2: "WhatsApp-Bot nimmt Bestellungen 24/7",
@@ -42,6 +44,7 @@ export const heroCopy: Record<
     badge1: "0% de commission par commande",
     badge2: "Jusqu'à 15h/mois économisées",
     cta: "S'inscrire maintenant - 15 jours gratuits",
+    demo: "Essayer Zelloo",
     ctaNote: "Sans carte de crédit · Annulable à tout moment",
     check1: "Installé en 10 minutes",
     check2: "Bot WhatsApp 24/7 pour les commandes",
@@ -52,6 +55,7 @@ export const heroCopy: Record<
     badge1: "0% di commissione per ordine",
     badge2: "Fino a 15 ore/mese risparmiate",
     cta: "Registrati ora - 15 giorni gratis",
+    demo: "Prova Zelloo",
     ctaNote: "Senza carta di credito · Annullabile in ogni momento",
     check1: "Pronto in 10 minuti",
     check2: "Bot WhatsApp riceve ordini 24/7",
@@ -62,6 +66,7 @@ export const heroCopy: Record<
     badge1: "0% commission per order",
     badge2: "Up to 15 hrs/month saved",
     cta: "Sign up now - 15 days free",
+    demo: "Try Zelloo",
     ctaNote: "No credit card · Cancel anytime",
     check1: "Set up in 10 minutes",
     check2: "WhatsApp bot takes orders 24/7",
@@ -72,6 +77,7 @@ export const heroCopy: Record<
     badge1: "0% عمولة على كل طلب",
     badge2: "وفّري حتى 15 ساعة بالشهر",
     cta: "سجّلي الآن - 15 يوم مجاناً",
+    demo: "جرّبي Zelloo",
     ctaNote: "بدون بطاقة ائتمان · إلغاء بأي وقت",
     check1: "جاهز خلال 10 دقائق",
     check2: "روبوت واتساب يستقبل طلبات 24/7",
@@ -82,6 +88,7 @@ export const heroCopy: Record<
     badge1: "Sipariş başına %0 komisyon",
     badge2: "Ayda 15 saate kadar tasarruf",
     cta: "Şimdi kaydol - 15 gün ücretsiz",
+    demo: "Zelloo'yu dene",
     ctaNote: "Kredi kartı gerekmez · Her zaman iptal edilebilir",
     check1: "10 dakikada kurulur",
     check2: "WhatsApp botu 7/24 sipariş alır",
