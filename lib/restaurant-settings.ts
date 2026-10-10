@@ -121,6 +121,29 @@ export function isOpenNow(hours: OpeningHours | null, now = new Date()) {
   return false;
 }
 
+export type NextOpening = {
+  daysAhead: number;
+  weekday: number;
+  time: string;
+};
+
+export function getNextOpening(
+  hours: OpeningHours | null,
+  now = new Date()
+): NextOpening | null {
+  if (!hours) return null;
+  const { day, minutes } = zurichNow(now);
+
+  for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
+    const weekday = (day + daysAhead) % 7;
+    const entry = hours[weekday];
+    if (entry.closed) continue;
+    if (daysAhead === 0 && toMinutes(entry.open) <= minutes) continue;
+    return { daysAhead, weekday, time: entry.open };
+  }
+  return null;
+}
+
 export function getAvailability(
   settings: RestaurantSettings,
   now = new Date()

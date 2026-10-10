@@ -93,6 +93,9 @@ export type OrderStrings = {
   busyNotice: string;
   closedTitle: string;
   closedText: string;
+  opensToday: (time: string) => string;
+  opensTomorrow: (time: string) => string;
+  opensOnDay: (day: string, time: string) => string;
   closedError: string;
   chooseOptions: string;
   requiredOption: string;
@@ -200,7 +203,10 @@ const de: OrderStrings = {
   prepTime: (minutes) => `Fertig in ca. ${minutes} Min.`,
   busyNotice: "Aktuell viel los – die Zubereitung kann etwas länger dauern.",
   closedTitle: "Restaurant derzeit geschlossen",
-  closedText: "Das Restaurant ist gerade ausserhalb der Öffnungszeiten. Bitte versuchen Sie es später erneut.",
+    closedText: "Das Restaurant ist gerade ausserhalb der Öffnungszeiten. Bitte versuchen Sie es später erneut.",
+    opensToday: (time) => `Öffnet heute um ${time} Uhr.`,
+    opensTomorrow: (time) => `Öffnet morgen um ${time} Uhr.`,
+    opensOnDay: (day, time) => `Öffnet am ${day} um ${time} Uhr.`,
   closedError: "Das Restaurant ist derzeit geschlossen.",
   chooseOptions: "Optionen wählen",
   requiredOption: "Pflicht",
@@ -309,7 +315,10 @@ const fr: OrderStrings = {
   prepTime: (minutes) => `Prête dans environ ${minutes} min`,
   busyNotice: "Beaucoup de monde en ce moment – la préparation peut prendre un peu plus de temps.",
   closedTitle: "Restaurant actuellement fermé",
-  closedText: "Le restaurant est en dehors de ses heures d'ouverture. Veuillez réessayer plus tard.",
+    closedText: "Le restaurant est en dehors de ses heures d'ouverture. Veuillez réessayer plus tard.",
+    opensToday: (time) => `Ouverture aujourd'hui à ${time}.`,
+    opensTomorrow: (time) => `Ouverture demain à ${time}.`,
+    opensOnDay: (day, time) => `Ouverture ${day} à ${time}.`,
   closedError: "Le restaurant est actuellement fermé.",
   chooseOptions: "Choisir les options",
   requiredOption: "Obligatoire",
@@ -418,7 +427,10 @@ const it: OrderStrings = {
   prepTime: (minutes) => `Pronto tra circa ${minutes} min`,
   busyNotice: "Molto lavoro in questo momento – la preparazione potrebbe richiedere più tempo.",
   closedTitle: "Ristorante attualmente chiuso",
-  closedText: "Il ristorante è fuori orario di apertura. Riprova più tardi.",
+    closedText: "Il ristorante è fuori orario di apertura. Riprova più tardi.",
+    opensToday: (time) => `Apre oggi alle ${time}.`,
+    opensTomorrow: (time) => `Apre domani alle ${time}.`,
+    opensOnDay: (day, time) => `Apre ${day} alle ${time}.`,
   closedError: "Il ristorante è attualmente chiuso.",
   chooseOptions: "Scegli le opzioni",
   requiredOption: "Obbligatorio",
@@ -527,7 +539,10 @@ const en: OrderStrings = {
   prepTime: (minutes) => `Ready in about ${minutes} min`,
   busyNotice: "We are very busy right now – preparation may take a little longer.",
   closedTitle: "Restaurant currently closed",
-  closedText: "The restaurant is outside its opening hours. Please try again later.",
+    closedText: "The restaurant is outside its opening hours. Please try again later.",
+    opensToday: (time) => `Opens today at ${time}.`,
+    opensTomorrow: (time) => `Opens tomorrow at ${time}.`,
+    opensOnDay: (day, time) => `Opens on ${day} at ${time}.`,
   closedError: "The restaurant is currently closed.",
   chooseOptions: "Choose options",
   requiredOption: "Required",
@@ -634,7 +649,10 @@ const ar: OrderStrings = {
   prepTime: (minutes) => `جاهز خلال حوالي ${minutes} دقيقة`,
   busyNotice: "المطعم مزدحم حالياً، وقد يستغرق التحضير وقتاً أطول.",
   closedTitle: "المطعم مغلق حالياً",
-  closedText: "المطعم خارج ساعات العمل. يرجى المحاولة لاحقاً.",
+    closedText: "المطعم خارج ساعات العمل. يرجى المحاولة لاحقاً.",
+    opensToday: (time) => `يفتح اليوم الساعة ${time}.`,
+    opensTomorrow: (time) => `يفتح غداً الساعة ${time}.`,
+    opensOnDay: (day, time) => `يفتح يوم ${day} الساعة ${time}.`,
   closedError: "المطعم مغلق حالياً.",
   chooseOptions: "اختيار الخيارات",
   requiredOption: "إلزامي",

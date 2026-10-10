@@ -23,7 +23,11 @@ import {
 import { MenuList } from "./menu-list";
 import { OptionsSheet } from "./options-sheet";
 import { hasRequiredOptions } from "../../lib/menu-options";
-import { canOrder, type Availability } from "../../lib/restaurant-settings";
+import {
+  canOrder,
+  type Availability,
+  type NextOpening,
+} from "../../lib/restaurant-settings";
 
 const MAX_QUANTITY = 20;
 
@@ -54,6 +58,7 @@ type Props = {
   restaurantId: string;
   isDemo?: boolean;
   availability?: Availability;
+  nextOpening?: NextOpening | null;
   delivery?: DeliveryInfo;
   restaurantName: string;
   restaurantPhone: string | null;
@@ -67,6 +72,7 @@ export function OrderApp({
   restaurantId,
   isDemo = false,
   availability = "open",
+  nextOpening = null,
   delivery = { feeCents: 0, minCents: 0 },
   restaurantName,
   restaurantPhone,
@@ -131,6 +137,17 @@ export function OrderApp({
 
   const t = ORDER_STRINGS[lang];
   const dir = lang === "ar" ? "rtl" : "ltr";
+  const opensLabel = (() => {
+    if (!nextOpening) return "";
+    if (nextOpening.daysAhead === 0) return t.opensToday(nextOpening.time);
+    if (nextOpening.daysAhead === 1) return t.opensTomorrow(nextOpening.time);
+    // 2024-01-01 is a Monday, so weekday 0 maps to Monday.
+    const dayName = new Intl.DateTimeFormat(lang, {
+      weekday: "long",
+      timeZone: "UTC",
+    }).format(new Date(Date.UTC(2024, 0, 1 + nextOpening.weekday)));
+    return t.opensOnDay(dayName, nextOpening.time);
+  })();
 
   const menuById = useMemo(
     () => new Map(menu.map((item) => [item.id, item])),
@@ -367,6 +384,9 @@ export function OrderApp({
             <p className="text-sm text-amber-900/80 mt-1">
               {availability === "closed" ? t.closedText : t.pausedText}
             </p>
+            {availability === "closed" && opensLabel && (
+              <p className="text-sm font-bold text-amber-900 mt-2">{opensLabel}</p>
+            )}
           </div>
         )}
 
