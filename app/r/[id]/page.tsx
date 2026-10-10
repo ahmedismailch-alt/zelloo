@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { OrderApp } from "../../../components/order/order-app";
+import { getNextOpening } from "../../../lib/restaurant-settings";
 import {
   getCategoryTranslations,
   getOrderableMenu,
@@ -42,6 +43,9 @@ export default async function RestaurantOrderPage({
       restaurantId={id}
       isDemo={isDemo}
       availability={availability}
+      nextOpening={
+        availability === "closed" ? getNextOpening(settings.openingHours) : null
+      }
       delivery={{
         feeCents: settings.deliveryFeeCents,
         minCents: settings.deliveryMinCents,
