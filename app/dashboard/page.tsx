@@ -7,6 +7,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { OrderBell } from "../../lib/order-bell";
 import { DashboardShell } from "../../components/dashboard/dashboard-shell";
+import type { Access } from "../../lib/subscription";
 
 type Restaurant = {
   id: number | string;
@@ -138,6 +139,7 @@ export default function DashboardPage() {
 
   const [loading, setLoading] = useState(true);
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [access, setAccess] = useState<Access | null>(null);
   const [email, setEmail] = useState("");
   const [pageError, setPageError] = useState("");
 
@@ -227,6 +229,34 @@ export default function DashboardPage() {
     return () => window.clearInterval(timer);
   }, [soundOn, hasPending]);
 
+  const restaurantId = restaurant?.id;
+
+  useEffect(() => {
+    if (restaurantId === undefined) return;
+    let cancelled = false;
+
+    async function loadAccess() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch("/api/subscription/status", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        cache: "no-store",
+      });
+      if (!response.ok) return;
+      const result = (await response.json()) as Access;
+      if (!cancelled) setAccess(result);
+    }
+
+    void loadAccess().catch((error) => console.error(error));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [restaurantId, restaurant?.subscription_status]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -309,8 +339,6 @@ export default function DashboardPage() {
       cancelled = true;
     };
   }, [router]);
-
-  const restaurantId = restaurant?.id;
 
   useEffect(() => {
     if (restaurantId === undefined) return;
@@ -820,6 +848,36 @@ export default function DashboardPage() {
     (order) => matchesFilter(order, orderFilter)
   );
 
+  if (access && !access.allowed) {
+    return (
+      <>
+        <DashboardShell restaurantName={restaurantName} />
+        <main className="min-h-screen bg-[#f8f9fb] text-black p-5 pb-24 md:pb-5 md:pl-[17rem]">
+          <div className="max-w-xl mx-auto mt-10 bg-white border rounded-2xl p-6 text-center">
+            <h1 className="text-2xl font-black text-balance">
+              Ihre Testphase ist beendet
+            </h1>
+            <p className="text-gray-600 mt-3 leading-relaxed">
+              Ihre 15 Tage gratis sind abgelaufen. Damit Ihre Gäste wieder
+              online bestellen können und Sie neue Bestellungen erhalten,
+              wählen Sie bitte ein Abonnement. Ihre Speisekarte und Ihre Daten
+              bleiben erhalten.
+            </p>
+            <Link
+              href="/pricing"
+              className="inline-block w-full min-h-12 rounded-xl bg-orange-500 text-black font-bold px-4 py-3 mt-6 hover:bg-orange-400 transition-colors"
+            >
+              Jetzt abonnieren
+            </Link>
+            <p className="text-sm text-gray-500 mt-4">
+              Fragen? Schreiben Sie uns an info@zelloo.ch
+            </p>
+          </div>
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
     <DashboardShell restaurantName={restaurantName} />
@@ -888,6 +946,53 @@ export default function DashboardPage() {
       )}
 
       <div className="max-w-5xl mx-auto">
+        {access && (access.kind === "trial" || access.kind === "grace") && (
+          <div
+            role="status"
+            className={`mb-6 rounded-xl border px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between ${
+              access.kind === "grace"
+                ? "bg-red-50 border-red-200"
+                : "bg-orange-50 border-orange-200"
+            }`}
+          >
+            <p className="text-sm font-semibold text-gray-900">
+              {access.kind === "grace"
+                ? `Ihre Testphase ist abgelaufen. Noch ${access.daysLeft} ${
+                    access.daysLeft === 1 ? "Tag" : "Tage"
+                  } Kulanzfrist, danach können keine Bestellungen mehr eingehen.`
+                : `Gratis-Testphase: noch ${access.daysLeft} ${
+                    access.daysLeft === 1 ? "Tag" : "Tage"
+                  }. Keine Kreditkarte nötig.`}
+            </p>
+            <Link
+              href="/pricing"
+              className="shrink-0 text-center min-h-11 flex items-center justify-center rounded-lg bg-orange-500 text-black font-bold px-4 text-sm"
+            >
+              Jetzt abonnieren
+            </Link>
+          </div>
+        )}
+
+        {access?.pastDue && (
+          <div
+            role="alert"
+            className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <p className="text-sm font-semibold text-gray-900">
+              Die letzte Zahlung ist fehlgeschlagen. Bitte aktualisieren Sie
+              Ihre Zahlungsmethode, damit Ihr Konto aktiv bleibt.
+            </p>
+            <button
+              type="button"
+              onClick={() => void handleManageBilling()}
+              disabled={openingBilling}
+              className="shrink-0 min-h-11 rounded-lg bg-red-600 text-white font-bold px-4 text-sm disabled:opacity-60"
+            >
+              {openingBilling ? "Wird geöffnet..." : "Zahlung aktualisieren"}
+            </button>
+          </div>
+        )}
+
         {adminMessages.length > 0 && (
           <div className="mb-6 flex flex-col gap-3">
             {adminMessages.map((item) => (
@@ -1546,7 +1651,8 @@ export default function DashboardPage() {
           <h2 className="text-xl font-black mb-2">Abonnement</h2>
 
           {restaurant.subscription_status === "active" ||
-          restaurant.subscription_status === "trialing" ? (
+          restaurant.subscription_status === "trialing" ||
+          restaurant.subscription_status === "past_due" ? (
             <>
               <div className="border rounded-xl p-4 mt-4 flex items-center justify-between gap-3">
                 <div>
@@ -1581,7 +1687,17 @@ export default function DashboardPage() {
             <>
               <div className="border rounded-xl p-4 mt-4">
                 <p className="text-xs text-gray-500">Status</p>
-                <p className="font-bold mt-1 text-red-700">Kein aktives Abonnement</p>
+                {access?.kind === "trial" || access?.kind === "grace" ? (
+                  <p className="font-bold mt-1 text-orange-600">
+                    Gratis-Testphase
+                    {access.trialEndsAt &&
+                      ` · bis ${new Date(access.trialEndsAt).toLocaleDateString("de-CH")}`}
+                  </p>
+                ) : access?.kind === "exempt" ? (
+                  <p className="font-bold mt-1 text-gray-700">Kein Abonnement nötig</p>
+                ) : (
+                  <p className="font-bold mt-1 text-red-700">Kein aktives Abonnement</p>
+                )}
               </div>
 
               <Link

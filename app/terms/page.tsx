@@ -36,8 +36,12 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-bold mb-2">3. Testphase</h2>
             <p>
-              Neue Kunden erhalten eine kostenlose Testphase von 15 Tagen ohne Angabe einer Kreditkarte. Nach Ablauf
-              der Testphase ist ein kostenpflichtiges Abonnement erforderlich, um den Dienst weiter zu nutzen.
+              Neue Kunden erhalten eine kostenlose Testphase von 15 Tagen ab Registrierung, ohne Angabe einer
+              Kreditkarte. Nach Ablauf der Testphase gilt eine Kulanzfrist von 2 Tagen. Danach ist ein
+              kostenpflichtiges Abonnement erforderlich: Ohne Abonnement können keine neuen Bestellungen mehr
+              entgegengenommen werden. Speisekarte und Daten bleiben erhalten und stehen nach Abschluss eines
+              Abonnements sofort wieder zur Verfügung. Bei einer fehlgeschlagenen Zahlung bleibt das Konto aktiv,
+              während Stripe die Zahlung erneut versucht; wird sie nicht beglichen, wird das Abonnement beendet.
             </p>
           </section>
 
@@ -113,6 +117,9 @@ export default function TermsPage() {
           </Link>
           <Link href="/privacy" className="hover:text-foreground">
             Datenschutz
+          </Link>
+          <Link href="/impressum" className="hover:text-foreground">
+            Impressum
           </Link>
           <Link href="/about" className="hover:text-foreground">
             Über uns

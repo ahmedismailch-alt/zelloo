@@ -379,10 +379,18 @@ export function OrderApp({
             className="bg-amber-50 border border-amber-300 rounded-2xl p-4"
           >
             <p className="font-black text-amber-900">
-              {availability === "closed" ? t.closedTitle : t.pausedTitle}
+              {availability === "closed"
+                ? t.closedTitle
+                : availability === "unavailable"
+                  ? t.unavailableTitle
+                  : t.pausedTitle}
             </p>
             <p className="text-sm text-amber-900/80 mt-1">
-              {availability === "closed" ? t.closedText : t.pausedText}
+              {availability === "closed"
+                ? t.closedText
+                : availability === "unavailable"
+                  ? t.unavailableText
+                  : t.pausedText}
             </p>
             {availability === "closed" && opensLabel && (
               <p className="text-sm font-bold text-amber-900 mt-2">{opensLabel}</p>

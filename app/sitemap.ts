@@ -15,6 +15,7 @@ const publicPages: {
   { path: "/login", changeFrequency: "yearly", priority: 0.3 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
+  { path: "/impressum", changeFrequency: "yearly", priority: 0.3 },
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {
