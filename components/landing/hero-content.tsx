@@ -20,7 +20,7 @@ export function HeroContent() {
         <p className="text-gray-500 mt-4">{t.channels}</p>
 
         <div className="flex flex-wrap gap-2 mt-5">
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold bg-green-50 text-green-700 px-3 py-1.5 rounded-full">
+          <span className="inline-flex items-center gap-1.5 text-base font-bold bg-green-50 text-green-700 px-4 py-2 rounded-2xl text-pretty">
             {t.badge1}
           </span>
           <span className="inline-flex items-center gap-1.5 text-sm font-semibold bg-green-50 text-green-700 px-3 py-1.5 rounded-full">
@@ -69,7 +69,7 @@ export function HeroContent() {
             </span>
             <div className="leading-tight">
               <div className="text-[10px] font-bold">Neue Bestellung</div>
-              <div className="text-[9px] text-gray-400">WhatsApp · jetzt</div>
+              <div className="text-[9px] text-gray-400">QR-Code · jetzt</div>
             </div>
           </div>
 

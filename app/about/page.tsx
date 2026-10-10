@@ -41,10 +41,11 @@ export default function AboutPage() {
         </p>
 
         <p className="text-gray-600 text-lg leading-relaxed mt-5">
-          Zelloo wurde gebaut, um genau dieses Problem zu lösen: ein System, das Bestellungen über
-          Google, Instagram, Facebook und WhatsApp automatisch entgegennimmt – ohne dass jemand im
-          Restaurant ständig am Handy hängen muss, und ohne Kommission pro Bestellung. Nur ein
-          fixer monatlicher Preis, egal wie viele Bestellungen eingehen.
+          Zelloo wurde gebaut, um genau dieses Problem zu lösen: ein System, das Bestellungen
+          automatisch entgegennimmt. Sie erhalten einen Bestell-Link und einen QR-Code, die Sie bei
+          Google, Instagram, Facebook oder am Tisch platzieren. Ihre Gäste bestellen per Text oder
+          Sprache, ohne dass jemand im Restaurant ständig am Handy hängen muss. Und ohne Kommission
+          pro Bestellung: Nur ein fixer monatlicher Preis, egal wie viele Bestellungen eingehen.
         </p>
 
         <div className="mt-10 border-l-4 border-[#c41e24] pl-5">
@@ -54,9 +55,9 @@ export default function AboutPage() {
         </div>
 
         <p className="text-gray-600 text-lg leading-relaxed mt-10">
-          Zelloo steht noch am Anfang. Wir bauen das Produkt gemeinsam mit den ersten Restaurants,
-          die es nutzen – jede Rückmeldung fliesst direkt in die nächste Verbesserung. Wenn etwas
-          nicht funktioniert, melden Sie es uns, und wir kümmern uns darum. Persönlich.
+          Wir entwickeln Zelloo laufend weiter, gemeinsam mit den Restaurants, die es nutzen. Jede
+          Rückmeldung fliesst direkt in die nächste Verbesserung. Wenn etwas nicht funktioniert,
+          melden Sie es uns, und wir kümmern uns persönlich darum.
         </p>
 
         <div className="mt-12 grid sm:grid-cols-3 gap-4">
@@ -71,14 +72,16 @@ export default function AboutPage() {
             <div className="text-2xl font-black">0%</div>
             <p className="text-sm font-semibold mt-2">Keine Kommission</p>
             <p className="text-sm text-gray-500 mt-1">
-              Ein fixer Monatspreis. Ihre Einnahmen bleiben bei Ihnen.
+              Ein fixer Monatspreis, keine Kommission pro Bestellung. Ihre Einnahmen bleiben bei
+              Ihnen.
             </p>
           </div>
           <div className="border border-black/10 rounded-2xl p-5">
-            <div className="text-2xl font-black">24/7</div>
-            <p className="text-sm font-semibold mt-2">Immer erreichbar</p>
+            <div className="text-2xl font-black">Auto</div>
+            <p className="text-sm font-semibold mt-2">Automatisch angenommen</p>
             <p className="text-sm text-gray-500 mt-1">
-              Bestellungen werden automatisch angenommen, auch nachts.
+              Bestellungen werden automatisch angenommen, gemäss den Öffnungszeiten, die Ihr
+              Restaurant festlegt.
             </p>
           </div>
         </div>
