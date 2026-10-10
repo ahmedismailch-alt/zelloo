@@ -157,6 +157,9 @@ export function PageSections() {
               <a href="/terms" className="hover:text-black">
                 {p.footerTerms}
               </a>
+              <a href="/impressum" className="hover:text-black">
+                Impressum
+              </a>
             </nav>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm text-gray-500 border-t border-black/5 pt-5">

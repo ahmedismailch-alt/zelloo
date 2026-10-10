@@ -119,6 +119,9 @@ export default function PrivacyPage() {
           <Link href="/" className="hover:text-foreground">
             Startseite
           </Link>
+          <Link href="/impressum" className="hover:text-foreground">
+            Impressum
+          </Link>
           <Link href="/terms" className="hover:text-foreground">
             AGB
           </Link>

@@ -148,7 +148,10 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: "Das Restaurant nimmt gerade keine Bestellungen an.",
-          code: availability === "closed" ? "closed" : "paused",
+          code:
+            availability === "closed" || availability === "unavailable"
+              ? availability
+              : "paused",
         },
         { status: 403 }
       );

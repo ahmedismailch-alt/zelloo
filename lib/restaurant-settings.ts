@@ -3,7 +3,7 @@ export type OpeningDay = { closed: boolean; open: string; close: string };
 // Index 0 = Monday ... 6 = Sunday.
 export type OpeningHours = OpeningDay[];
 
-export type Availability = "open" | "busy" | "paused" | "closed";
+export type Availability = "open" | "busy" | "paused" | "closed" | "unavailable";
 
 export type RestaurantSettings = {
   accepting: boolean;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { parseOptionGroups, type OptionGroup } from "./menu-options";
+import { computeAccess, type Access } from "./subscription";
 import {
   DEFAULT_SETTINGS,
   canOrder,
@@ -245,10 +246,29 @@ export async function getRestaurantSettings(
   return { ...DEFAULT_SETTINGS, accepting: basic.data?.accepting_orders !== false };
 }
 
+// Fails open: if the subscription columns are not migrated yet, nobody is blocked.
+export async function getRestaurantAccess(
+  restaurantId: string | number
+): Promise<Access> {
+  const open = computeAccess({}, ADMIN_EMAIL);
+  const { data, error } = await getSupabaseAdmin()
+    .from("restaurants")
+    .select("subscription_status, trial_ends_at, is_demo, email")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  if (error || !data) return open;
+  return computeAccess(data, ADMIN_EMAIL);
+}
+
 export async function getOrderAvailability(
   restaurantId: string | number
 ): Promise<{ availability: Availability; settings: RestaurantSettings }> {
-  const settings = await getRestaurantSettings(restaurantId);
+  const [settings, access] = await Promise.all([
+    getRestaurantSettings(restaurantId),
+    getRestaurantAccess(restaurantId),
+  ]);
+  if (!access.allowed) return { availability: "unavailable", settings };
   return { availability: getAvailability(settings), settings };
 }
 
