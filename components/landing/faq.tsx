@@ -10,11 +10,15 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
     items: [
       {
         q: "Was ist im Abo für CHF 39 pro Monat enthalten?",
-        a: "Bestellseite mit QR-Code, Dashboard mit Bestell-Alarm, Menüverwaltung mit KI-Import, Statistiken und WhatsApp-Bestellungen. Es gibt keine Kommission pro Bestellung.",
+        a: "Bestellseite mit QR-Code, Dashboard mit Bestell-Alarm, Menüverwaltung mit KI-Import, und Statistiken. Es gibt keine Kommission pro Bestellung.",
       },
       {
-        q: "Wie verbinde ich meine Nummer mit WhatsApp?",
-        a: "Wir richten die WhatsApp-Anbindung gemeinsam mit Ihnen ein. Schreiben Sie uns an info@zelloo.ch oder rufen Sie an.",
+        q: "Wie bestellen Gäste über Google, Instagram und Facebook?",
+        a: "Sie erhalten einen Bestell-Link und einen QR-Code. Den Link hinterlegen Sie in Ihrem Google-Profil, in der Instagram-Bio oder auf Ihrer Facebook-Seite, den QR-Code stellen Sie auf den Tisch. Gäste öffnen ihn und bestellen per Text oder Sprache direkt im Browser.",
+      },
+      {
+        q: "Kann ich auch Bestellungen über WhatsApp erhalten?",
+        a: "Die WhatsApp-Bestellung ist noch nicht allgemein verfügbar. Wir richten sie gemeinsam mit interessierten Restaurants ein. Schreiben Sie uns an info@zelloo.ch.",
       },
       {
         q: "Was passiert nach den 15 Gratis-Tagen?",
@@ -22,7 +26,7 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
       },
       {
         q: "Gibt es Gebühren pro Bestellung?",
-        a: "Nein. Sie zahlen nur das monatliche Abo, ohne Kommission.",
+        a: "Nein. Ein fixer Monatspreis, keine Kommission pro Bestellung.",
       },
     ],
   },
@@ -31,11 +35,15 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
     items: [
       {
         q: "Que comprend l'abonnement à CHF 39 par mois ?",
-        a: "Page de commande avec QR code, tableau de bord avec alarme de commande, gestion du menu avec import IA, statistiques et commandes WhatsApp. Aucune commission par commande.",
+        a: "Page de commande avec QR code, tableau de bord avec alarme de commande, gestion du menu avec import IA, et statistiques. Aucune commission par commande.",
       },
       {
-        q: "Comment connecter mon numéro à WhatsApp ?",
-        a: "Nous configurons la connexion WhatsApp avec vous. Écrivez-nous à info@zelloo.ch ou appelez-nous.",
+        q: "Comment les clients commandent-ils via Google, Instagram et Facebook ?",
+        a: "Vous recevez un lien de commande et un QR code. Le lien se place dans votre profil Google, la bio Instagram ou votre page Facebook, et le QR code sur la table. Les clients l'ouvrent et commandent par texte ou à la voix, directement dans le navigateur.",
+      },
+      {
+        q: "Puis-je aussi recevoir des commandes par WhatsApp ?",
+        a: "La commande WhatsApp n'est pas encore disponible pour tous. Nous la configurons avec les restaurants intéressés. Écrivez-nous à info@zelloo.ch.",
       },
       {
         q: "Que se passe-t-il après les 15 jours gratuits ?",
@@ -43,7 +51,7 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
       },
       {
         q: "Y a-t-il des frais par commande ?",
-        a: "Non. Vous ne payez que l'abonnement mensuel, sans commission.",
+        a: "Non. Un prix mensuel fixe, sans commission par commande.",
       },
     ],
   },
@@ -52,11 +60,15 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
     items: [
       {
         q: "Cosa include l'abbonamento da CHF 39 al mese?",
-        a: "Pagina d'ordine con QR code, dashboard con allarme ordini, gestione del menu con import IA, statistiche e ordini WhatsApp. Nessuna commissione per ordine.",
+        a: "Pagina d'ordine con QR code, dashboard con allarme ordini, gestione del menu con import IA, e statistiche. Nessuna commissione per ordine.",
       },
       {
-        q: "Come collego il mio numero a WhatsApp?",
-        a: "Configuriamo insieme a voi il collegamento WhatsApp. Scrivete a info@zelloo.ch o chiamateci.",
+        q: "Come ordinano i clienti da Google, Instagram e Facebook?",
+        a: "Ricevete un link d'ordine e un QR code. Il link va nel profilo Google, nella bio di Instagram o sulla pagina Facebook, il QR code sul tavolo. I clienti lo aprono e ordinano a testo o a voce direttamente nel browser.",
+      },
+      {
+        q: "Posso ricevere ordini anche via WhatsApp?",
+        a: "L'ordine via WhatsApp non è ancora disponibile per tutti. Lo configuriamo insieme ai ristoranti interessati. Scrivete a info@zelloo.ch.",
       },
       {
         q: "Cosa succede dopo i 15 giorni gratuiti?",
@@ -64,7 +76,7 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
       },
       {
         q: "Ci sono costi per ogni ordine?",
-        a: "No. Pagate solo l'abbonamento mensile, senza commissioni.",
+        a: "No. Un prezzo mensile fisso, nessuna commissione per ordine.",
       },
     ],
   },
@@ -73,11 +85,15 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
     items: [
       {
         q: "What does the CHF 39 per month plan include?",
-        a: "An ordering page with QR code, a dashboard with order alarm, menu management with AI import, statistics and WhatsApp orders. There is no commission per order.",
+        a: "An ordering page with QR code, a dashboard with order alarm, menu management with AI import, and statistics. There is no commission per order.",
       },
       {
-        q: "How do I connect my number to WhatsApp?",
-        a: "We set up the WhatsApp connection together with you. Email info@zelloo.ch or give us a call.",
+        q: "How do guests order through Google, Instagram and Facebook?",
+        a: "You get an order link and a QR code. Put the link in your Google profile, Instagram bio or Facebook page, and the QR code on the table. Guests open it and order by text or voice right in the browser.",
+      },
+      {
+        q: "Can I also receive orders via WhatsApp?",
+        a: "WhatsApp ordering is not generally available yet. We set it up together with interested restaurants. Email info@zelloo.ch.",
       },
       {
         q: "What happens after the 15 free days?",
@@ -85,7 +101,7 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
       },
       {
         q: "Are there fees per order?",
-        a: "No. You only pay the monthly subscription, with no commission.",
+        a: "No. One fixed monthly price, no commission per order.",
       },
     ],
   },
@@ -94,11 +110,15 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
     items: [
       {
         q: "شو بيشمل الاشتراك بـ 39 فرنك بالشهر؟",
-        a: "صفحة طلب مع رمز QR، لوحة تحكم مع تنبيه للطلبات، إدارة المنيو باستيراد بالذكاء الاصطناعي، إحصائيات وطلبات عبر واتساب. بدون أي عمولة على الطلبات.",
+        a: "صفحة طلب مع رمز QR، لوحة تحكم مع تنبيه للطلبات، إدارة المنيو باستيراد بالذكاء الاصطناعي، وإحصائيات. بدون أي عمولة على الطلبات.",
       },
       {
-        q: "كيف بربط رقمي مع واتساب؟",
-        a: "منجهّز ربط واتساب معك. راسلنا على info@zelloo.ch أو اتصل فينا.",
+        q: "كيف بيطلب الزبائن عبر Google وInstagram وFacebook؟",
+        a: "بتاخد رابط طلب وكود QR. الرابط بتحطه ببروفايل Google أو بايو Instagram أو صفحة Facebook، والكود على الطاولة. الزبون بيفتحه وبيطلب بالكتابة أو بالصوت مباشرة بالمتصفح.",
+      },
+      {
+        q: "بقدر استقبل طلبات عبر واتساب كمان؟",
+        a: "الطلب عبر واتساب لسا مو متاح للكل. منجهّزه مع المطاعم المهتمة. راسلنا على info@zelloo.ch.",
       },
       {
         q: "شو بيصير بعد الـ 15 يوم المجانية؟",
@@ -106,7 +126,7 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
       },
       {
         q: "في رسوم على كل طلب؟",
-        a: "لا. بتدفع الاشتراك الشهري بس، بدون عمولة.",
+        a: "لا. سعر شهري ثابت، بدون عمولة على كل طلب.",
       },
     ],
   },
@@ -115,11 +135,15 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
     items: [
       {
         q: "Aylık CHF 39 aboneliğe neler dahil?",
-        a: "QR kodlu sipariş sayfası, sipariş alarmlı panel, yapay zeka ile menü aktarımı, istatistikler ve WhatsApp siparişleri. Sipariş başına komisyon yoktur.",
+        a: "QR kodlu sipariş sayfası, sipariş alarmlı panel, yapay zeka ile menü aktarımı, ve istatistikler. Sipariş başına komisyon yoktur.",
       },
       {
-        q: "Numaramı WhatsApp'a nasıl bağlarım?",
-        a: "WhatsApp bağlantısını sizinle birlikte kuruyoruz. info@zelloo.ch adresine yazın veya bizi arayın.",
+        q: "Müşteriler Google, Instagram ve Facebook üzerinden nasıl sipariş verir?",
+        a: "Bir sipariş bağlantısı ve QR kodu alırsınız. Bağlantıyı Google profilinize, Instagram biyografinize veya Facebook sayfanıza, QR kodunu masaya koyarsınız. Müşteriler açıp doğrudan tarayıcıda yazıyla veya sesle sipariş verir.",
+      },
+      {
+        q: "WhatsApp üzerinden de sipariş alabilir miyim?",
+        a: "WhatsApp siparişi henüz herkese açık değil. İlgilenen restoranlarla birlikte kuruyoruz. info@zelloo.ch adresine yazın.",
       },
       {
         q: "15 ücretsiz günden sonra ne olur?",
@@ -127,7 +151,7 @@ const faqCopy: Record<Lang, { title: string; items: Entry[] }> = {
       },
       {
         q: "Sipariş başına ücret var mı?",
-        a: "Hayır. Yalnızca aylık abonelik ödersiniz, komisyon yoktur.",
+        a: "Hayır. Sabit aylık ücret, sipariş başına komisyon yok.",
       },
     ],
   },
