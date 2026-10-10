@@ -170,6 +170,7 @@ export default function DashboardPage() {
   } | null>(null);
   const [checklistDismissed, setChecklistDismissed] = useState(false);
 
+  const welcomeRequestedRef = useRef(false);
   const knownIdsRef = useRef<Set<string> | null>(null);
   const bellRef = useRef<OrderBell | null>(null);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
@@ -447,6 +448,28 @@ export default function DashboardPage() {
       cancelled = true;
     };
   }, [restaurantId, refreshVersion]);
+
+  useEffect(() => {
+    if (restaurantId === undefined || welcomeRequestedRef.current) return;
+    welcomeRequestedRef.current = true;
+
+    async function requestWelcomeEmail() {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) return;
+
+        await fetch("/api/welcome-email", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    void requestWelcomeEmail();
+  }, [restaurantId]);
 
   async function dismissAdminMessage(messageId: string) {
     setDismissingMessageId(messageId);
