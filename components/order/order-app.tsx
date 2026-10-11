@@ -21,7 +21,7 @@ import {
   type DeliveryInfo,
 } from "./cart";
 import { MenuList } from "./menu-list";
-import { OptionsSheet } from "./options-sheet";
+import { OptionsSheet, type OptionsConfirm } from "./options-sheet";
 import { hasRequiredOptions } from "../../lib/menu-options";
 import {
   canOrder,
@@ -190,17 +190,30 @@ export function OrderApp({
     });
   }
 
-  function addWithOptions(item: PublicMenuItem, options: string[]) {
-    const key = cartLineKey(item.id, options);
-    setCart((current) => ({
-      ...current,
-      [key]: {
-        menuItemId: item.id,
-        options,
-        quantity: Math.min((current[key]?.quantity ?? 0) + 1, MAX_QUANTITY),
-        note: current[key]?.note ?? null,
-      },
-    }));
+  function addWithOptions(item: PublicMenuItem, result: OptionsConfirm) {
+    const key = cartLineKey(item.id, result.options);
+    setCart((current) => {
+      const next = {
+        ...current,
+        [key]: {
+          menuItemId: item.id,
+          options: result.options,
+          quantity: Math.min((current[key]?.quantity ?? 0) + result.quantity, MAX_QUANTITY),
+          note: result.note ?? current[key]?.note ?? null,
+        },
+      };
+      for (const extra of result.extras) {
+        if (!menuById.has(extra.itemId)) continue;
+        const existing = next[extra.itemId];
+        next[extra.itemId] = {
+          menuItemId: extra.itemId,
+          options: [],
+          quantity: Math.min((existing?.quantity ?? 0) + extra.quantity, MAX_QUANTITY),
+          note: existing?.note ?? null,
+        };
+      }
+      return next;
+    });
     setPendingItem(null);
   }
 
@@ -511,9 +524,14 @@ export function OrderApp({
       {pendingItem && (
         <OptionsSheet
           item={pendingItem}
+          drinks={
+            isDrinkCategory(pendingItem.category)
+              ? []
+              : drinkItems.filter((drink) => drink.options.length === 0)
+          }
           t={t}
           showArabic={lang === "ar"}
-          onConfirm={(options) => addWithOptions(pendingItem, options)}
+          onConfirm={(result) => addWithOptions(pendingItem, result)}
           onClose={() => setPendingItem(null)}
         />
       )}

@@ -105,7 +105,12 @@ export function OptionsEditor({
               type="button"
               role="switch"
               aria-checked={group.multiple}
-              onClick={() => updateGroup(group.id, { multiple: !group.multiple })}
+              onClick={() =>
+                updateGroup(group.id, {
+                  multiple: !group.multiple,
+                  maxSelect: undefined,
+                })
+              }
               className={`min-h-11 rounded-lg border px-3 text-sm font-semibold ${
                 group.multiple ? "bg-black text-white" : "bg-white"
               }`}
@@ -113,6 +118,29 @@ export function OptionsEditor({
               {group.multiple ? "Mehrfach wählbar" : "Eine Auswahl"}
             </button>
           </div>
+
+          {group.multiple && (
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold">Maximal wählbar (leer = unbegrenzt)</span>
+              <input
+                key={`${group.id}-${group.maxSelect ?? ""}`}
+                defaultValue={group.maxSelect ?? ""}
+                onBlur={(e) => {
+                  const parsed = Math.floor(Number(e.target.value));
+                  updateGroup(group.id, {
+                    maxSelect:
+                      Number.isFinite(parsed) && parsed >= 1
+                        ? Math.min(parsed, group.choices.length)
+                        : undefined,
+                  });
+                }}
+                inputMode="numeric"
+                aria-label="Maximale Anzahl Auswahlen"
+                placeholder="∞"
+                className="min-h-11 w-20 rounded-lg border border-gray-300 px-3 text-base"
+              />
+            </label>
+          )}
 
           <ul className="flex flex-col gap-2">
             {group.choices.map((choice) => (

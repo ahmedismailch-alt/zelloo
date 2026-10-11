@@ -5,6 +5,7 @@ export type OptionGroup = {
   name: string;
   required: boolean;
   multiple: boolean;
+  maxSelect?: number;
   choices: OptionChoice[];
 };
 
@@ -44,11 +45,18 @@ export function parseOptionGroups(value: unknown): OptionGroup[] {
     }
 
     if (choices.length === 0) continue;
+    const multiple = group.multiple === true;
+    const rawMax = Number(group.maxSelect);
+    const maxSelect =
+      multiple && Number.isInteger(rawMax) && rawMax >= 1 && rawMax < choices.length
+        ? rawMax
+        : undefined;
     groups.push({
       id,
       name,
       required: group.required === true,
-      multiple: group.multiple === true,
+      multiple,
+      ...(maxSelect ? { maxSelect } : {}),
       choices,
     });
   }
@@ -83,6 +91,7 @@ export function resolveSelection(
     matched += picked.length;
     if (group.required && picked.length === 0) return { ok: false };
     if (!group.multiple && picked.length > 1) return { ok: false };
+    if (group.maxSelect && picked.length > group.maxSelect) return { ok: false };
     choices.push(...picked);
   }
 

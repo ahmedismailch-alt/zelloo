@@ -106,6 +106,10 @@ export type OrderStrings = {
   pickAny: string;
   addToCart: (price: string) => string;
   optionsMissingError: string;
+  pickUpTo: (max: number) => string;
+  extraCostNote: string;
+  drinksTitle: string;
+  addQtyToCart: (quantity: number, price: string) => string;
   subtotalLabel: string;
   deliveryFeeLabel: string;
   deliveryMinInfo: (min: string) => string;
@@ -219,7 +223,11 @@ const de: OrderStrings = {
   pickOne: "Eine Auswahl",
   pickAny: "Mehrfachauswahl möglich",
   addToCart: (p) => `In den Warenkorb · ${p}`,
-  optionsMissingError: "Bitte alle Pflichtoptionen wählen.",
+    optionsMissingError: "Bitte alle Pflichtoptionen wählen.",
+    pickUpTo: (n) => `Wähle bis zu ${n}`,
+    extraCostNote: "Es können zusätzliche Kosten anfallen.",
+    drinksTitle: "Getränke hinzufügen",
+    addQtyToCart: (q, p) => `${q} in den Warenkorb · ${p}`,
   subtotalLabel: "Zwischensumme",
   deliveryFeeLabel: "Liefergebühr",
   deliveryMinInfo: (m) => `Mindestbestellwert für Lieferung: ${m}`,
@@ -334,7 +342,11 @@ const fr: OrderStrings = {
   pickOne: "Un seul choix",
   pickAny: "Plusieurs choix possibles",
   addToCart: (p) => `Ajouter au panier · ${p}`,
-  optionsMissingError: "Veuillez choisir toutes les options obligatoires.",
+    optionsMissingError: "Veuillez choisir toutes les options obligatoires.",
+    pickUpTo: (n) => `Choisir jusqu'à ${n}`,
+    extraCostNote: "Des frais supplémentaires peuvent s'appliquer.",
+    drinksTitle: "Ajouter des boissons",
+    addQtyToCart: (q, p) => `Ajouter ${q} au panier · ${p}`,
   subtotalLabel: "Sous-total",
   deliveryFeeLabel: "Frais de livraison",
   deliveryMinInfo: (m) => `Commande minimum pour la livraison : ${m}`,
@@ -449,7 +461,11 @@ const it: OrderStrings = {
   pickOne: "Una sola scelta",
   pickAny: "Scelta multipla possibile",
   addToCart: (p) => `Aggiungi al carrello · ${p}`,
-  optionsMissingError: "Scegli tutte le opzioni obbligatorie.",
+    optionsMissingError: "Scegli tutte le opzioni obbligatorie.",
+    pickUpTo: (n) => `Scegli fino a ${n}`,
+    extraCostNote: "Potrebbero essere addebitati costi aggiuntivi.",
+    drinksTitle: "Aggiungi bevande",
+    addQtyToCart: (q, p) => `Aggiungi ${q} al carrello · ${p}`,
   subtotalLabel: "Subtotale",
   deliveryFeeLabel: "Costo di consegna",
   deliveryMinInfo: (m) => `Ordine minimo per la consegna: ${m}`,
@@ -564,7 +580,11 @@ const en: OrderStrings = {
   pickOne: "Choose one",
   pickAny: "You can choose several",
   addToCart: (p) => `Add to cart · ${p}`,
-  optionsMissingError: "Please choose all required options.",
+    optionsMissingError: "Please choose all required options.",
+    pickUpTo: (n) => `Choose up to ${n}`,
+    extraCostNote: "Additional charges may apply.",
+    drinksTitle: "Add drinks",
+    addQtyToCart: (q, p) => `Add ${q} to cart · ${p}`,
   subtotalLabel: "Subtotal",
   deliveryFeeLabel: "Delivery fee",
   deliveryMinInfo: (m) => `Minimum order for delivery: ${m}`,
@@ -677,10 +697,14 @@ const ar: OrderStrings = {
   pickOne: "اختيار واحد",
   pickAny: "يمكن اختيار أكثر من واحد",
   addToCart: (p) => `أضف إلى السلة · ${p}`,
-  optionsMissingError: "يرجى اختيار كل الخيارات الإلزامية.",
+    optionsMissingError: "يرجى اختيار كل الخيارات الإلزامية.",
+    pickUpTo: (n) => `اختر حتى ${n}`,
+    extraCostNote: "ممكن تنحسب تكلفة إضافية.",
+    drinksTitle: "أضف مشروبات",
+    addQtyToCart: (q, p) => `أضف ${q} إلى السلة · ${p}`,
   subtotalLabel: "المجموع الفرعي",
   deliveryFeeLabel: "رسوم التوصيل",
-  deliveryMinInfo: (m) => `الحد الأدنى للطلب للتوصيل: ${m}`,
+  deliveryMinInfo: (m) => `الحد الأدنى للط��ب للتوصيل: ${m}`,
   minOrderError: (m) => `الحد الأدنى للطلب للتوصيل: ${m}`,
   zoneError: "للأسف لا نوصّل إلى هذا العنوان.",
   reorderButton: "إعادة الطلب السابق",
