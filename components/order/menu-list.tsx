@@ -221,6 +221,12 @@ export function MenuList({
                         className={`size-16 rounded-xl object-cover border transition-opacity duration-200 ${
                           imageLoaded ? "opacity-100" : "opacity-0"
                         }`}
+                        ref={(node) => {
+                          // Images can finish loading before React attaches onLoad.
+                          if (!node || !node.complete || loadedImages.has(item.id)) return;
+                          if (node.naturalWidth > 0) markImageLoaded(item.id);
+                          else if (usingRealPhoto && !failedImages.has(item.id)) markImageFailed(item.id);
+                        }}
                         onLoad={() => markImageLoaded(item.id)}
                         onError={() => markImageFailed(item.id)}
                       />
