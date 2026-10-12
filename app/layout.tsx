@@ -25,6 +25,42 @@ export const metadata: Metadata = {
   },
 };
 
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://zelloo.ch/#organization",
+      name: "Zelloo",
+      alternateName: "Zelloo.ch",
+      url: "https://zelloo.ch",
+      logo: "https://zelloo.ch/icon.png",
+      description:
+        "Zelloo ist ein Bestellsystem für Restaurants und Cafés in der Schweiz. Gäste bestellen per Text oder Sprache über QR-Code. Fixer Monatspreis, 0% Kommission pro Bestellung.",
+      areaServed: { "@type": "Country", name: "Switzerland" },
+      email: "info@zelloo.ch",
+      telephone: "+41445053220",
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: "info@zelloo.ch",
+        telephone: "+41445053220",
+        areaServed: "CH",
+        availableLanguage: ["de", "fr", "it", "en"],
+      },
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://zelloo.ch/#website",
+      url: "https://zelloo.ch",
+      name: "Zelloo",
+      alternateName: "Zelloo Bestellsystem für Restaurants",
+      inLanguage: "de-CH",
+      publisher: { "@id": "https://zelloo.ch/#organization" },
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -35,7 +71,13 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+        {children}
+      </body>
     </html>
   );
 }
