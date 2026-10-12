@@ -25,6 +25,32 @@ export function PageSections() {
         </div>
       </div>
 
+      {/* Direct ordering without commission */}
+      <div className="py-16">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-black text-center text-balance">{p.directTitle}</h2>
+          <p className="text-gray-500 text-center mt-3 max-w-2xl mx-auto leading-relaxed text-pretty">
+            {p.directParagraph}
+          </p>
+          <div className="grid md:grid-cols-3 gap-4 mt-10">
+            {p.directPoints.map((point) => (
+              <div key={point} className="flex items-start gap-3 border rounded-2xl p-5">
+                <svg
+                  className="w-5 h-5 text-[#c41e24] shrink-0 mt-0.5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" />
+                </svg>
+                <span className="font-semibold leading-snug">{point}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-gray-500 text-center mt-5">{p.directNote}</p>
+        </div>
+      </div>
+
       {/* WhatsApp bot */}
       <div className="py-16 overflow-hidden">
         <div className="max-w-[1200px] mx-auto px-6">
