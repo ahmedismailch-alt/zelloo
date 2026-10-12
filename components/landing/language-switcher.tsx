@@ -109,6 +109,10 @@ export const pageCopy: Record<
     whatsappTitle: [string, string]
     whatsappParagraph: string
     whatsappChecks: [string, string, string]
+    directTitle: string
+    directParagraph: string
+    directPoints: [string, string, string]
+    directNote: string
     featuresTitle: string
     featuresSubtitle: string
     features: [
@@ -149,6 +153,15 @@ export const pageCopy: Record<
       "Gemäss den vom Restaurant festgelegten Öffnungszeiten",
       "Im selben Dashboard wie alle anderen Bestellungen",
     ],
+    directTitle: "Direkt bestellen, ohne Provision",
+    directParagraph:
+      "Ihre Stammgäste bestellen direkt bei Ihnen — zum Mitnehmen, mit Lieferung oder am Tisch. Sie sparen die Provision pro Bestellung. CHF 39 pro Monat, fix.",
+    directPoints: [
+      "QR-Code für Ihr Restaurant — an der Kasse, auf der Speisekarte oder in der Verpackung",
+      "Bestellung per Text oder Sprache",
+      "Keine Provision, nie",
+    ],
+    directNote: "Bestellungen per WhatsApp folgen bald.",
     featuresTitle: "Alles, was Ihr Restaurant braucht",
     featuresSubtitle: "Entwickelt für Schweizer Restaurants und Cafés.",
     features: [
@@ -188,6 +201,15 @@ export const pageCopy: Record<
       "Selon les horaires d'ouverture définis par le restaurant",
       "Dans le même tableau de bord que toutes les autres commandes",
     ],
+    directTitle: "Commandez en direct, sans commission",
+    directParagraph:
+      "Vos clients habituels commandent directement chez vous — à emporter, en livraison ou à table. Vous économisez la commission sur chaque commande. CHF 39 par mois, fixe.",
+    directPoints: [
+      "Un code QR pour votre restaurant — à la caisse, sur la carte ou dans l'emballage",
+      "Commande par texte ou par la voix",
+      "Aucune commission, jamais",
+    ],
+    directNote: "Les commandes par WhatsApp arrivent bientôt.",
     featuresTitle: "Tout ce dont votre restaurant a besoin",
     featuresSubtitle: "Conçu pour les restaurants et cafés suisses.",
     features: [
@@ -227,6 +249,15 @@ export const pageCopy: Record<
       "Secondo gli orari di apertura definiti dal ristorante",
       "Nella stessa dashboard di tutti gli altri ordini",
     ],
+    directTitle: "Ordina direttamente, senza commissioni",
+    directParagraph:
+      "I tuoi clienti abituali ordinano direttamente da te — da asporto, a domicilio o al tavolo. Risparmi la commissione su ogni ordine. CHF 39 al mese, fissi.",
+    directPoints: [
+      "Un codice QR per il tuo ristorante — alla cassa, sul menu o nella confezione",
+      "Ordine con testo o voce",
+      "Nessuna commissione, mai",
+    ],
+    directNote: "Gli ordini via WhatsApp arriveranno presto.",
     featuresTitle: "Tutto ciò di cui il tuo ristorante ha bisogno",
     featuresSubtitle: "Pensato per ristoranti e caffè svizzeri.",
     features: [
@@ -266,6 +297,15 @@ export const pageCopy: Record<
       "Based on the opening hours the restaurant sets",
       "In the same dashboard as every other order",
     ],
+    directTitle: "Order direct, no commission",
+    directParagraph:
+      "Your regular guests order straight from you — takeaway, delivery or at the table. You save the commission on every order. CHF 39 per month, fixed.",
+    directPoints: [
+      "A QR code for your restaurant — at the till, on the menu or in the packaging",
+      "Order by text or voice",
+      "No commission, ever",
+    ],
+    directNote: "WhatsApp ordering is coming soon.",
     featuresTitle: "Everything your restaurant needs",
     featuresSubtitle: "Built for Swiss restaurants and cafés.",
     features: [
@@ -305,6 +345,15 @@ export const pageCopy: Record<
       "وفق ساعات العمل اللي بيحددها المطعم",
       "بنفس لوحة التحكم مع كل الطلبات الأخرى",
     ],
+    directTitle: "اطلب مباشرة، بدون عمولة",
+    directParagraph:
+      "زبائنك المعتادين بيطلبوا مباشرة منك — استلام أو توصيل أو على الطاولة. بتوفّر العمولة على كل طلب. 39 فرنك بالشهر، ثابتة.",
+    directPoints: [
+      "رمز QR لمطعمك — عند الكاشير أو على القائمة أو على التغليف",
+      "الطلب بالنص أو بالصوت",
+      "بدون عمولة، أبداً",
+    ],
+    directNote: "الطلب عبر واتساب قريباً.",
     featuresTitle: "كل شي مطعمك محتاجه",
     featuresSubtitle: "مصمم خصيصاً للمطاعم والمقاهي السويسرية.",
     features: [
@@ -344,6 +393,15 @@ export const pageCopy: Record<
       "Restoranın belirlediği çalışma saatlerine göre",
       "Diğer tüm siparişlerle aynı panelde",
     ],
+    directTitle: "Doğrudan sipariş, komisyonsuz",
+    directParagraph:
+      "Müdavimleriniz size doğrudan sipariş verir — paket servis, teslimat veya masada. Her siparişte komisyon ödemezsiniz. Ayda sabit CHF 39.",
+    directPoints: [
+      "Restoranınız için bir QR kod — kasada, menüde veya ambalajda",
+      "Metin veya sesle sipariş",
+      "Komisyon yok, asla",
+    ],
+    directNote: "WhatsApp ile sipariş yakında geliyor.",
     featuresTitle: "Restoranınızın ihtiyacı olan her şey",
     featuresSubtitle: "İsviçre restoranları ve kafeleri için geliştirildi.",
     features: [
