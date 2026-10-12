@@ -13,6 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://zelloo.ch"),
+  alternates: {
+    canonical: "./",
+  },
   title: "Zelloo – Bestellsystem für Restaurants und Cafés in der Schweiz",
   description:
     "Gäste bestellen per Text oder Sprache. Fixer Monatspreis, 0% Kommission pro Bestellung.",
