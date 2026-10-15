@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { OrderApp } from "../../../components/order/order-app";
 import { getNextOpening } from "../../../lib/restaurant-settings";
+import { getReservationConfig } from "../../../lib/reservations-server";
 import {
   getCategoryTranslations,
   getOrderableMenu,
@@ -29,14 +30,21 @@ export default async function RestaurantOrderPage({
   const restaurant = await getRestaurant(id);
   if (!restaurant) notFound();
 
-  const [menu, categoryAr, popularItemNames, { availability, settings }, isDemo] =
-    await Promise.all([
-      getOrderableMenu(id),
-      getCategoryTranslations(id),
-      getPopularItemNames(id).catch(() => []),
-      getOrderAvailability(id),
-      isDemoRestaurant(id),
-    ]);
+  const [
+    menu,
+    categoryAr,
+    popularItemNames,
+    { availability, settings },
+    isDemo,
+    reservationConfig,
+  ] = await Promise.all([
+    getOrderableMenu(id),
+    getCategoryTranslations(id),
+    getPopularItemNames(id).catch(() => []),
+    getOrderAvailability(id),
+    isDemoRestaurant(id),
+    getReservationConfig(restaurant.id).catch(() => null),
+  ]);
 
   return (
     <OrderApp
@@ -56,6 +64,14 @@ export default async function RestaurantOrderPage({
       menu={menu}
       categoryAr={categoryAr}
       popularItemNames={popularItemNames}
+      reservation={
+        reservationConfig?.enabled
+          ? {
+              maxParty: reservationConfig.maxParty,
+              openingHours: settings.openingHours,
+            }
+          : null
+      }
     />
   );
 }

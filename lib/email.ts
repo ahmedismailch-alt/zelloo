@@ -39,6 +39,83 @@ export async function sendEmail({ to, subject, html, text }: SendEmailInput) {
   return true;
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+type ReservationEmailInput = {
+  restaurantName: string;
+  guestName: string;
+  status: "confirmed" | "declined" | "cancelled";
+  when: string;
+  partySize: number;
+  statusUrl: string;
+};
+
+export function reservationStatusEmail({
+  restaurantName,
+  guestName,
+  status,
+  when,
+  partySize,
+  statusUrl,
+}: ReservationEmailInput) {
+  const headline = {
+    confirmed: "Ihre Reservierung ist bestätigt",
+    declined: "Reservierung leider nicht möglich",
+    cancelled: "Ihre Reservierung wurde storniert",
+  }[status];
+
+  const intro = {
+    confirmed: `${restaurantName} hat Ihre Reservierung bestätigt. Wir freuen uns auf Sie!`,
+    declined: `${restaurantName} kann Ihre Anfrage leider nicht annehmen. Bitte wählen Sie eine andere Zeit oder rufen Sie das Restaurant an.`,
+    cancelled: `${restaurantName} hat Ihre Reservierung storniert. Bei Fragen rufen Sie das Restaurant an.`,
+  }[status];
+
+  const details = `${when} · ${partySize} ${partySize === 1 ? "Person" : "Personen"}`;
+  const subject = `${headline} – ${restaurantName}`;
+
+  const text = [
+    `Hallo ${guestName},`,
+    "",
+    intro,
+    "",
+    details,
+    "",
+    `Status ansehen: ${statusUrl}`,
+  ].join("\n");
+
+  const html = `<!doctype html>
+<html lang="de">
+  <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;padding:32px 24px;">
+            <tr>
+              <td>
+                <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;">${escapeHtml(headline)}</h1>
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hallo ${escapeHtml(guestName)},</p>
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">${escapeHtml(intro)}</p>
+                <p style="margin:0 0 28px;font-size:16px;font-weight:700;line-height:1.6;">${escapeHtml(details)}</p>
+                <a href="${escapeHtml(statusUrl)}" style="display:inline-block;background:#ff6600;color:#000000;font-weight:700;font-size:16px;text-decoration:none;padding:14px 28px;border-radius:10px;">Status ansehen</a>
+                <p style="margin:32px 0 0;font-size:14px;line-height:1.6;color:#71717a;">Gesendet über Zelloo</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  return { subject, html, text };
+}
+
 export function welcomeEmail() {
   const dashboardUrl = "https://zelloo.ch/dashboard";
   const subject = "Willkommen bei Zelloo";
