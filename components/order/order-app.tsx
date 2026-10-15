@@ -387,7 +387,7 @@ export function OrderApp({
                 {t.shareCopied}
               </p>
             )}
-            {reservation && !isDemo && (
+            {reservation && (
               <button
                 type="button"
                 onClick={() => setReservationOpen(true)}
@@ -543,6 +543,7 @@ export function OrderApp({
           maxParty={reservation.maxParty}
           openingHours={reservation.openingHours}
           lang={lang}
+          isDemo={isDemo}
           onClose={() => setReservationOpen(false)}
         />
       )}

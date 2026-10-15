@@ -3,11 +3,12 @@
 import { Logo } from "@/components/logo";
 import { AnimatedJourney } from "@/components/landing/animated-journey"
 import { Faq } from "./faq"
-import { heroCopy, pageCopy, useLang } from "./language-switcher"
+import { heroCopy, pageCopy, reservationCopy, useLang } from "./language-switcher"
 
 export function PageSections() {
   const { lang } = useLang()
   const p = pageCopy[lang]
+  const rv = reservationCopy[lang]
   const h = heroCopy[lang]
   const isRtl = lang === "ar"
 
@@ -21,6 +22,63 @@ export function PageSections() {
 
           <div className="mt-10" dir="ltr">
             <AnimatedJourney steps={p.journeySteps} />
+          </div>
+        </div>
+      </div>
+
+      {/* Table reservation */}
+      <div className="py-16">
+        <div className="max-w-[1200px] mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-orange-50 text-orange-800 px-3 py-1.5 rounded-full">
+              {rv.badge}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black mt-4 text-balance">{rv.title}</h2>
+            <p className="text-gray-500 mt-3 leading-relaxed text-pretty">{rv.paragraph}</p>
+            <ul className="mt-6 space-y-3">
+              {rv.points.map((point) => (
+                <li key={point} className="flex items-start gap-3">
+                  <svg
+                    className="w-5 h-5 text-[#c41e24] shrink-0 mt-0.5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" />
+                  </svg>
+                  <span className="font-semibold leading-snug">{point}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href="/demo"
+              className="inline-flex items-center border border-black text-black font-bold px-8 py-3 rounded-lg mt-6 min-h-11"
+            >
+              {rv.cta}
+            </a>
+            <p className="text-sm text-gray-500 mt-3">{rv.note}</p>
+          </div>
+
+          <div className="flex justify-center" dir="ltr">
+            <div className="w-full max-w-[320px] rounded-3xl border bg-white shadow-xl overflow-hidden">
+              <div className="bg-black text-white px-5 py-4 font-bold">{rv.cardTitle}</div>
+              <div className="p-5 space-y-3">
+                <span className="inline-block text-[11px] font-bold bg-green-100 text-green-800 px-2.5 py-1 rounded-full">
+                  {rv.cardNew}
+                </span>
+                <p className="text-xl font-black">{rv.cardWhen}</p>
+                <p className="text-sm font-bold text-gray-600">{rv.cardGuests}</p>
+                <p className="text-sm">{rv.cardGuest}</p>
+                <div className="flex gap-2 pt-1">
+                  <span className="flex-1 min-h-11 rounded-xl bg-orange-500 text-black font-black flex items-center justify-center">
+                    {rv.confirm}
+                  </span>
+                  <span className="flex-1 min-h-11 rounded-xl border border-gray-300 font-bold flex items-center justify-center">
+                    {rv.decline}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

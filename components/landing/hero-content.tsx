@@ -1,10 +1,11 @@
 "use client"
 
-import { heroCopy, useLang } from "./language-switcher"
+import { heroCopy, reservationCopy, useLang } from "./language-switcher"
 
 export function HeroContent() {
   const { lang } = useLang()
   const t = heroCopy[lang]
+  const r = reservationCopy[lang]
   const isRtl = lang === "ar"
 
   return (
@@ -28,7 +29,12 @@ export function HeroContent() {
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-3 mt-6">
+        <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 text-sm font-semibold text-orange-800">
+          <span className="size-2 rounded-full bg-orange-500" aria-hidden="true" />
+          {r.heroBadge}
+        </p>
+
+        <div className="flex flex-wrap gap-3 mt-4">
           <a href="/dashboard" className="bg-[#c41e24] text-white font-bold px-8 py-3 rounded-lg min-h-11 flex items-center">
             {t.cta}
           </a>
