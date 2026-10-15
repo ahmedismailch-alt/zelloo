@@ -5,6 +5,10 @@ import type { OrderLang } from "../../lib/order-i18n";
 import { RESERVATION_STRINGS } from "../../lib/reservation-i18n";
 import { slotsForDay, upcomingDays } from "../../lib/reservations";
 import type { OpeningHours } from "../../lib/restaurant-settings";
+import {
+  DemoReservationResult,
+  type DemoReservationSummary,
+} from "./demo-reservation-result";
 import { ReservationStatusView, reservationLocale } from "./reservation-status";
 
 type Props = {
@@ -13,6 +17,7 @@ type Props = {
   maxParty: number;
   openingHours: OpeningHours | null;
   lang: OrderLang;
+  isDemo?: boolean;
   onClose: () => void;
 };
 
@@ -24,6 +29,7 @@ export function ReservationSheet({
   maxParty,
   openingHours,
   lang,
+  isDemo = false,
   onClose,
 }: Props) {
   const t = RESERVATION_STRINGS[lang];
@@ -48,6 +54,7 @@ export function ReservationSheet({
   const [error, setError] = useState("");
   const [reservationId, setReservationId] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [demoSummary, setDemoSummary] = useState<DemoReservationSummary | null>(null);
 
   const slots = slotsByDate.get(date) ?? [];
   const dayFormatter = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" });
@@ -57,6 +64,17 @@ export function ReservationSheet({
     event.preventDefault();
     if (!name.trim() || !phone.trim() || !time) {
       setError(t.missingFields);
+      return;
+    }
+    if (isDemo) {
+      setDemoSummary({
+        date,
+        time,
+        partySize,
+        guestName: name.trim(),
+        guestPhone: phone.trim(),
+        note: note.trim(),
+      });
       return;
     }
     setSending(true);
@@ -114,6 +132,10 @@ export function ReservationSheet({
     } catch {
       // Clipboard can be blocked; the link stays visible in the page.
     }
+  }
+
+  if (demoSummary) {
+    return <DemoReservationResult summary={demoSummary} lang={lang} onClose={onClose} />;
   }
 
   return (

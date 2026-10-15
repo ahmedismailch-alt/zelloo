@@ -426,6 +426,153 @@ export const pageCopy: Record<
   },
   }
 
+export const reservationCopy: Record<
+  Lang,
+  {
+    heroBadge: string
+    badge: string
+    title: string
+    paragraph: string
+    points: [string, string, string]
+    cardTitle: string
+    cardNew: string
+    cardWhen: string
+    cardGuests: string
+    cardGuest: string
+    confirm: string
+    decline: string
+    cta: string
+    note: string
+  }
+> = {
+  de: {
+    heroBadge: "Neu: Tischreservierung",
+    badge: "Neu · Tischreservierung",
+    title: "Gäste reservieren online, Sie bestätigen mit einem Tipp",
+    paragraph:
+      "Ihre Gäste reservieren direkt auf Ihrer Bestellseite. Die Anfrage landet im selben Dashboard wie Ihre Bestellungen, mit Ton und Zähler.",
+    points: [
+      "Gast wählt Tag, Uhrzeit und Personenzahl, passend zu Ihren Öffnungszeiten",
+      "Sie bestätigen oder lehnen mit einem Tipp ab, auch vom Handy",
+      "Der Gast erhält eine E-Mail und einen Link zum Status seiner Reservierung",
+    ],
+    cardTitle: "Tisch reservieren",
+    cardNew: "Neu",
+    cardWhen: "Fr 19:00",
+    cardGuests: "4 Personen",
+    cardGuest: "Familie Meier",
+    confirm: "Bestätigen",
+    decline: "Ablehnen",
+    cta: "Reservierung ausprobieren",
+    note: "Im Demo wird nichts gespeichert und keine E-Mail gesendet.",
+  },
+  fr: {
+    heroBadge: "Nouveau : réservation de table",
+    badge: "Nouveau · Réservation de table",
+    title: "Vos clients réservent en ligne, vous confirmez d'un geste",
+    paragraph:
+      "Vos clients réservent directement sur votre page de commande. La demande arrive dans le même tableau de bord que vos commandes, avec son et compteur.",
+    points: [
+      "Le client choisit le jour, l'heure et le nombre de personnes, selon vos horaires",
+      "Vous confirmez ou refusez d'un geste, même depuis votre téléphone",
+      "Le client reçoit un e-mail et un lien pour suivre sa réservation",
+    ],
+    cardTitle: "Réserver une table",
+    cardNew: "Nouveau",
+    cardWhen: "Ven 19:00",
+    cardGuests: "4 personnes",
+    cardGuest: "Famille Meier",
+    confirm: "Confirmer",
+    decline: "Refuser",
+    cta: "Essayer la réservation",
+    note: "Dans la démo, rien n'est enregistré et aucun e-mail n'est envoyé.",
+  },
+  it: {
+    heroBadge: "Novità: prenotazione tavolo",
+    badge: "Novità · Prenotazione tavolo",
+    title: "I clienti prenotano online, tu confermi con un tocco",
+    paragraph:
+      "I tuoi clienti prenotano direttamente dalla pagina degli ordini. La richiesta arriva nella stessa dashboard degli ordini, con suono e contatore.",
+    points: [
+      "Il cliente sceglie giorno, orario e numero di persone, secondo i tuoi orari",
+      "Confermi o rifiuti con un tocco, anche dal telefono",
+      "Il cliente riceve un'e-mail e un link per seguire la prenotazione",
+    ],
+    cardTitle: "Prenota un tavolo",
+    cardNew: "Nuova",
+    cardWhen: "Ven 19:00",
+    cardGuests: "4 persone",
+    cardGuest: "Famiglia Meier",
+    confirm: "Conferma",
+    decline: "Rifiuta",
+    cta: "Prova la prenotazione",
+    note: "Nella demo non viene salvato nulla né inviata alcuna e-mail.",
+  },
+  en: {
+    heroBadge: "New: table reservations",
+    badge: "New · Table reservations",
+    title: "Guests book online, you confirm with one tap",
+    paragraph:
+      "Your guests reserve right from your order page. The request lands in the same dashboard as your orders, with sound and a counter.",
+    points: [
+      "Guests pick the day, time and party size, based on your opening hours",
+      "You confirm or decline with one tap, even from your phone",
+      "The guest gets an email and a link to track their reservation",
+    ],
+    cardTitle: "Reserve a table",
+    cardNew: "New",
+    cardWhen: "Fri 19:00",
+    cardGuests: "4 people",
+    cardGuest: "Meier family",
+    confirm: "Confirm",
+    decline: "Decline",
+    cta: "Try a reservation",
+    note: "In the demo nothing is saved and no email is sent.",
+  },
+  ar: {
+    heroBadge: "جديد: حجز الطاولات",
+    badge: "جديد · حجز الطاولات",
+    title: "الزبون بيحجز أونلاين وإنتِ بتأكدي بلمسة",
+    paragraph:
+      "زبائنك بيحجزوا مباشرة من صفحة الطلب عندك. الحجز بيوصل لنفس لوحة الطلبات، مع صوت وعدّاد.",
+    points: [
+      "الزبون بيختار اليوم والساعة وعدد الأشخاص حسب أوقات دوامك",
+      "بتأكدي أو بترفضي بلمسة، حتى من الموبايل",
+      "الزبون بيوصله إيميل ورابط لمتابعة حالة حجزه",
+    ],
+    cardTitle: "حجز طاولة",
+    cardNew: "جديد",
+    cardWhen: "الجمعة 19:00",
+    cardGuests: "4 أشخاص",
+    cardGuest: "عائلة ماير",
+    confirm: "تأكيد",
+    decline: "رفض",
+    cta: "جرّب الحجز",
+    note: "بالتجريبي ما بينحفظ شي وما بيتبعت إيميل.",
+  },
+  tr: {
+    heroBadge: "Yeni: masa rezervasyonu",
+    badge: "Yeni · Masa rezervasyonu",
+    title: "Misafirler online rezervasyon yapar, siz tek dokunuşla onaylarsınız",
+    paragraph:
+      "Misafirleriniz doğrudan sipariş sayfanızdan rezervasyon yapar. Talep, siparişlerinizle aynı panele ses ve sayaçla düşer.",
+    points: [
+      "Misafir çalışma saatlerinize göre gün, saat ve kişi sayısını seçer",
+      "Telefonunuzdan bile tek dokunuşla onaylar veya reddedersiniz",
+      "Misafir e-posta ve rezervasyon durumu için bir bağlantı alır",
+    ],
+    cardTitle: "Masa ayırt",
+    cardNew: "Yeni",
+    cardWhen: "Cum 19:00",
+    cardGuests: "4 kişi",
+    cardGuest: "Meier ailesi",
+    confirm: "Onayla",
+    decline: "Reddet",
+    cta: "Rezervasyonu dene",
+    note: "Demoda hiçbir şey kaydedilmez ve e-posta gönderilmez.",
+  },
+}
+
 const LangContext = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
   lang: "de",
   setLang: () => {},

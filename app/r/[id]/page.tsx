@@ -15,6 +15,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const DEMO_MAX_PARTY = 12;
+
 export default async function RestaurantOrderPage({
   params,
   searchParams,
@@ -65,12 +67,14 @@ export default async function RestaurantOrderPage({
       categoryAr={categoryAr}
       popularItemNames={popularItemNames}
       reservation={
-        reservationConfig?.enabled
-          ? {
-              maxParty: reservationConfig.maxParty,
-              openingHours: settings.openingHours,
-            }
-          : null
+        isDemo
+          ? { maxParty: DEMO_MAX_PARTY, openingHours: settings.openingHours }
+          : reservationConfig?.enabled
+            ? {
+                maxParty: reservationConfig.maxParty,
+                openingHours: settings.openingHours,
+              }
+            : null
       }
     />
   );
