@@ -62,6 +62,27 @@ function IconTables() {
   );
 }
 
+function IconReservations() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+      <path
+        d="M8 3v3m8-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="m9 14.5 2 2 4-4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function IconStats() {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
@@ -120,6 +141,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard", label: "Bestellungen", icon: <IconOrders /> },
   { href: "/menu", label: "Menü", icon: <IconMenu /> },
   { href: "/dashboard/tables", label: "Tische", icon: <IconTables /> },
+  { href: "/dashboard/reservations", label: "Reservierungen", icon: <IconReservations /> },
   { href: "/dashboard/stats", label: "Statistiken", icon: <IconStats /> },
   { href: "/dashboard/settings", label: "Einstellungen", icon: <IconSettings /> },
 ];
@@ -174,6 +196,7 @@ function MobileBottomNav() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const moreActive =
+    pathname?.startsWith("/dashboard/reservations") ||
     pathname?.startsWith("/dashboard/stats") ||
     pathname?.startsWith("/dashboard/settings");
 
@@ -207,6 +230,15 @@ function MobileBottomNav() {
             role="menu"
             className="fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-50 rounded-2xl border border-black/10 bg-white p-2 shadow-xl"
           >
+            <Link
+              href="/dashboard/reservations"
+              role="menuitem"
+              onClick={() => setMoreOpen(false)}
+              className="flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-black active:bg-gray-100"
+            >
+              <IconReservations />
+              Reservierungen
+            </Link>
             <Link
               href="/dashboard/stats"
               role="menuitem"

@@ -25,6 +25,9 @@ export function OperationsSettings({ restaurantId }: { restaurantId: number | st
   const [fee, setFee] = useState("");
   const [minOrder, setMinOrder] = useState("");
   const [zones, setZones] = useState("");
+  const [reservationsEnabled, setReservationsEnabled] = useState(false);
+  const [maxParty, setMaxParty] = useState("12");
+  const [reservationsAvailable, setReservationsAvailable] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -51,6 +54,16 @@ export function OperationsSettings({ restaurantId }: { restaurantId: number | st
       setFee(centsToInput(data?.delivery_fee_cents));
       setMinOrder(centsToInput(data?.delivery_min_order_cents));
       setZones(typeof data?.delivery_zones === "string" ? data.delivery_zones : "");
+
+      const { data: reservationData, error: reservationError } = await supabase
+        .from("restaurants")
+        .select("reservations_enabled, reservation_max_party")
+        .eq("id", restaurantId)
+        .maybeSingle();
+      if (cancelled || reservationError || !reservationData) return;
+      setReservationsAvailable(true);
+      setReservationsEnabled(reservationData.reservations_enabled === true);
+      setMaxParty(String(reservationData.reservation_max_party ?? 12));
     }
     void load();
     return () => {
@@ -81,8 +94,22 @@ export function OperationsSettings({ restaurantId }: { restaurantId: number | st
       })
       .eq("id", restaurantId);
 
+    let reservationSaveError = null;
+    if (!updateError && reservationsAvailable) {
+      const party = Math.min(50, Math.max(1, Math.round(Number(maxParty)) || 12));
+      setMaxParty(String(party));
+      const result = await supabase
+        .from("restaurants")
+        .update({
+          reservations_enabled: reservationsEnabled,
+          reservation_max_party: party,
+        })
+        .eq("id", restaurantId);
+      reservationSaveError = result.error;
+    }
+
     setSaving(false);
-    if (updateError) {
+    if (updateError || reservationSaveError) {
       setError("Speichern nicht möglich. Bitte später erneut versuchen.");
       return;
     }
@@ -216,6 +243,55 @@ export function OperationsSettings({ restaurantId }: { restaurantId: number | st
           />
         </label>
       </section>
+
+      {reservationsAvailable && (
+        <section className="flex flex-col gap-3" aria-labelledby="reservations-title">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 id="reservations-title" className="text-base font-bold">
+                Tischreservierung
+              </h2>
+              <p className="text-xs text-gray-500">
+                Gäste können online einen Tisch anfragen. Sie bestätigen jede Anfrage selbst.
+                Die Zeiten richten sich nach den Öffnungszeiten.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={reservationsEnabled}
+              aria-label="Tischreservierung aktivieren"
+              onClick={() => {
+                setReservationsEnabled((v) => !v);
+                setSaved(false);
+              }}
+              className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+                reservationsEnabled ? "bg-orange-500" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 size-6 rounded-full bg-white transition-all ${
+                  reservationsEnabled ? "left-[1.4rem]" : "left-0.5"
+                }`}
+              />
+            </button>
+          </div>
+          {reservationsEnabled && (
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold">Maximale Personenzahl pro Reservierung</span>
+              <input
+                inputMode="numeric"
+                value={maxParty}
+                onChange={(e) => {
+                  setMaxParty(e.target.value.replace(/\D/g, "").slice(0, 2));
+                  setSaved(false);
+                }}
+                className="min-h-12 rounded-xl border border-gray-300 px-4 text-base"
+              />
+            </label>
+          )}
+        </section>
+      )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
       {saved && !error && <p className="text-sm text-green-600">Gespeichert.</p>}

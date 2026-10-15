@@ -27,7 +27,10 @@ import {
   canOrder,
   type Availability,
   type NextOpening,
+  type OpeningHours,
 } from "../../lib/restaurant-settings";
+import { RESERVATION_STRINGS } from "../../lib/reservation-i18n";
+import { ReservationSheet } from "./reservation-sheet";
 
 const MAX_QUANTITY = 20;
 
@@ -66,6 +69,7 @@ type Props = {
   menu: PublicMenuItem[];
   categoryAr: Record<string, string>;
   popularItemNames?: string[];
+  reservation?: { maxParty: number; openingHours: OpeningHours | null } | null;
 };
 
 export function OrderApp({
@@ -80,7 +84,9 @@ export function OrderApp({
   menu,
   categoryAr,
   popularItemNames = [],
+  reservation = null,
 }: Props) {
+  const [reservationOpen, setReservationOpen] = useState(false);
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [lang, setLang] = useState<OrderLang>("de");
   const [shareCopied, setShareCopied] = useState(false);
@@ -381,6 +387,15 @@ export function OrderApp({
                 {t.shareCopied}
               </p>
             )}
+            {reservation && !isDemo && (
+              <button
+                type="button"
+                onClick={() => setReservationOpen(true)}
+                className="mt-3 min-h-11 self-start rounded-full border border-orange-500 px-5 text-sm font-black text-orange-500"
+              >
+                {RESERVATION_STRINGS[lang].button}
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -520,6 +535,17 @@ export function OrderApp({
           setReorderNotice("");
         }}
       />
+
+      {reservation && reservationOpen && (
+        <ReservationSheet
+          restaurantId={restaurantId}
+          restaurantName={restaurantName}
+          maxParty={reservation.maxParty}
+          openingHours={reservation.openingHours}
+          lang={lang}
+          onClose={() => setReservationOpen(false)}
+        />
+      )}
 
       {pendingItem && (
         <OptionsSheet
