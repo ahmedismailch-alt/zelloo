@@ -35,6 +35,11 @@ export default function PrivacyPage() {
                 Artikel, Zeitstempel, optionale Sprachnachrichten zur Texterkennung der Bestellung.
               </li>
               <li>
+                <span className="font-semibold">Tischreservierungen:</span> Name, Telefonnummer, optional
+                E-Mail-Adresse und Bemerkung, Datum, Uhrzeit und Anzahl Personen. Diese Daten gehen an das
+                gewählte Restaurant; bei Angabe einer E-Mail-Adresse senden wir die Bestätigung per E-Mail.
+              </li>
+              <li>
                 <span className="font-semibold">WhatsApp-Bestellungen:</span> Bei Bestellungen über WhatsApp
                 bearbeiten wir Ihre Telefonnummer, Ihre Nachrichten (Text oder Sprachnachricht), Ihren Namen und
                 gegebenenfalls Ihre Lieferadresse, um die Bestellung dem Restaurant zu übermitteln.
