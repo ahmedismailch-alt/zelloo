@@ -7,6 +7,8 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { OrderBell } from "../../lib/order-bell";
 import { DashboardShell } from "../../components/dashboard/dashboard-shell";
+import { NewReservationsBanner } from "../../components/dashboard/new-reservations-banner";
+import { useNewReservations } from "../../lib/use-new-reservations";
 import type { Access } from "../../lib/subscription";
 
 type Restaurant = {
@@ -221,16 +223,18 @@ export default function DashboardPage() {
   const pendingOrders = orders.filter((order) => order.status === "new");
   const hasPending = pendingOrders.length > 0;
 
+  const restaurantId = restaurant?.id;
+  const newReservations = useNewReservations(restaurantId);
+  const shouldRing = hasPending || newReservations > 0;
+
   useEffect(() => {
-    if (!soundOn || !hasPending) return;
+    if (!soundOn || !shouldRing) return;
     bellRef.current?.ring();
     const timer = window.setInterval(() => {
       bellRef.current?.ring();
     }, BELL_REPEAT_MS);
     return () => window.clearInterval(timer);
-  }, [soundOn, hasPending]);
-
-  const restaurantId = restaurant?.id;
+  }, [soundOn, shouldRing]);
 
   useEffect(() => {
     if (restaurantId === undefined) return;
@@ -969,6 +973,8 @@ export default function DashboardPage() {
       )}
 
       <div className="max-w-5xl mx-auto">
+        <NewReservationsBanner count={newReservations} />
+
         {access && (access.kind === "trial" || access.kind === "grace") && (
           <div
             role="status"
