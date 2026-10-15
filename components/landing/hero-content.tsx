@@ -20,7 +20,12 @@ export function HeroContent() {
         </h1>
         <p className="text-gray-500 mt-4">{t.channels}</p>
 
-        <div className="flex flex-wrap gap-2 mt-5">
+        <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-black px-3 py-1.5 text-sm font-semibold text-white">
+          <span className="size-2 rounded-full bg-white" aria-hidden="true" />
+          {r.heroBadge}
+        </p>
+
+        <div className="flex flex-wrap gap-2 mt-4">
           <span className="inline-flex items-center gap-1.5 text-base font-bold bg-green-50 text-green-700 px-4 py-2 rounded-2xl text-pretty">
             {t.badge1}
           </span>
@@ -29,12 +34,7 @@ export function HeroContent() {
           </span>
         </div>
 
-        <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 text-sm font-semibold text-orange-800">
-          <span className="size-2 rounded-full bg-orange-500" aria-hidden="true" />
-          {r.heroBadge}
-        </p>
-
-        <div className="flex flex-wrap gap-3 mt-4">
+        <div className="flex flex-wrap gap-3 mt-5">
           <a href="/dashboard" className="bg-[#c41e24] text-white font-bold px-8 py-3 rounded-lg min-h-11 flex items-center">
             {t.cta}
           </a>
