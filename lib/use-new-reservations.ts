@@ -1,10 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import { supabase } from "@/lib/supabase";
 
 const POLL_MS = 15000;
 const SHOW_SINCE_MS = 3 * 60 * 60 * 1000;
+
+async function fetchOwnRestaurantId(): Promise<number | string | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data } = await supabase
+    .from("restaurants")
+    .select("id")
+    .eq("owner_id", user.id)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
+export function useOwnNewReservations() {
+  const { data: restaurantId } = useSWR("own-restaurant-id", fetchOwnRestaurantId, {
+    revalidateOnFocus: false,
+  });
+  return useNewReservations(restaurantId ?? undefined);
+}
 
 export function useNewReservations(restaurantId: number | string | undefined) {
   const [count, setCount] = useState(0);

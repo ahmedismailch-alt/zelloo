@@ -5,6 +5,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { supabase } from "@/lib/supabase";
+import { useOwnNewReservations } from "@/lib/use-new-reservations";
+
+function CountBadge({ count, className = "" }: { count: number; className?: string }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-none text-white ${className}`}
+    >
+      <span className="sr-only">Neue Reservierungen: </span>
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
 
 type NavItem = {
   href: string;
@@ -194,6 +207,7 @@ function MobileBottomNav() {
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const newReservations = useOwnNewReservations();
 
   const moreActive =
     pathname?.startsWith("/dashboard/reservations") ||
@@ -238,6 +252,7 @@ function MobileBottomNav() {
             >
               <IconReservations />
               Reservierungen
+              <CountBadge count={newReservations} className="ml-auto" />
             </Link>
             <Link
               href="/dashboard/stats"
@@ -308,7 +323,13 @@ function MobileBottomNav() {
           onClick={() => setMoreOpen((open) => !open)}
           className={tabClass(Boolean(moreActive) || moreOpen)}
         >
-          <IconMore />
+          <span className="relative">
+            <IconMore />
+            <CountBadge
+              count={newReservations}
+              className="absolute -right-3 -top-2"
+            />
+          </span>
           Mehr
         </button>
       </nav>
@@ -318,6 +339,7 @@ function MobileBottomNav() {
 
 function DesktopSidebar({ restaurantName }: { restaurantName?: string }) {
   const pathname = usePathname();
+  const newReservations = useOwnNewReservations();
 
   return (
     <nav
@@ -357,6 +379,9 @@ function DesktopSidebar({ restaurantName }: { restaurantName?: string }) {
                 >
                   {item.icon}
                   {item.label}
+                  {item.href === "/dashboard/reservations" && (
+                    <CountBadge count={newReservations} className="ml-auto" />
+                  )}
                 </Link>
               </li>
             );
