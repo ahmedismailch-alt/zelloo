@@ -29,10 +29,10 @@ export default async function RestaurantOrderPage({
 
   if (!isValidRestaurantId(id)) notFound();
 
-  const restaurant = await getRestaurant(id);
-  if (!restaurant) notFound();
+  const isDemoPromise = isDemoRestaurant(id);
 
   const [
+    restaurant,
     menu,
     categoryAr,
     popularItemNames,
@@ -40,13 +40,18 @@ export default async function RestaurantOrderPage({
     isDemo,
     reservationConfig,
   ] = await Promise.all([
+    getRestaurant(id),
     getOrderableMenu(id),
     getCategoryTranslations(id),
-    getPopularItemNames(id).catch(() => []),
+    isDemoPromise.then((demo) =>
+      demo ? [] : getPopularItemNames(id).catch(() => [])
+    ),
     getOrderAvailability(id),
-    isDemoRestaurant(id),
-    getReservationConfig(restaurant.id).catch(() => null),
+    isDemoPromise,
+    getReservationConfig(id).catch(() => null),
   ]);
+
+  if (!restaurant) notFound();
 
   return (
     <OrderApp
