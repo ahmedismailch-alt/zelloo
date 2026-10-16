@@ -8,6 +8,7 @@ import { supabase } from "../../../lib/supabase";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { OperationsSettings } from "../../../components/dashboard/operations-settings";
 import { ChannelStatus } from "../../../components/dashboard/channel-status";
+import { WHATSAPP_ORDERS_ENABLED } from "../../../lib/feature-flags";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -104,7 +105,7 @@ export default function SettingsPage() {
   }, [router]);
 
   useEffect(() => {
-    if (restaurantId === null) return;
+    if (!WHATSAPP_ORDERS_ENABLED || restaurantId === null) return;
     let cancelled = false;
 
     async function loadWhatsappLink() {
@@ -381,7 +382,7 @@ export default function SettingsPage() {
           </>
         )}
 
-        {!loading && !whatsappUnavailable && (
+        {WHATSAPP_ORDERS_ENABLED && !loading && !whatsappUnavailable && (
           <div className="bg-white border rounded-2xl p-4 flex flex-col gap-3 mt-4">
             <h2 className="text-base font-bold">WhatsApp-Bestellungen</h2>
             <p className="text-xs text-gray-500">

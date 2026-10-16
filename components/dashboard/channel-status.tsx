@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { OrderBell } from "../../lib/order-bell";
+import { WHATSAPP_ORDERS_ENABLED } from "../../lib/feature-flags";
 
 type Props = {
   restaurantId: number | string;
@@ -35,19 +36,21 @@ export function ChannelStatus({ restaurantId, whatsappConnected }: Props) {
         Kanäle und Tests
       </h2>
 
-      <div className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 p-3">
-        <span className="text-sm font-semibold">WhatsApp</span>
-        <span
-          role="status"
-          className={`rounded-full px-3 py-1 text-xs font-bold ${
-            whatsappConnected
-              ? "bg-green-100 text-green-800"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          {statusLabel}
-        </span>
-      </div>
+      {WHATSAPP_ORDERS_ENABLED && (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 p-3">
+          <span className="text-sm font-semibold">WhatsApp</span>
+          <span
+            role="status"
+            className={`rounded-full px-3 py-1 text-xs font-bold ${
+              whatsappConnected
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-200 text-gray-700"
+            }`}
+          >
+            {statusLabel}
+          </span>
+        </div>
+      )}
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <a
