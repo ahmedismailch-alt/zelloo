@@ -8,13 +8,19 @@ export const metadata = {
   robots: { index: false },
 };
 
-export default async function DemoPage() {
-  const { data } = await getSupabaseAdmin()
-    .from("restaurants")
-    .select("id")
-    .eq("is_demo", true)
-    .limit(1)
-    .maybeSingle();
+// Kept per warm server instance so only the first visit queries the database.
+let cachedDemoId: string | number | null = null;
 
-  redirect(data?.id ? `/r/${data.id}` : "/");
+export default async function DemoPage() {
+  if (cachedDemoId === null) {
+    const { data } = await getSupabaseAdmin()
+      .from("restaurants")
+      .select("id")
+      .eq("is_demo", true)
+      .limit(1)
+      .maybeSingle();
+    cachedDemoId = data?.id ?? null;
+  }
+
+  redirect(cachedDemoId !== null ? `/r/${cachedDemoId}` : "/");
 }
