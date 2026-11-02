@@ -100,6 +100,11 @@ export default function AdminPage() {
   const [supportLoading, setSupportLoading] = useState(true);
   const [supportToken, setSupportToken] = useState<string | null>(null);
   const [soundOn, setSoundOn] = useState(false);
+  const [replyOpenId, setReplyOpenId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [replySending, setReplySending] = useState(false);
+  const [replyError, setReplyError] = useState("");
+  const [repliedIds, setRepliedIds] = useState<Set<string>>(new Set());
 
   const bellRef = useRef<OrderBell | null>(null);
   const knownSupportIdsRef = useRef<Set<string> | null>(null);
@@ -255,6 +260,50 @@ export default function AdminPage() {
     }
   }
 
+  function openReply(messageId: string) {
+    setReplyOpenId(messageId);
+    setReplyText("");
+    setReplyError("");
+  }
+
+  async function sendReply(message: SupportMessage) {
+    const text = replyText.trim();
+    if (!text) return;
+
+    setReplySending(true);
+    setReplyError("");
+
+    try {
+      const response = await fetch(
+        `/api/admin/restaurants/${message.restaurantId}/message`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(supportToken ? { Authorization: `Bearer ${supportToken}` } : {}),
+          },
+          body: JSON.stringify({ message: text }),
+        }
+      );
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(body?.error || "Senden fehlgeschlagen.");
+      }
+
+      setRepliedIds((prev) => new Set(prev).add(message.id));
+      setReplyOpenId(null);
+      setReplyText("");
+      if (!message.readAt) await markSupportMessageRead(message.id);
+    } catch (err) {
+      console.error("Zelloo admin reply error:", err);
+      setReplyError(
+        err instanceof Error ? err.message : "Senden fehlgeschlagen."
+      );
+    } finally {
+      setReplySending(false);
+    }
+  }
+
   if (checking) {
     return (
       <main className="min-h-screen bg-black flex items-center justify-center">
@@ -379,14 +428,69 @@ export default function AdminPage() {
                       <p className="text-sm text-gray-300 whitespace-pre-wrap">
                         {m.message}
                       </p>
-                      {!m.readAt && (
-                        <button
-                          type="button"
-                          onClick={() => markSupportMessageRead(m.id)}
-                          className="self-start text-xs font-semibold text-orange-500"
-                        >
-                          Als erledigt markieren
-                        </button>
+                      {repliedIds.has(m.id) && (
+                        <p className="text-sm font-semibold text-green-500">
+                          Antwort gesendet.
+                        </p>
+                      )}
+
+                      {replyOpenId === m.id ? (
+                        <div className="flex flex-col gap-2">
+                          <label htmlFor={`reply-${m.id}`} className="sr-only">
+                            Antwort an {m.restaurantName}
+                          </label>
+                          <textarea
+                            id={`reply-${m.id}`}
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            rows={4}
+                            maxLength={1000}
+                            placeholder="Antwort an das Restaurant..."
+                            className="w-full rounded-xl bg-black border border-zinc-700 p-3 text-base text-white placeholder:text-gray-500"
+                          />
+                          {replyError && (
+                            <p role="alert" className="text-sm text-red-400">
+                              {replyError}
+                            </p>
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => void sendReply(m)}
+                              disabled={replySending || !replyText.trim()}
+                              className="flex-1 min-h-11 rounded-xl bg-orange-500 text-black font-bold text-sm disabled:opacity-50"
+                            >
+                              {replySending ? "Wird gesendet..." : "Senden"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setReplyOpenId(null)}
+                              disabled={replySending}
+                              className="min-h-11 px-4 rounded-xl border border-zinc-700 text-sm font-semibold text-white"
+                            >
+                              Abbrechen
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openReply(m.id)}
+                            className="min-h-11 px-4 rounded-xl bg-orange-500 text-black font-bold text-sm"
+                          >
+                            Antworten
+                          </button>
+                          {!m.readAt && (
+                            <button
+                              type="button"
+                              onClick={() => markSupportMessageRead(m.id)}
+                              className="min-h-11 px-2 text-xs font-semibold text-orange-500"
+                            >
+                              Als erledigt markieren
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}
