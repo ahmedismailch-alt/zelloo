@@ -21,6 +21,7 @@ export async function GET(
       .from("admin_messages")
       .select("id, message, created_at, read_at")
       .eq("restaurant_id", id)
+      .neq("sender", "restaurant")
       .order("created_at", { ascending: false })
       .limit(20);
 
