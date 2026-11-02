@@ -243,12 +243,19 @@ export default function SettingsPage() {
         body: JSON.stringify({ report: trimmed }),
       });
 
-      if (!res.ok) throw new Error("failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        console.error("Zelloo report submit failed:", res.status, data);
+        const suffix = data?.code ? ` (Code ${data.code})` : ` (HTTP ${res.status})`;
+        setReportError(`Senden fehlgeschlagen. Bitte erneut versuchen.${suffix}`);
+        return;
+      }
 
       setReport("");
       setReportSent(true);
-    } catch {
-      setReportError("Senden fehlgeschlagen. Bitte erneut versuchen.");
+    } catch (error) {
+      console.error("Zelloo report submit network error:", error);
+      setReportError("Senden fehlgeschlagen. Bitte Verbindung prüfen und erneut versuchen.");
     } finally {
       setReportSending(false);
     }

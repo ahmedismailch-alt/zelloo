@@ -14,6 +14,16 @@ async function getAuthedUserId(request: Request) {
   return data.user.id;
 }
 
+function logSupabaseError(context: string, error: unknown) {
+  const e = error as { code?: string; message?: string; details?: string; hint?: string } | null;
+  console.error(`Zelloo ${context}:`, {
+    code: e?.code,
+    message: e?.message,
+    details: e?.details,
+    hint: e?.hint,
+  });
+}
+
 export async function GET(request: Request) {
   const userId = await getAuthedUserId(request);
   if (!userId) {
@@ -38,6 +48,7 @@ export async function GET(request: Request) {
       .from("admin_messages")
       .select("id, message, created_at")
       .eq("restaurant_id", restaurant.id)
+      .neq("sender", "restaurant")
       .is("read_at", null)
       .order("created_at", { ascending: false });
 
@@ -45,7 +56,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ messages: data || [] });
   } catch (error) {
-    console.error("Zelloo restaurant messages error:", error);
+    logSupabaseError("restaurant messages load error", error);
     return NextResponse.json({ error: "Nachrichten konnten nicht geladen werden." }, { status: 500 });
   }
 }
@@ -99,7 +110,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Zelloo restaurant messages error:", error);
-    return NextResponse.json({ error: "Anfrage fehlgeschlagen." }, { status: 500 });
+    logSupabaseError("restaurant messages POST error", error);
+    const code = (error as { code?: string } | null)?.code;
+    return NextResponse.json(
+      { error: "Anfrage fehlgeschlagen.", code: code ?? null },
+      { status: 500 }
+    );
   }
 }
