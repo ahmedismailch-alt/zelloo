@@ -4,6 +4,27 @@ import { getSupabaseAdmin } from "../../../../lib/supabase-server";
 
 export const runtime = "nodejs";
 
+const ALLOWED_RETURN_HOSTS = ["zelloo.ch", "www.zelloo.ch"];
+
+// The portal return URL comes from the client, so only same-origin or zelloo.ch
+// URLs are accepted; anything else falls back to this deployment's dashboard.
+function resolveReturnUrl(request: Request, candidate: unknown): string {
+  const requestOrigin = new URL(request.url).origin;
+  const fallback = `${requestOrigin}/dashboard`;
+
+  if (typeof candidate !== "string") return fallback;
+
+  try {
+    const parsed = new URL(candidate);
+    const isSameOrigin = parsed.origin === requestOrigin;
+    const isZelloo =
+      parsed.protocol === "https:" && ALLOWED_RETURN_HOSTS.includes(parsed.hostname);
+    return isSameOrigin || isZelloo ? parsed.toString() : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get("authorization") || "";
@@ -34,7 +55,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => null);
-    const returnUrl = typeof body?.returnUrl === "string" ? body.returnUrl : undefined;
+    const returnUrl = resolveReturnUrl(request, body?.returnUrl);
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: restaurant.stripe_customer_id,
