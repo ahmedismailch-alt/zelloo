@@ -5,6 +5,8 @@ import { getSupabaseAdmin } from "../../../../lib/supabase-server";
 
 export const runtime = "nodejs";
 
+const LIVE_SUBSCRIPTION_STATUSES = ["active", "trialing", "past_due"];
+
 async function getAuthenticatedUser(request: Request) {
   const authHeader = request.headers.get("authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
 
     const { data: restaurant, error: restaurantError } = await supabase
       .from("restaurants")
-      .select("id, name, email, stripe_customer_id")
+      .select("id, name, email, stripe_customer_id, subscription_status")
       .eq("owner_id", user.id)
       .maybeSingle();
 
@@ -45,14 +47,34 @@ export async function POST(request: Request) {
       );
     }
 
+    if (
+      typeof restaurant.subscription_status === "string" &&
+      LIVE_SUBSCRIPTION_STATUSES.includes(restaurant.subscription_status)
+    ) {
+      return NextResponse.json(
+        {
+          code: "already_subscribed",
+          error:
+            "Sie haben bereits ein aktives Abonnement. Verwalten Sie es im Dashboard unter «Abonnement verwalten».",
+        },
+        { status: 409 }
+      );
+    }
+
     let customerId = restaurant.stripe_customer_id as string | null;
 
     if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: restaurant.email || user.email || undefined,
-        name: restaurant.name,
-        metadata: { restaurantId: String(restaurant.id) },
-      });
+      const customerEmail = restaurant.email || user.email || undefined;
+      const customer = await stripe.customers.create(
+        {
+          email: customerEmail,
+          name: restaurant.name,
+          metadata: { restaurantId: String(restaurant.id) },
+        },
+        {
+          idempotencyKey: `zelloo-customer-${restaurant.id}-${customerEmail ?? ""}-${restaurant.name ?? ""}`,
+        }
+      );
       customerId = customer.id;
 
       await supabase
@@ -61,7 +83,9 @@ export async function POST(request: Request) {
         .eq("id", restaurant.id);
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const minuteBucket = Math.floor(Date.now() / 60_000);
+    const session = await stripe.checkout.sessions.create(
+      {
       ui_mode: "embedded_page",
       redirect_on_completion: "never",
       mode: "subscription",
@@ -91,7 +115,11 @@ export async function POST(request: Request) {
           planId: plan.id,
         },
       },
-    });
+      },
+      {
+        idempotencyKey: `zelloo-checkout-${restaurant.id}-${plan.id}-${minuteBucket}`,
+      }
+    );
 
     return NextResponse.json({ clientSecret: session.client_secret });
   } catch (error) {
