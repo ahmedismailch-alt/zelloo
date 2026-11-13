@@ -17,6 +17,7 @@ export default function StripeCheckout({ planId }: { planId: string }) {
   const [alreadySubscribedMessage, setAlreadySubscribedMessage] = useState<
     string | null
   >(null);
+  const [completed, setCompleted] = useState(false);
 
   const fetchClientSecret = useCallback(async () => {
     const { data } = await supabase.auth.getSession();
@@ -60,11 +61,31 @@ export default function StripeCheckout({ planId }: { planId: string }) {
     );
   }
 
+  if (completed) {
+    return (
+      <div
+        role="status"
+        className="flex flex-col gap-4 rounded-2xl border border-black/10 bg-white p-5 text-center text-black"
+      >
+        <p className="text-xl font-semibold">Vielen Dank!</p>
+        <p className="text-base leading-relaxed">
+          Ihr Abonnement ist aktiv.
+        </p>
+        <Link
+          href="/dashboard"
+          className="flex min-h-11 items-center justify-center rounded-xl bg-orange-500 px-4 text-base font-semibold text-white"
+        >
+          Zum Dashboard
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div id="checkout" className="overflow-hidden rounded-2xl">
       <EmbeddedCheckoutProvider
         stripe={stripePromise}
-        options={{ fetchClientSecret }}
+        options={{ fetchClientSecret, onComplete: () => setCompleted(true) }}
       >
         <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>
