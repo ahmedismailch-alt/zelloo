@@ -90,8 +90,28 @@ const CATEGORY_RANK_KEYWORDS: Array<{ rank: number; keywords: string[] }> = [
 ];
 
 const UNKNOWN_RANK = 5;
+const DEAL_RANK = -1;
+
+const DEAL_KEYWORDS = [
+  "angebot",
+  "aktion",
+  "deal",
+  "offre",
+  "offerta",
+  "offerte",
+  "promo",
+  "عرض",
+  "عروض",
+];
+
+/** Categories the owner names like "Tagesangebote" or "Deals" are promoted to the top. */
+export function isDealCategory(category: string): boolean {
+  const normalized = category.toLowerCase();
+  return DEAL_KEYWORDS.some((keyword) => normalized.includes(keyword));
+}
 
 function categoryRank(category: string): number {
+  if (isDealCategory(category)) return DEAL_RANK;
   const normalized = category.toLowerCase();
   for (const group of CATEGORY_RANK_KEYWORDS) {
     if (group.keywords.some((keyword) => normalized.includes(keyword))) {
