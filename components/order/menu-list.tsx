@@ -5,7 +5,7 @@ import type { OrderStrings } from "../../lib/order-i18n";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import type { CartLine } from "./cart";
 import { formatChf } from "./format";
-import { sortCategoriesByMenuOrder } from "../../lib/menu-category-order";
+import { isDealCategory, sortCategoriesByMenuOrder } from "../../lib/menu-category-order";
 
 type Props = {
   menu: PublicMenuItem[];
@@ -109,8 +109,8 @@ export function MenuList({
       <div
         className={
           compact
-            ? "sticky top-0 z-10 -mx-4 flex flex-col gap-3 bg-[#f8f9fb] px-4 py-2"
-            : "flex flex-col gap-3"
+            ? "order-first sticky top-0 z-10 -mx-4 flex flex-col gap-3 bg-[#f8f9fb] px-4 py-2"
+            : "order-first flex flex-col gap-3"
         }
       >
         <label className="relative block">
@@ -237,7 +237,19 @@ export function MenuList({
       sortCategoriesByMenuOrder([...groups.keys()])
         .map((category) => [category, groups.get(category)!] as const)
         .map(([category, items]) => (
-        <div key={category || "__other"} className="flex flex-col gap-3">
+        <div
+          key={category || "__other"}
+          className={
+            isDealCategory(category)
+              ? "order-[-1] flex flex-col gap-3 rounded-2xl border-2 border-[var(--brand,#f97316)] p-3"
+              : "flex flex-col gap-3"
+          }
+          style={
+            isDealCategory(category)
+              ? { background: "color-mix(in srgb, var(--brand,#f97316) 10%, white)" }
+              : undefined
+          }
+        >
           {(() => {
             const coverUrl =
               compact && category && !failedImages.has(`cat:${category}`)
@@ -340,7 +352,11 @@ export function MenuList({
                       </div>
                     )}
                     <div className="min-w-0 flex flex-col gap-1 flex-1" dir="auto">
-                      {popularSet.has(item.name) && (
+                      {isDealCategory(category) ? (
+                        <span className="self-start inline-flex items-center rounded-full bg-[var(--brand,#f97316)] px-2 py-0.5 text-[11px] font-bold text-[var(--brand-fg,#000)]">
+                          {t.dealBadge}
+                        </span>
+                      ) : popularSet.has(item.name) && (
                         <span className="self-start inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
                           {t.popularBadge}
                         </span>

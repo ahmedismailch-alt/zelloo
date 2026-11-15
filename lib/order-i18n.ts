@@ -39,6 +39,7 @@ export type OrderStrings = {
   remove: (name: string) => string;
   itemNotePlaceholder: string;
   popularBadge: string;
+  dealBadge: string;
   upsellTitle: string;
   shareButton: string;
   shareMessage: (name: string) => string;
@@ -156,6 +157,7 @@ const de: OrderStrings = {
   remove: (n) => `${n} entfernen`,
   itemNotePlaceholder: "Wunsch, z. B. ohne Zwiebeln",
   popularBadge: "Beliebt",
+  dealBadge: "Angebot",
   upsellTitle: "Noch ein Getränk dazu?",
   shareButton: "Restaurant teilen",
   shareMessage: (name) => `Schau dir ${name} an – ganz einfach online bestellen mit Zelloo:`,
@@ -277,6 +279,7 @@ const fr: OrderStrings = {
   remove: (n) => `Retirer ${n}`,
   itemNotePlaceholder: "Souhait, p. ex. sans oignons",
   popularBadge: "Populaire",
+  dealBadge: "Offre",
   upsellTitle: "Une boisson en plus ?",
   shareButton: "Partager le restaurant",
   shareMessage: (name) => `Découvre ${name} – commande facilement en ligne avec Zelloo :`,
@@ -398,6 +401,7 @@ const it: OrderStrings = {
   remove: (n) => `Rimuovi ${n}`,
   itemNotePlaceholder: "Richiesta, es. senza cipolle",
   popularBadge: "Popolare",
+  dealBadge: "Offerta",
   upsellTitle: "Aggiungi una bevanda?",
   shareButton: "Condividi il ristorante",
   shareMessage: (name) => `Guarda ${name} – ordina facilmente online con Zelloo:`,
@@ -519,6 +523,7 @@ const en: OrderStrings = {
   remove: (n) => `Remove ${n}`,
   itemNotePlaceholder: "Request, e.g. no onions",
   popularBadge: "Popular",
+  dealBadge: "Deal",
   upsellTitle: "Add a drink?",
   shareButton: "Share restaurant",
   shareMessage: (name) => `Check out ${name} – order easily online with Zelloo:`,
@@ -640,6 +645,7 @@ const ar: OrderStrings = {
   remove: (n) => `إزالة ${n}`,
   itemNotePlaceholder: "طلب خاص، مثلاً بدون بصل",
   popularBadge: "الأكثر طلباً",
+  dealBadge: "عرض",
   upsellTitle: "تحب تضيف مشروب؟",
   shareButton: "شارك المطعم",
   shareMessage: (name) => `شوف ${name} – اطلب أونلاين بسهولة مع Zelloo:`,
