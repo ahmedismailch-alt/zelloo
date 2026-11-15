@@ -35,6 +35,12 @@ export default function SettingsPage() {
   const [loyaltySaved, setLoyaltySaved] = useState(false);
   const [loyaltyUnavailable, setLoyaltyUnavailable] = useState(false);
 
+  const [venueType, setVenueType] = useState("restaurant");
+  const [venueTypeUnavailable, setVenueTypeUnavailable] = useState(true);
+  const [venueTypeSaving, setVenueTypeSaving] = useState(false);
+  const [venueTypeError, setVenueTypeError] = useState<string | null>(null);
+  const [venueTypeSaved, setVenueTypeSaved] = useState(false);
+
   const [report, setReport] = useState("");
   const [reportSending, setReportSending] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
@@ -103,6 +109,53 @@ export default function SettingsPage() {
 
     void load();
   }, [router]);
+
+  useEffect(() => {
+    if (restaurantId === null) return;
+    let cancelled = false;
+
+    async function loadVenueType() {
+      const { data, error: readError } = await supabase
+        .from("restaurants")
+        .select("venue_type")
+        .eq("id", restaurantId)
+        .maybeSingle();
+
+      // The venue_type column may not exist yet; keep the card hidden.
+      if (cancelled || readError || !data) return;
+      setVenueType(data.venue_type || "restaurant");
+      setVenueTypeUnavailable(false);
+    }
+
+    void loadVenueType();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [restaurantId]);
+
+  async function handleVenueTypeSave(e: FormEvent) {
+    e.preventDefault();
+    if (restaurantId === null) return;
+
+    setVenueTypeSaving(true);
+    setVenueTypeError(null);
+    setVenueTypeSaved(false);
+
+    const { error: updateError } = await supabase
+      .from("restaurants")
+      .update({ venue_type: venueType })
+      .eq("id", restaurantId);
+
+    setVenueTypeSaving(false);
+
+    if (updateError) {
+      setVenueTypeError("Speichern fehlgeschlagen. Bitte erneut versuchen.");
+      return;
+    }
+
+    setVenueTypeSaved(true);
+  }
 
   useEffect(() => {
     if (!WHATSAPP_ORDERS_ENABLED || restaurantId === null) return;
@@ -424,6 +477,47 @@ export default function SettingsPage() {
               <p className="text-gray-500 text-sm">Wird geladen...</p>
             )}
           </div>
+        )}
+
+        {!loading && !venueTypeUnavailable && (
+          <form
+            onSubmit={handleVenueTypeSave}
+            className="bg-white border rounded-2xl p-4 flex flex-col gap-3 mt-4"
+          >
+            <h2 className="text-base font-bold">Betriebsart</h2>
+            <p className="text-xs text-gray-500">
+              Bestimmt, wie Ihre Bestellseite für Kunden aufgebaut ist.
+            </p>
+
+            <select
+              value={venueType}
+              onChange={(e) => {
+                setVenueType(e.target.value);
+                setVenueTypeSaved(false);
+              }}
+              aria-label="Betriebsart"
+              className="min-h-12 rounded-xl border border-gray-300 bg-white px-4 text-base"
+            >
+              <option value="restaurant">Restaurant</option>
+              <option value="cafe">Café</option>
+              <option value="shisha_bar">Shisha Bar</option>
+            </select>
+
+            {venueTypeError && (
+              <p className="text-sm text-red-600">{venueTypeError}</p>
+            )}
+            {venueTypeSaved && !venueTypeError && (
+              <p className="text-sm text-green-600">Gespeichert.</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={venueTypeSaving}
+              className="min-h-12 rounded-xl bg-orange-500 text-white font-black text-base disabled:opacity-60"
+            >
+              {venueTypeSaving ? "Wird gespeichert..." : "Speichern"}
+            </button>
+          </form>
         )}
 
         {!loading && !loyaltyUnavailable && (

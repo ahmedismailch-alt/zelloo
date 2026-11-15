@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 export default function SignupPage() {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantUrl, setRestaurantUrl] = useState("");
+  const [venueType, setVenueType] = useState("restaurant");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -25,6 +26,7 @@ export default function SignupPage() {
         data: {
           restaurant_name: restaurantName.trim(),
           restaurant_url: restaurantUrl.trim(),
+          venue_type: venueType,
         },
         emailRedirectTo: `${window.location.origin}/dashboard`,
       },
@@ -82,6 +84,21 @@ export default function SignupPage() {
               required
               className="w-full p-3 rounded-lg bg-black border border-zinc-700"
             />
+
+            <label className="block">
+              <span className="block text-sm text-gray-400 mb-2">
+                Art des Betriebs
+              </span>
+              <select
+                value={venueType}
+                onChange={(e) => setVenueType(e.target.value)}
+                className="w-full p-3 rounded-lg bg-black border border-zinc-700 text-base"
+              >
+                <option value="restaurant">Restaurant</option>
+                <option value="cafe">Café</option>
+                <option value="shisha_bar">Shisha Bar</option>
+              </select>
+            </label>
 
             <div>
               <input
