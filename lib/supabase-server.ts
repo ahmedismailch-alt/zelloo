@@ -57,6 +57,7 @@ export type PublicMenuItem = {
   subcategory: string | null;
   description: string | null;
   priceCents: number;
+  comparePriceCents: number | null;
   nameAr: string | null;
   imageUrl: string | null;
   options: OptionGroup[];
@@ -406,8 +407,9 @@ export async function getOrderableMenu(
       .order("name", { ascending: true });
   }
 
-  // The options column may not exist until the SQL migration has been run.
-  let result = await query(`${baseColumns}, options`);
+  // The options and compare_price columns may not exist until their SQL migrations have been run.
+  let result = await query(`${baseColumns}, options, compare_price`);
+  if (result.error) result = await query(`${baseColumns}, options`);
   if (result.error) result = await query(baseColumns);
   if (result.error) throw result.error;
 
@@ -420,15 +422,21 @@ export async function getOrderableMenu(
         typeof item.price === "number" &&
         item.price > 0
     )
-    .map((item) => ({
+    .map((item) => {
+      const priceCents = Math.round(Number(item.price) * 100);
+      const rawCompare = Number(item.compare_price);
+      const compareCents = Number.isFinite(rawCompare) ? Math.round(rawCompare * 100) : 0;
+      return {
       id: String(item.id),
       name: item.name,
       category: item.category,
       subcategory: typeof item.subcategory === "string" && item.subcategory.trim() ? item.subcategory : null,
       description: item.description,
-      priceCents: Math.round(Number(item.price) * 100),
+      priceCents,
+      comparePriceCents: compareCents > priceCents ? compareCents : null,
       nameAr: readArabicName(item.name_translations),
       imageUrl: typeof item.image_url === "string" && item.image_url.trim() ? item.image_url : null,
       options: parseOptionGroups(item.options),
-    }));
+      };
+    });
 }

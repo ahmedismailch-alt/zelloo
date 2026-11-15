@@ -313,8 +313,12 @@ export function MenuList({
               const quantity = quantityOf(item.id);
               const label = showArabic && item.nameAr ? item.nameAr : item.name;
               const note = cart[item.id]?.note ?? "";
+              const isDeal = isDealCategory(category);
+              const photoSize = isDeal ? "size-20" : "size-16";
               const usingRealPhoto =
-                !compact && Boolean(item.imageUrl) && !failedImages.has(item.id);
+                (!compact || isDeal) &&
+                Boolean(item.imageUrl) &&
+                !failedImages.has(item.id);
               const imageLoaded = !usingRealPhoto || loadedImages.has(item.id);
               return (
                 <li
@@ -327,7 +331,7 @@ export function MenuList({
                 >
                   <div className="flex items-center justify-between gap-3">
                     {usingRealPhoto && (
-                      <div className="relative size-16 shrink-0">
+                      <div className={`relative ${photoSize} shrink-0`}>
                         {!imageLoaded && (
                           <span
                             aria-hidden="true"
@@ -337,7 +341,7 @@ export function MenuList({
                         <img
                           src={item.imageUrl as string}
                           alt=""
-                          className={`size-16 rounded-xl object-cover border transition-opacity duration-200 ${
+                          className={`${photoSize} rounded-xl object-cover border transition-opacity duration-200 ${
                             imageLoaded ? "opacity-100" : "opacity-0"
                           }`}
                           ref={(node) => {
@@ -378,9 +382,22 @@ export function MenuList({
                           {item.description}
                         </p>
                       )}
-                      <p className="text-sm font-semibold" dir="ltr">
-                        {formatChf(item.priceCents)}
-                      </p>
+                      {item.comparePriceCents ? (
+                        <p className="flex items-baseline gap-2" dir="ltr">
+                          <span className="text-sm text-gray-400 line-through">
+                            <span className="sr-only">{t.dealWasPrice} </span>
+                            {formatChf(item.comparePriceCents)}
+                          </span>
+                          <span className="text-base font-black text-[var(--brand,#f97316)]">
+                            <span className="sr-only">{t.dealNowPrice} </span>
+                            {formatChf(item.priceCents)}
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-sm font-semibold" dir="ltr">
+                          {formatChf(item.priceCents)}
+                        </p>
+                      )}
                     </div>
 
                     {hasOptions ? (

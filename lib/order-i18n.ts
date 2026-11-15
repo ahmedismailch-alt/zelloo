@@ -40,6 +40,8 @@ export type OrderStrings = {
   itemNotePlaceholder: string;
   popularBadge: string;
   dealBadge: string;
+  dealWasPrice: string;
+  dealNowPrice: string;
   upsellTitle: string;
   shareButton: string;
   shareMessage: (name: string) => string;
@@ -157,7 +159,9 @@ const de: OrderStrings = {
   remove: (n) => `${n} entfernen`,
   itemNotePlaceholder: "Wunsch, z. B. ohne Zwiebeln",
   popularBadge: "Beliebt",
-  dealBadge: "Angebot",
+    dealBadge: "Angebot",
+    dealWasPrice: "Statt",
+    dealNowPrice: "Jetzt",
   upsellTitle: "Noch ein Getränk dazu?",
   shareButton: "Restaurant teilen",
   shareMessage: (name) => `Schau dir ${name} an – ganz einfach online bestellen mit Zelloo:`,
@@ -279,7 +283,9 @@ const fr: OrderStrings = {
   remove: (n) => `Retirer ${n}`,
   itemNotePlaceholder: "Souhait, p. ex. sans oignons",
   popularBadge: "Populaire",
-  dealBadge: "Offre",
+    dealBadge: "Offre",
+    dealWasPrice: "Au lieu de",
+    dealNowPrice: "Maintenant",
   upsellTitle: "Une boisson en plus ?",
   shareButton: "Partager le restaurant",
   shareMessage: (name) => `Découvre ${name} – commande facilement en ligne avec Zelloo :`,
@@ -401,7 +407,9 @@ const it: OrderStrings = {
   remove: (n) => `Rimuovi ${n}`,
   itemNotePlaceholder: "Richiesta, es. senza cipolle",
   popularBadge: "Popolare",
-  dealBadge: "Offerta",
+    dealBadge: "Offerta",
+    dealWasPrice: "Invece di",
+    dealNowPrice: "Ora",
   upsellTitle: "Aggiungi una bevanda?",
   shareButton: "Condividi il ristorante",
   shareMessage: (name) => `Guarda ${name} – ordina facilmente online con Zelloo:`,
@@ -523,7 +531,9 @@ const en: OrderStrings = {
   remove: (n) => `Remove ${n}`,
   itemNotePlaceholder: "Request, e.g. no onions",
   popularBadge: "Popular",
-  dealBadge: "Deal",
+    dealBadge: "Deal",
+    dealWasPrice: "Was",
+    dealNowPrice: "Now",
   upsellTitle: "Add a drink?",
   shareButton: "Share restaurant",
   shareMessage: (name) => `Check out ${name} – order easily online with Zelloo:`,
@@ -645,7 +655,9 @@ const ar: OrderStrings = {
   remove: (n) => `إزالة ${n}`,
   itemNotePlaceholder: "طلب خاص، مثلاً بدون بصل",
   popularBadge: "الأكثر طلباً",
-  dealBadge: "عرض",
+    dealBadge: "عرض",
+    dealWasPrice: "بدلاً من",
+    dealNowPrice: "الآن",
   upsellTitle: "تحب تضيف مشروب؟",
   shareButton: "شارك المطعم",
   shareMessage: (name) => `شوف ${name} – اطلب أونلاين بسهولة مع Zelloo:`,
@@ -700,7 +712,7 @@ const ar: OrderStrings = {
   pausedError: "المطعم لا يستقبل طلبات حالياً.",
   unavailableTitle: "الطلب عبر الإنترنت غير متاح",
   unavailableText:
-    "الطلبات عبر الإنترنت غير متاحة في هذا المطعم حالياً. يرجى الطلب مباشرة في المطعم أو عبر الهاتف.",
+    "الطلبات ��بر الإنترنت غير متاحة في هذا المطعم حالياً. يرجى الطلب مباشرة في المطعم أو عبر الهاتف.",
   prepTime: (minutes) => `جاهز خلال حوالي ${minutes} دقيقة`,
   busyNotice: "المطعم مزدحم حالياً، وقد يستغرق التحضير وقتاً أط��ل.",
   closedTitle: "المطعم مغلق حالياً",

@@ -23,6 +23,7 @@ type MenuItem = {
   is_confirmed: boolean;
   name_translations: Record<string, string> | null;
   image_url: string | null;
+  compare_price?: number | null;
   options?: unknown;
 };
 
@@ -145,6 +146,7 @@ export default function MenuPage() {
   const [editCategory, setEditCategory] = useState("");
   const [editSubcategory, setEditSubcategory] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [editComparePrice, setEditComparePrice] = useState("");
   const [editArabic, setEditArabic] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editOptions, setEditOptions] = useState<OptionGroup[]>([]);
@@ -866,6 +868,7 @@ export default function MenuPage() {
     setEditCategory(item.category || "");
     setEditSubcategory(item.subcategory || "");
     setEditPrice(item.price === null ? "" : String(item.price));
+    setEditComparePrice(item.compare_price ? String(item.compare_price) : "");
     setEditArabic(arabicNameOf(item));
     setEditImageUrl(item.image_url || "");
     setEditOptions(parseOptionGroups(item.options));
@@ -878,6 +881,7 @@ export default function MenuPage() {
     setEditCategory("");
     setEditSubcategory("");
     setEditPrice("");
+    setEditComparePrice("");
     setEditArabic("");
     setEditImageUrl("");
     setEditOptions([]);
@@ -896,6 +900,21 @@ export default function MenuPage() {
 
     if (parsedPrice !== null && Number.isNaN(parsedPrice)) {
       setMessage("Bitte geben Sie einen gültigen Preis ein.");
+      return;
+    }
+
+    const parsedComparePrice =
+      editComparePrice.trim() === ""
+        ? null
+        : Number(editComparePrice.replace(",", "."));
+
+    if (
+      parsedComparePrice !== null &&
+      (Number.isNaN(parsedComparePrice) ||
+        parsedPrice === null ||
+        parsedComparePrice <= parsedPrice)
+    ) {
+      setMessage("Der durchgestrichene Preis muss höher als der aktuelle Preis sein.");
       return;
     }
 
@@ -936,12 +955,26 @@ export default function MenuPage() {
     const optionsChanged =
       JSON.stringify(cleanedOptions) !== JSON.stringify(parseOptionGroups(item.options));
 
+    const compareChanged = parsedComparePrice !== (item.compare_price ?? null);
+
     let { data, error } = await supabase
       .from("menu_items")
-      .update(optionsChanged ? { ...baseUpdate, options: cleanedOptions } : baseUpdate)
+      .update({
+        ...baseUpdate,
+        ...(compareChanged ? { compare_price: parsedComparePrice } : {}),
+        ...(optionsChanged ? { options: cleanedOptions } : {}),
+      })
       .eq("id", item.id)
       .select()
       .single();
+
+    if (error && compareChanged) {
+      setMessage(
+        "Der durchgestrichene Preis konnte nicht gespeichert werden. Bitte die Datenbank-Aktualisierung ausführen."
+      );
+      setSaving(false);
+      return;
+    }
 
     if (error && optionsChanged) {
       setMessage(
@@ -1944,6 +1977,20 @@ export default function MenuPage() {
                         inputMode="decimal"
                         className="w-full border rounded-xl px-4 py-3"
                       />
+
+                      <label className="flex flex-col gap-1 text-sm font-bold">
+                        Normaler Preis, durchgestrichen (optional)
+                        <input
+                          value={editComparePrice}
+                          onChange={(e) => setEditComparePrice(e.target.value)}
+                          placeholder="z. B. 7.50"
+                          inputMode="decimal"
+                          className="w-full border rounded-xl px-4 py-3 text-base font-normal"
+                        />
+                        <span className="text-xs font-normal text-gray-500">
+                          Nur für Angebote: Der Kunde sieht den alten Preis durchgestrichen und den neuen Preis daneben.
+                        </span>
+                      </label>
 
                       <label className="flex flex-col gap-1 text-sm font-bold">
                         Arabischer Name (optional)
