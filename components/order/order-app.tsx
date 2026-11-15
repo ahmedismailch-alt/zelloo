@@ -70,6 +70,7 @@ type Props = {
   menu: PublicMenuItem[];
   categoryAr: Record<string, string>;
   venueType?: VenueType;
+  counterMode?: boolean;
   categoryImages?: Record<string, string>;
   logoUrl?: string | null;
   brandColor?: string | null;
@@ -89,6 +90,7 @@ export function OrderApp({
   menu,
   categoryAr,
   venueType = "restaurant",
+  counterMode = false,
   categoryImages = {},
   logoUrl = null,
   brandColor = null,
@@ -561,6 +563,7 @@ export function OrderApp({
         delivery={delivery}
         isDemo={isDemo}
         quickOrder={venueType !== "restaurant"}
+        counterMode={counterMode}
         onSetQuantity={setQuantity}
         onOrdered={() => {
           setCart({});

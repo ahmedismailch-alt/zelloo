@@ -62,6 +62,7 @@ type Props = {
   delivery: DeliveryInfo;
   isDemo?: boolean;
   quickOrder?: boolean;
+  counterMode?: boolean;
   onSetQuantity: (key: string, quantity: number) => void;
   onOrdered: () => void;
 };
@@ -78,6 +79,7 @@ export function Cart({
   delivery,
   isDemo = false,
   quickOrder = false,
+  counterMode = false,
   onSetQuantity,
   onOrdered,
 }: Props) {
@@ -238,7 +240,11 @@ export function Cart({
     event.preventDefault();
     if (sending || lines.length === 0) return;
 
-    if (!table && (!name.trim() || (!quickOrder && !phone.trim()))) {
+    if (
+      !table &&
+      !counterMode &&
+      (!name.trim() || (!quickOrder && !phone.trim()))
+    ) {
       setError(t.missingContactError);
       return;
     }
@@ -264,7 +270,8 @@ export function Cart({
           restaurantId,
           table,
           customerName: name,
-          customerPhone: phone,
+          customerPhone: counterMode ? "" : phone,
+          counter: counterMode,
           orderType: pickupOnly ? "pickup" : orderType,
           customerAddress: isDelivery ? address : "",
           notes,
@@ -603,18 +610,18 @@ export function Cart({
             )}
 
             <label className="flex flex-col gap-1 text-sm font-semibold">
-              {table ? t.nameLabel : t.nameLabelRequired}
+              {table || counterMode ? t.nameLabel : t.nameLabelRequired}
               <input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 maxLength={60}
-                required={!table}
+                required={!table && !counterMode}
                 autoComplete="given-name"
                 className="rounded-xl border p-3 text-base font-normal"
               />
             </label>
 
-            {!table && (
+            {!table && !counterMode && (
               <label className="flex flex-col gap-1 text-sm font-semibold">
                 {quickOrder ? t.phoneLabelOptional : t.phoneLabel}
                 <input

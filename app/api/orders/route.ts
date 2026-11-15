@@ -62,6 +62,7 @@ export async function POST(request: Request) {
     const customerPhone = cleanText(body.customerPhone, 30);
     const orderNote = cleanText(body.notes, 300);
     const quickOrder = (await getVenueType(restaurantId)) !== "restaurant";
+    const counterOrder = body.counter === true && quickOrder && !table;
     const orderType =
       body.orderType === "delivery" && !table && !quickOrder
         ? "delivery"
@@ -69,7 +70,11 @@ export async function POST(request: Request) {
     const customerAddress =
       orderType === "delivery" ? cleanText(body.customerAddress, 200) : null;
 
-    if (!table && (!customerName || (!quickOrder && !customerPhone))) {
+    if (
+      !table &&
+      !counterOrder &&
+      (!customerName || (!quickOrder && !customerPhone))
+    ) {
       return badRequest("Bitte Name und Telefonnummer angeben.");
     }
 
@@ -211,7 +216,9 @@ export async function POST(request: Request) {
 
     const orderRow: Record<string, unknown> = {
       restaurant_id: restaurant.id,
-      customer_name: customerName || (table ? `Tisch ${table}` : "Gast"),
+      customer_name:
+        customerName ||
+        (table ? `Tisch ${table}` : counterOrder ? "Theke" : "Gast"),
       customer_phone: customerPhone,
       customer_address: customerAddress,
       order_type: orderType,

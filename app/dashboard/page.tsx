@@ -1410,6 +1410,17 @@ export default function DashboardPage() {
             ))}
           </div>
 
+          {isCafeMode && view === "active" && restaurantId !== undefined && (
+            <a
+              href={`/r/${encodeURIComponent(String(restaurantId))}?staff=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full min-h-11 rounded-xl bg-orange-500 text-black px-4 mb-3 text-sm font-bold flex items-center justify-center"
+            >
+              Neue Bestellung an der Theke
+            </a>
+          )}
+
           {isCafeMode && view === "active" && (
             <button
               type="button"

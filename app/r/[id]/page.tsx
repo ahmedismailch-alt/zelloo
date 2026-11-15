@@ -25,10 +25,10 @@ export default async function RestaurantOrderPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ table?: string | string[] }>;
+  searchParams: Promise<{ table?: string | string[]; staff?: string | string[] }>;
 }) {
   const { id } = await params;
-  const { table } = await searchParams;
+  const { table, staff } = await searchParams;
 
   if (!isValidRestaurantId(id)) notFound();
 
@@ -80,6 +80,11 @@ export default async function RestaurantOrderPage({
       menu={menu}
       categoryAr={categoryAr}
       venueType={venueType}
+      counterMode={
+        venueType !== "restaurant" &&
+        !normalizeTable(Array.isArray(table) ? table[0] : table) &&
+        (Array.isArray(staff) ? staff[0] : staff) === "1"
+      }
       categoryImages={categoryImages}
       logoUrl={branding.logoUrl}
       brandColor={branding.brandColor}

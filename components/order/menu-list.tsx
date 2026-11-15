@@ -302,7 +302,7 @@ export function MenuList({
               const label = showArabic && item.nameAr ? item.nameAr : item.name;
               const note = cart[item.id]?.note ?? "";
               const usingRealPhoto =
-                !compact && Boolean(item.imageUrl) && !failedImages.has(item.id);
+                Boolean(item.imageUrl) && !failedImages.has(item.id);
               const imageLoaded = !usingRealPhoto || loadedImages.has(item.id);
               return (
                 <li
