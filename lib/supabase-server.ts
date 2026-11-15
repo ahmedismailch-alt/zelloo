@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { parseOptionGroups, type OptionGroup } from "./menu-options";
 import { computeAccess, type Access } from "./subscription";
-import { readBrandColor, readLogoUrl, type Branding } from "./branding";
+import {
+  readBrandColor,
+  readGoogleReviewUrl,
+  readLogoUrl,
+  type Branding,
+} from "./branding";
 import {
   DEFAULT_SETTINGS,
   canOrder,
@@ -132,6 +137,20 @@ export async function getBranding(
     logoUrl: readLogoUrl(data.logo_url),
     brandColor: readBrandColor(data.brand_color),
   };
+}
+
+// Returns null if the google_review_url column does not exist yet.
+export async function getGoogleReviewUrl(
+  restaurantId: string | number
+): Promise<string | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("restaurants")
+    .select("google_review_url")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return readGoogleReviewUrl(data.google_review_url);
 }
 
 export type CategoryImages = Record<string, string>;

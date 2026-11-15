@@ -22,6 +22,34 @@ export function readLogoUrl(value: unknown): string | null {
   return typeof value === "string" && /^https:\/\//.test(value) ? value : null;
 }
 
+const GOOGLE_REVIEW_HOSTS = [
+  "g.page",
+  "search.google.com",
+  "www.google.com",
+  "google.com",
+  "maps.app.goo.gl",
+  "goo.gl",
+  "share.google",
+];
+
+const MAX_REVIEW_URL_LENGTH = 500;
+
+// Accepts only https links on Google hosts, so no other site can be linked.
+export function readGoogleReviewUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > MAX_REVIEW_URL_LENGTH) return null;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== "https:") return null;
+    return GOOGLE_REVIEW_HOSTS.includes(url.hostname.toLowerCase())
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 // Picks black or white text, whichever contrasts better with the background.
 export function readableTextColor(hex: string): string {
   const value = hex.replace("#", "");

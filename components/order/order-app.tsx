@@ -73,6 +73,7 @@ type Props = {
   categoryImages?: Record<string, string>;
   logoUrl?: string | null;
   brandColor?: string | null;
+  googleReviewUrl?: string | null;
   popularItemNames?: string[];
   reservation?: { maxParty: number; openingHours: OpeningHours | null } | null;
 };
@@ -92,6 +93,7 @@ export function OrderApp({
   categoryImages = {},
   logoUrl = null,
   brandColor = null,
+  googleReviewUrl = null,
   popularItemNames = [],
   reservation = null,
 }: Props) {
@@ -561,8 +563,9 @@ export function OrderApp({
         showArabic={lang === "ar"}
         delivery={delivery}
         isDemo={isDemo}
-        quickOrder={venueType !== "restaurant"}
-        onSetQuantity={setQuantity}
+  quickOrder={venueType !== "restaurant"}
+  googleReviewUrl={googleReviewUrl}
+  onSetQuantity={setQuantity}
         onOrdered={() => {
           setCart({});
           setReorderNotice("");

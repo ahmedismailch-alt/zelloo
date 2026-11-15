@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import {
   BRAND_COLORS,
   readBrandColor,
+  readGoogleReviewUrl,
   readLogoUrl,
   readableTextColor,
 } from "../../lib/branding";
@@ -36,6 +37,9 @@ export function BrandingSettings({
   const [available, setAvailable] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [brandColor, setBrandColor] = useState<string | null>(null);
+  const [googleAvailable, setGoogleAvailable] = useState(false);
+  const [googleSaved, setGoogleSaved] = useState("");
+  const [googleDraft, setGoogleDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -56,6 +60,19 @@ export function BrandingSettings({
       setLogoUrl(readLogoUrl(data.logo_url));
       setBrandColor(readBrandColor(data.brand_color));
       setAvailable(true);
+
+      // Separate read: a missing google_review_url column must not hide the card.
+      const { data: google, error: googleError } = await supabase
+        .from("restaurants")
+        .select("google_review_url")
+        .eq("id", restaurantId)
+        .maybeSingle();
+
+      if (cancelled || googleError || !google) return;
+      const url = readGoogleReviewUrl(google.google_review_url) ?? "";
+      setGoogleSaved(url);
+      setGoogleDraft(url);
+      setGoogleAvailable(true);
     }
 
     void load();
@@ -65,7 +82,11 @@ export function BrandingSettings({
     };
   }, [restaurantId]);
 
-  async function save(change: { logoUrl?: string | null; brandColor?: string | null }) {
+  async function save(change: {
+    logoUrl?: string | null;
+    brandColor?: string | null;
+    googleReviewUrl?: string | null;
+  }) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -137,6 +158,15 @@ export function BrandingSettings({
     void run(async () => {
       await save({ brandColor: hex });
       setBrandColor(hex);
+    });
+  }
+
+  function handleGoogleSave(next: string) {
+    void run(async () => {
+      const value = next.trim();
+      await save({ googleReviewUrl: value || null });
+      setGoogleSaved(value);
+      setGoogleDraft(value);
     });
   }
 
@@ -233,6 +263,49 @@ export function BrandingSettings({
           </button>
         )}
       </fieldset>
+
+      {googleAvailable && (
+        <div className="flex flex-col gap-2">
+          <label htmlFor="google-review-url" className="text-sm font-semibold">
+            Google-Bewertungslink
+          </label>
+          <p className="text-xs text-gray-500">
+            Kunden sehen nach der Bestellung den Button &quot;Auch auf Google
+            bewerten&quot;. Den Link finden Sie in Ihrem Google Business Profil
+            unter &quot;Bewertungen einholen&quot; (beginnt mit https://g.page/r/).
+          </p>
+          <input
+            id="google-review-url"
+            type="url"
+            inputMode="url"
+            autoComplete="off"
+            placeholder="https://g.page/r/..."
+            value={googleDraft}
+            onChange={(e) => setGoogleDraft(e.target.value)}
+            className="min-h-11 rounded-xl border border-gray-300 bg-white px-4 text-base"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={busy || googleDraft.trim() === googleSaved}
+              onClick={() => handleGoogleSave(googleDraft)}
+              className="min-h-11 flex-1 rounded-xl bg-black px-4 text-sm font-bold text-white disabled:opacity-40"
+            >
+              Link speichern
+            </button>
+            {googleSaved && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => handleGoogleSave("")}
+                className="min-h-11 rounded-xl border border-red-200 bg-white px-4 text-sm font-bold text-red-600 disabled:opacity-60"
+              >
+                Entfernen
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <p role="status" className="text-sm min-h-5">
         {busy && <span className="text-gray-500">Wird gespeichert...</span>}
