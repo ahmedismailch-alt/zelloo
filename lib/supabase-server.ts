@@ -95,6 +95,51 @@ export async function getCategoryTranslations(
   return readCategoryTranslations(data?.category_translations);
 }
 
+export type VenueType = "restaurant" | "cafe" | "shisha_bar";
+
+export function readVenueType(value: unknown): VenueType {
+  return value === "cafe" || value === "shisha_bar" ? value : "restaurant";
+}
+
+// Returns "restaurant" if the venue_type column does not exist yet.
+export async function getVenueType(
+  restaurantId: string | number
+): Promise<VenueType> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("restaurants")
+    .select("venue_type")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  if (error) return "restaurant";
+  return readVenueType(data?.venue_type);
+}
+
+export type CategoryImages = Record<string, string>;
+
+export function readCategoryImages(value: unknown): CategoryImages {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const result: CategoryImages = {};
+  for (const [key, url] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof url === "string" && /^https:\/\//.test(url)) result[key] = url;
+  }
+  return result;
+}
+
+// Returns {} if the category_images column does not exist yet.
+export async function getCategoryImages(
+  restaurantId: string | number
+): Promise<CategoryImages> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("restaurants")
+    .select("category_images")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  if (error) return {};
+  return readCategoryImages(data?.category_images);
+}
+
 export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;

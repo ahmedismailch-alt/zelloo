@@ -62,7 +62,7 @@ export default function SignupPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
 
           <h2 className="text-2xl font-semibold mb-2">
-            Restaurant registrieren
+            Betrieb registrieren
           </h2>
 
           <p className="text-gray-400 mb-6">
@@ -76,7 +76,7 @@ export default function SignupPage() {
 
             <input
               type="text"
-              placeholder="Restaurantname"
+              placeholder="Name des Betriebs"
               value={restaurantName}
               onChange={(e) =>
                 setRestaurantName(e.target.value)
@@ -113,7 +113,7 @@ export default function SignupPage() {
               />
 
               <p className="text-xs text-gray-500 mt-2">
-                Fügen Sie den Link zu Ihrem Restaurant
+                Fügen Sie den Link zu Ihrem Betrieb
                 auf Google Maps oder Instagram ein.
               </p>
             </div>
