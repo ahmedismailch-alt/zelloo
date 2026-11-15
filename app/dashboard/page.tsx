@@ -307,18 +307,37 @@ export default function DashboardPage() {
             ? user.user_metadata.restaurant_url
             : "";
 
-        const { data: created, error: insertError } = await supabase
+        const rawVenueType = user.user_metadata?.venue_type;
+        const metadataVenueType =
+          rawVenueType === "cafe" || rawVenueType === "shisha_bar"
+            ? rawVenueType
+            : "restaurant";
+
+        const baseRow = {
+          owner_id: user.id,
+          name: metadataName,
+          source_url: metadataUrl,
+          email: user.email || "",
+        };
+        const createdColumns =
+          "id, name, source_url, subscription_status, subscription_plan, current_period_end";
+
+        let { data: created, error: insertError } = await supabase
           .from("restaurants")
-          .insert({
-            owner_id: user.id,
-            name: metadataName,
-            source_url: metadataUrl,
-            email: user.email || "",
-          })
-          .select(
-            "id, name, source_url, subscription_status, subscription_plan, current_period_end"
-          )
+          .insert({ ...baseRow, venue_type: metadataVenueType })
+          .select(createdColumns)
           .single();
+
+        // venue_type column may not exist yet; create the restaurant without it.
+        if (insertError) {
+          const retry = await supabase
+            .from("restaurants")
+            .insert(baseRow)
+            .select(createdColumns)
+            .single();
+          created = retry.data;
+          insertError = retry.error;
+        }
 
         if (insertError) throw insertError;
 
