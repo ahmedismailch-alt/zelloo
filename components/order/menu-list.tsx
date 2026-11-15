@@ -5,7 +5,6 @@ import type { OrderStrings } from "../../lib/order-i18n";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import type { CartLine } from "./cart";
 import { formatChf } from "./format";
-import { getMenuItemFallbackImage } from "../../lib/menu-item-fallback-image";
 import { sortCategoriesByMenuOrder } from "../../lib/menu-category-order";
 
 type Props = {
@@ -204,33 +203,31 @@ export function MenuList({
                   className="bg-white border rounded-2xl p-4 flex flex-col gap-3"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <div className="relative size-16 shrink-0">
-                      {!imageLoaded && (
-                        <span
-                          aria-hidden="true"
-                          className="absolute inset-0 animate-pulse rounded-xl bg-gray-200"
+                    {usingRealPhoto && (
+                      <div className="relative size-16 shrink-0">
+                        {!imageLoaded && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-0 animate-pulse rounded-xl bg-gray-200"
+                          />
+                        )}
+                        <img
+                          src={item.imageUrl as string}
+                          alt=""
+                          className={`size-16 rounded-xl object-cover border transition-opacity duration-200 ${
+                            imageLoaded ? "opacity-100" : "opacity-0"
+                          }`}
+                          ref={(node) => {
+                            // Images can finish loading before React attaches onLoad.
+                            if (!node || !node.complete || loadedImages.has(item.id)) return;
+                            if (node.naturalWidth > 0) markImageLoaded(item.id);
+                            else markImageFailed(item.id);
+                          }}
+                          onLoad={() => markImageLoaded(item.id)}
+                          onError={() => markImageFailed(item.id)}
                         />
-                      )}
-                      <img
-                        src={
-                          usingRealPhoto
-                            ? (item.imageUrl as string)
-                            : getMenuItemFallbackImage(item.category)
-                        }
-                        alt=""
-                        className={`size-16 rounded-xl object-cover border transition-opacity duration-200 ${
-                          imageLoaded ? "opacity-100" : "opacity-0"
-                        }`}
-                        ref={(node) => {
-                          // Images can finish loading before React attaches onLoad.
-                          if (!node || !node.complete || loadedImages.has(item.id)) return;
-                          if (node.naturalWidth > 0) markImageLoaded(item.id);
-                          else if (usingRealPhoto && !failedImages.has(item.id)) markImageFailed(item.id);
-                        }}
-                        onLoad={() => markImageLoaded(item.id)}
-                        onError={() => markImageFailed(item.id)}
-                      />
-                    </div>
+                      </div>
+                    )}
                     <div className="min-w-0 flex flex-col gap-1 flex-1" dir="auto">
                       {popularSet.has(item.name) && (
                         <span className="self-start inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
