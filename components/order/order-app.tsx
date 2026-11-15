@@ -1,8 +1,9 @@
 "use client";
 
 import { Logo } from "@/components/logo";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { PublicMenuItem, VenueType } from "../../lib/supabase-server";
+import { readableTextColor } from "../../lib/branding";
 import {
   LANG_LABELS,
   LANG_STORAGE_KEY,
@@ -70,6 +71,8 @@ type Props = {
   categoryAr: Record<string, string>;
   venueType?: VenueType;
   categoryImages?: Record<string, string>;
+  logoUrl?: string | null;
+  brandColor?: string | null;
   popularItemNames?: string[];
   reservation?: { maxParty: number; openingHours: OpeningHours | null } | null;
 };
@@ -87,9 +90,17 @@ export function OrderApp({
   categoryAr,
   venueType = "restaurant",
   categoryImages = {},
+  logoUrl = null,
+  brandColor = null,
   popularItemNames = [],
   reservation = null,
 }: Props) {
+  const brandStyle = brandColor
+    ? ({
+        "--brand": brandColor,
+        "--brand-fg": readableTextColor(brandColor),
+      } as CSSProperties)
+    : undefined;
   const [reservationOpen, setReservationOpen] = useState(false);
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [lang, setLang] = useState<OrderLang>("de");
@@ -303,7 +314,12 @@ export function OrderApp({
   }
 
   return (
-    <main lang={lang} dir={dir} className="min-h-screen bg-[#f8f9fb] text-black">
+    <main
+      lang={lang}
+      dir={dir}
+      style={brandStyle}
+      className="min-h-screen bg-[#f8f9fb] text-black"
+    >
       {isDemo && (
         <p
           role="note"
@@ -327,7 +343,7 @@ export function OrderApp({
                       aria-pressed={active}
                       className={`min-h-11 min-w-11 rounded-full px-3 text-sm font-bold ${
                         active
-                          ? "bg-orange-500 text-black"
+                          ? "bg-[var(--brand,#f97316)] text-[var(--brand-fg,#000)]"
                           : "bg-white/10 text-white"
                       }`}
                     >
@@ -342,7 +358,16 @@ export function OrderApp({
           <div className="flex flex-col gap-1">
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col gap-1">
-                <Logo size="sm" className="text-orange-500" />
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logoUrl}
+                    alt=""
+                    className="h-14 w-auto max-w-40 rounded-lg object-contain object-left"
+                  />
+                ) : (
+                  <Logo size="sm" className="text-orange-500" />
+                )}
                 <h1 className="text-3xl font-black text-balance break-words">
                   {restaurantName}
                 </h1>

@@ -657,7 +657,7 @@ export function Cart({
             <button
               type="submit"
               disabled={sending}
-              className="min-h-12 flex items-center justify-center gap-2 rounded-xl bg-orange-500 text-black font-black px-4 py-3 disabled:opacity-70"
+              className="min-h-12 flex items-center justify-center gap-2 rounded-xl bg-[var(--brand,#f97316)] text-[var(--brand-fg,#000)] font-black px-4 py-3 disabled:opacity-70"
             >
               {sending && (
                 <span

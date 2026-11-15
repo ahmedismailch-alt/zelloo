@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { parseOptionGroups, type OptionGroup } from "./menu-options";
 import { computeAccess, type Access } from "./subscription";
+import { readBrandColor, readLogoUrl, type Branding } from "./branding";
 import {
   DEFAULT_SETTINGS,
   canOrder,
@@ -113,6 +114,23 @@ export async function getVenueType(
 
   if (error) return "restaurant";
   return readVenueType(data?.venue_type);
+}
+
+// Returns no branding if the logo_url / brand_color columns do not exist yet.
+export async function getBranding(
+  restaurantId: string | number
+): Promise<Branding> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("restaurants")
+    .select("logo_url, brand_color")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  if (error || !data) return { logoUrl: null, brandColor: null };
+  return {
+    logoUrl: readLogoUrl(data.logo_url),
+    brandColor: readBrandColor(data.brand_color),
+  };
 }
 
 export type CategoryImages = Record<string, string>;

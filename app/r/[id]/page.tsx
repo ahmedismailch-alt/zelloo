@@ -3,6 +3,7 @@ import { OrderApp } from "../../../components/order/order-app";
 import { getNextOpening } from "../../../lib/restaurant-settings";
 import { getReservationConfig } from "../../../lib/reservations-server";
 import {
+  getBranding,
   getCategoryImages,
   getCategoryTranslations,
   getOrderableMenu,
@@ -43,6 +44,7 @@ export default async function RestaurantOrderPage({
     reservationConfig,
     venueType,
     categoryImages,
+    branding,
   ] = await Promise.all([
     getRestaurant(id),
     getOrderableMenu(id),
@@ -55,6 +57,7 @@ export default async function RestaurantOrderPage({
     getReservationConfig(id).catch(() => null),
     getVenueType(id),
     getCategoryImages(id),
+    getBranding(id),
   ]);
 
   if (!restaurant) notFound();
@@ -78,6 +81,8 @@ export default async function RestaurantOrderPage({
       categoryAr={categoryAr}
       venueType={venueType}
       categoryImages={categoryImages}
+      logoUrl={branding.logoUrl}
+      brandColor={branding.brandColor}
       popularItemNames={popularItemNames}
       reservation={
         isDemo
