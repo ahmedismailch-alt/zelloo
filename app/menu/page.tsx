@@ -4,7 +4,7 @@ import { Logo } from "@/components/logo";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import { getMenuItemFallbackImage } from "../../lib/menu-item-fallback-image";
+import { MenuItemThumb } from "../../components/menu-item-thumb";
 import { DashboardShell } from "../../components/dashboard/dashboard-shell";
 import { OptionsEditor } from "../../components/menu/options-editor";
 import { parseOptionGroups, type OptionGroup } from "../../lib/menu-options";
@@ -1629,14 +1629,7 @@ export default function MenuPage() {
                     <>
                       <div className="flex justify-between gap-4">
                         <div className="min-w-0 flex gap-3">
-                          <img
-                            src={item.image_url || getMenuItemFallbackImage(item.category)}
-                            alt=""
-                            className="size-16 shrink-0 rounded-lg object-cover border"
-                            onError={(e) => {
-                              e.currentTarget.src = getMenuItemFallbackImage(item.category);
-                            }}
-                          />
+                          <MenuItemThumb imageUrl={item.image_url} />
                           <div className="min-w-0">
                           <p className="font-black text-lg text-pretty">
                             {item.name}

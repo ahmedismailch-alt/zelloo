@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { OrderStrings } from "../../lib/order-i18n";
 import { resolveSelection, type OptionGroup } from "../../lib/menu-options";
-import { getMenuItemFallbackImage } from "../../lib/menu-item-fallback-image";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import { formatChf } from "./format";
 
@@ -267,11 +266,13 @@ export function OptionsSheet({
                       key={drink.id}
                       className="flex items-center gap-3 border-b border-gray-200 py-3 last:border-b-0"
                     >
-                      <img
-                        src={drink.imageUrl || getMenuItemFallbackImage(drink.category)}
-                        alt=""
-                        className="size-16 shrink-0 rounded-xl border object-cover"
-                      />
+                      {drink.imageUrl && (
+                        <img
+                          src={drink.imageUrl}
+                          alt=""
+                          className="size-16 shrink-0 rounded-xl border object-cover"
+                        />
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold break-words" dir="auto">
                           {drinkName}
