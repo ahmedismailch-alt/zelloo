@@ -139,6 +139,7 @@ export type OrderStrings = {
   rateSubmit: string;
   rateThanks: string;
   rateError: string;
+  rateGoogle: string;
   loyaltyProgress: (count: number, target: number) => string;
   loyaltyReached: (reward: string) => string;
 };
@@ -262,6 +263,7 @@ const de: OrderStrings = {
   rateSubmit: "Bewertung senden",
   rateThanks: "Danke für Ihre Bewertung!",
   rateError: "Bewertung konnte nicht gesendet werden.",
+  rateGoogle: "Auch auf Google bewerten",
   loyaltyProgress: (count, target) =>
     `Treuepunkte: ${count} von ${target} Bestellungen. Noch ${Math.max(target - count, 0)} bis zur Belohnung!`,
   loyaltyReached: (reward) => `Geschafft! Sie haben sich ${reward} verdient.`,
@@ -386,6 +388,7 @@ const fr: OrderStrings = {
   rateSubmit: "Envoyer l'évaluation",
   rateThanks: "Merci pour votre évaluation!",
   rateError: "L'évaluation n'a pas pu être envoyée.",
+  rateGoogle: "Évaluer aussi sur Google",
   loyaltyProgress: (count, target) =>
     `Points fidélité : ${count} sur ${target} commandes. Encore ${Math.max(target - count, 0)} pour la récompense !`,
   loyaltyReached: (reward) => `Bravo ! Vous avez gagné ${reward}.`,
@@ -510,6 +513,7 @@ const it: OrderStrings = {
   rateSubmit: "Invia valutazione",
   rateThanks: "Grazie per la tua valutazione!",
   rateError: "Non è stato possibile inviare la valutazione.",
+  rateGoogle: "Valuta anche su Google",
   loyaltyProgress: (count, target) =>
     `Punti fedeltà: ${count} di ${target} ordini. Ancora ${Math.max(target - count, 0)} per la ricompensa!`,
   loyaltyReached: (reward) => `Ce l'hai fatta! Hai guadagnato ${reward}.`,
@@ -634,6 +638,7 @@ const en: OrderStrings = {
   rateSubmit: "Send rating",
   rateThanks: "Thanks for your rating!",
   rateError: "Your rating could not be sent.",
+  rateGoogle: "Also review us on Google",
   loyaltyProgress: (count, target) =>
     `Loyalty points: ${count} of ${target} orders. ${Math.max(target - count, 0)} more for your reward!`,
   loyaltyReached: (reward) => `You made it! You earned ${reward}.`,
@@ -759,6 +764,7 @@ const ar: OrderStrings = {
   loyaltyReached: (reward) => `برافو! حصلت على ${reward}.`,
   rateThanks: "شكراً على تقييمك!",
   rateError: "لم نتمكن من إرسال التقييم.",
+  rateGoogle: "قيّمنا أيضاً على Google",
 };
 
 export const ORDER_STRINGS: Record<OrderLang, OrderStrings> = { de, fr, it, en, ar };

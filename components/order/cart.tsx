@@ -63,6 +63,7 @@ type Props = {
   delivery: DeliveryInfo;
   isDemo?: boolean;
   quickOrder?: boolean;
+  googleReviewUrl?: string | null;
   onSetQuantity: (key: string, quantity: number) => void;
   onOrdered: () => void;
 };
@@ -79,6 +80,7 @@ export function Cart({
   delivery,
   isDemo = false,
   quickOrder = false,
+  googleReviewUrl = null,
   onSetQuantity,
   onOrdered,
 }: Props) {
@@ -476,6 +478,16 @@ export function Cart({
                     </p>
                   )}
                 </>
+              )}
+              {googleReviewUrl && (
+                <a
+                  href={googleReviewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 min-h-11 flex items-center justify-center rounded-xl border border-white/40 px-4 text-sm font-bold text-white"
+                >
+                  {t.rateGoogle}
+                </a>
               )}
             </div>
           )}

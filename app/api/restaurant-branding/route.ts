@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "../../../lib/supabase-server";
-import { readBrandColor } from "../../../lib/branding";
+import { readBrandColor, readGoogleReviewUrl } from "../../../lib/branding";
 
 export const runtime = "nodejs";
 
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     const body = (await request.json().catch(() => null)) as {
       logoUrl?: unknown;
       brandColor?: unknown;
+      googleReviewUrl?: unknown;
     } | null;
 
     const update: Record<string, string | null> = {};
@@ -65,6 +66,21 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: "Ungültige Farbe." }, { status: 400 });
         }
         update.brand_color = color;
+      }
+    }
+
+    if (body && "googleReviewUrl" in body) {
+      if (body.googleReviewUrl === null) {
+        update.google_review_url = null;
+      } else {
+        const reviewUrl = readGoogleReviewUrl(body.googleReviewUrl);
+        if (!reviewUrl) {
+          return NextResponse.json(
+            { error: "Bitte einen gültigen Google-Link (https) eingeben." },
+            { status: 400 }
+          );
+        }
+        update.google_review_url = reviewUrl;
       }
     }
 

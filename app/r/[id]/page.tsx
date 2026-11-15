@@ -6,6 +6,7 @@ import {
   getBranding,
   getCategoryImages,
   getCategoryTranslations,
+  getGoogleReviewUrl,
   getOrderableMenu,
   getVenueType,
   getPopularItemNames,
@@ -45,6 +46,7 @@ export default async function RestaurantOrderPage({
     venueType,
     categoryImages,
     branding,
+    googleReviewUrl,
   ] = await Promise.all([
     getRestaurant(id),
     getOrderableMenu(id),
@@ -58,6 +60,7 @@ export default async function RestaurantOrderPage({
     getVenueType(id),
     getCategoryImages(id),
     getBranding(id),
+    getGoogleReviewUrl(id),
   ]);
 
   if (!restaurant) notFound();
@@ -83,6 +86,7 @@ export default async function RestaurantOrderPage({
       categoryImages={categoryImages}
       logoUrl={branding.logoUrl}
       brandColor={branding.brandColor}
+      googleReviewUrl={googleReviewUrl}
       popularItemNames={popularItemNames}
       reservation={
         isDemo
