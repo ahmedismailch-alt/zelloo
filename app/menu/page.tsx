@@ -1,7 +1,7 @@
 "use client";
 
 import { Logo } from "@/components/logo";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { MenuItemThumb } from "../../components/menu-item-thumb";
@@ -180,6 +180,7 @@ export default function MenuPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [panel, setPanel] = useState<"add" | "photo" | null>(null);
+  const addFormRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadMenu() {
@@ -845,6 +846,20 @@ export default function MenuPage() {
     void requestArabicNames([String(data.id)], { silent: true });
   }
 
+  function openAddForm(presetCategory?: string) {
+    setPanel("add");
+    if (presetCategory !== undefined) {
+      setCategory(presetCategory);
+      setSubcategory("");
+    }
+    setTimeout(() => {
+      addFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document
+        .getElementById("new-item-name")
+        ?.focus({ preventScroll: true });
+    }, 80);
+  }
+
   function startEditing(item: MenuItem) {
     setEditingId(item.id);
     setEditName(item.name);
@@ -1432,7 +1447,7 @@ export default function MenuPage() {
         {/* MANUAL ADD */}
 
         {panel === "add" && (
-        <div className="bg-white border rounded-2xl p-5 mb-6">
+        <div ref={addFormRef} className="bg-white border rounded-2xl p-5 mb-6 scroll-mt-4">
           <h2 className="text-xl font-black">
             Gericht manuell hinzufügen
           </h2>
@@ -1880,9 +1895,22 @@ export default function MenuPage() {
                         </div>
                       )}
                     </div>
-                    <span className="shrink-0 bg-gray-100 rounded-full px-3 py-1 text-xs font-bold">
-                      {groupItems.length}
-                    </span>
+                    <div className="shrink-0 flex flex-col items-end gap-2">
+                      <span className="bg-gray-100 rounded-full px-3 py-1 text-xs font-bold">
+                        {groupItems.length}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openAddForm(groupName === "Ohne Kategorie" ? "" : groupName)
+                        }
+                        aria-label={`Artikel zu ${groupName} hinzufügen`}
+                        className="min-h-11 inline-flex items-center gap-1 rounded-xl border border-orange-500 bg-orange-50 px-3 text-sm font-bold text-black"
+                      >
+                        <span aria-hidden="true" className="text-lg leading-none">+</span>
+                        Artikel
+                      </button>
+                    </div>
                   </div>
               {groupItems.map((item) => (
                 <div
@@ -2202,6 +2230,15 @@ export default function MenuPage() {
         </div>
       </div>
     </main>
+    <button
+      type="button"
+      onClick={() => openAddForm()}
+      aria-label="Gericht hinzufügen"
+      className="fixed right-4 bottom-24 md:bottom-6 z-30 min-h-14 inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 text-base font-black text-black shadow-lg"
+    >
+      <span aria-hidden="true" className="text-2xl leading-none">+</span>
+      Gericht
+    </button>
     </>
   );
 }
