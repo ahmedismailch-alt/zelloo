@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { OrderLang, OrderStrings } from "../../lib/order-i18n";
 import { playReadyChime, unlockReadyChime } from "../../lib/ready-chime";
 import { DemoResult, type DemoSummary } from "./demo-result";
+import { NotifyReadyButton } from "./notify-ready-button";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import { optionsKey, resolveSelection } from "../../lib/menu-options";
 import { formatChf } from "./format";
@@ -441,6 +442,15 @@ export function Cart({
               formatChf(confirmed.totalCents)
             )}
           </p>
+
+          {!isReady && !isCancelled && (
+            <NotifyReadyButton
+              orderId={confirmed.id}
+              restaurantId={restaurantId}
+              lang={lang}
+              t={t}
+            />
+          )}
 
           {isReady && (
             <div className="mt-2 rounded-2xl bg-white/10 p-4 flex flex-col gap-2">

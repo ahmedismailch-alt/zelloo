@@ -768,6 +768,10 @@ export default function DashboardPage() {
         )
       );
 
+      if (nextStatus === "ready") {
+        void notifyCustomerReady(order.id);
+      }
+
       setRefreshVersion((current) => current + 1);
     } catch (error) {
       console.error(error);
@@ -777,6 +781,21 @@ export default function DashboardPage() {
       );
     } finally {
       setSavingId(null);
+    }
+  }
+
+  async function notifyCustomerReady(orderId: string) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) return;
+
+      await fetch(`/api/orders/${encodeURIComponent(orderId)}/notify-ready`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      console.error(error);
     }
   }
 

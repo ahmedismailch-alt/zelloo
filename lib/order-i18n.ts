@@ -140,6 +140,10 @@ export type OrderStrings = {
   rateThanks: string;
   rateError: string;
   rateGoogle: string;
+  notifyButton: string;
+  notifyOn: string;
+  notifyDenied: string;
+  notifyError: string;
   loyaltyProgress: (count: number, target: number) => string;
   loyaltyReached: (reward: string) => string;
 };
@@ -264,6 +268,10 @@ const de: OrderStrings = {
   rateThanks: "Danke für Ihre Bewertung!",
   rateError: "Bewertung konnte nicht gesendet werden.",
   rateGoogle: "Auch auf Google bewerten",
+  notifyButton: "Benachrichtigen, wenn bereit",
+  notifyOn: "Sie werden benachrichtigt, sobald Ihre Bestellung bereit ist.",
+  notifyDenied: "Benachrichtigungen sind im Browser blockiert.",
+  notifyError: "Benachrichtigung konnte nicht aktiviert werden.",
   loyaltyProgress: (count, target) =>
     `Treuepunkte: ${count} von ${target} Bestellungen. Noch ${Math.max(target - count, 0)} bis zur Belohnung!`,
   loyaltyReached: (reward) => `Geschafft! Sie haben sich ${reward} verdient.`,
@@ -389,6 +397,10 @@ const fr: OrderStrings = {
   rateThanks: "Merci pour votre évaluation!",
   rateError: "L'évaluation n'a pas pu être envoyée.",
   rateGoogle: "Évaluer aussi sur Google",
+  notifyButton: "Me prévenir quand c'est prêt",
+  notifyOn: "Vous serez prévenu dès que votre commande sera prête.",
+  notifyDenied: "Les notifications sont bloquées dans le navigateur.",
+  notifyError: "Les notifications n'ont pas pu être activées.",
   loyaltyProgress: (count, target) =>
     `Points fidélité : ${count} sur ${target} commandes. Encore ${Math.max(target - count, 0)} pour la récompense !`,
   loyaltyReached: (reward) => `Bravo ! Vous avez gagné ${reward}.`,
@@ -514,6 +526,10 @@ const it: OrderStrings = {
   rateThanks: "Grazie per la tua valutazione!",
   rateError: "Non è stato possibile inviare la valutazione.",
   rateGoogle: "Valuta anche su Google",
+  notifyButton: "Avvisami quando è pronto",
+  notifyOn: "Riceverai un avviso appena il tuo ordine sarà pronto.",
+  notifyDenied: "Le notifiche sono bloccate nel browser.",
+  notifyError: "Non è stato possibile attivare le notifiche.",
   loyaltyProgress: (count, target) =>
     `Punti fedeltà: ${count} di ${target} ordini. Ancora ${Math.max(target - count, 0)} per la ricompensa!`,
   loyaltyReached: (reward) => `Ce l'hai fatta! Hai guadagnato ${reward}.`,
@@ -639,6 +655,10 @@ const en: OrderStrings = {
   rateThanks: "Thanks for your rating!",
   rateError: "Your rating could not be sent.",
   rateGoogle: "Also review us on Google",
+  notifyButton: "Notify me when it's ready",
+  notifyOn: "We'll notify you as soon as your order is ready.",
+  notifyDenied: "Notifications are blocked in your browser.",
+  notifyError: "Notifications could not be enabled.",
   loyaltyProgress: (count, target) =>
     `Loyalty points: ${count} of ${target} orders. ${Math.max(target - count, 0)} more for your reward!`,
   loyaltyReached: (reward) => `You made it! You earned ${reward}.`,
@@ -702,7 +722,7 @@ const ar: OrderStrings = {
   addressLabel: "عنوان التوصيل",
   addressPlaceholder: "الشارع، رقم المبنى، الرمز البريدي، المدينة",
   missingAddressError: "يرجى كتابة عنوان التوصيل.",
-  noteLabel: "ملاحظة (اختياري)",
+  noteLabel: "ملاح��ة (اختياري)",
   notePlaceholder: "مثلاً: حساسية",
   finalPriceInfo: "يحسب المطعم المبلغ النهائي حسب الأسعار الحالية.",
   sending: "جارٍ الإرسال...",
@@ -765,6 +785,10 @@ const ar: OrderStrings = {
   rateThanks: "شكراً على تقييمك!",
   rateError: "لم نتمكن من إرسال التقييم.",
   rateGoogle: "قيّمنا أيضاً على Google",
+  notifyButton: "نبّهني عندما يكون جاهزاً",
+  notifyOn: "سننبّهك فور أن يصبح طلبك جاهزاً.",
+  notifyDenied: "الإشعارات محظورة في المتصفح.",
+  notifyError: "تعذّر تفعيل الإشعارات.",
 };
 
 export const ORDER_STRINGS: Record<OrderLang, OrderStrings> = { de, fr, it, en, ar };
