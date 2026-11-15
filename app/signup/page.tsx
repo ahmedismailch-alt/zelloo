@@ -55,7 +55,7 @@ export default function SignupPage() {
           </h1>
 
           <p className="text-gray-400 mt-2">
-            RESTAURANT · AI
+            ORDER · AI
           </p>
         </div>
 
