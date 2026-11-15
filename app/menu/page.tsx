@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { MenuItemThumb } from "../../components/menu-item-thumb";
 import { DashboardShell } from "../../components/dashboard/dashboard-shell";
 import { OptionsEditor } from "../../components/menu/options-editor";
+import { CoffeeOptionsPanel } from "../../components/menu/coffee-options-panel";
 import { parseOptionGroups, type OptionGroup } from "../../lib/menu-options";
 
 type MenuItem = {
@@ -1626,6 +1627,23 @@ export default function MenuPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-6">
+              <CoffeeOptionsPanel
+                categories={existingCategories}
+                items={items.map((item) => ({
+                  id: String(item.id),
+                  category: item.category,
+                }))}
+                onApplied={(updated) => {
+                  const byId = new Map(updated.map((row) => [row.id, row.options]));
+                  setItems((current) =>
+                    current.map((item) =>
+                      byId.has(String(item.id))
+                        ? { ...item, options: byId.get(String(item.id)) }
+                        : item
+                    )
+                  );
+                }}
+              />
               <div className="flex flex-col gap-2">
                 <label htmlFor="menu-search" className="sr-only">
                   Gericht suchen

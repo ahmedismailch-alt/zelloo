@@ -68,6 +68,7 @@ export type OrderStrings = {
   nameLabel: string;
   nameLabelRequired: string;
   phoneLabel: string;
+  phoneLabelOptional: string;
   phonePlaceholder: string;
   noTableHint: string;
   missingContactError: string;
@@ -183,6 +184,7 @@ const de: OrderStrings = {
   nameLabel: "Ihr Name (optional)",
   nameLabelRequired: "Ihr Name",
   phoneLabel: "Telefonnummer",
+  phoneLabelOptional: "Telefonnummer (optional)",
   phonePlaceholder: "z. B. 079 123 45 67",
   noTableHint:
     "Kein Tisch gescannt. Bitte Name und Telefonnummer angeben, damit wir Sie finden können.",
@@ -302,6 +304,7 @@ const fr: OrderStrings = {
   nameLabel: "Votre nom (facultatif)",
   nameLabelRequired: "Votre nom",
   phoneLabel: "Numéro de téléphone",
+  phoneLabelOptional: "Numéro de téléphone (facultatif)",
   phonePlaceholder: "p. ex. 079 123 45 67",
   noTableHint:
     "Aucune table scannée. Merci d'indiquer votre nom et votre numéro de téléphone pour que nous puissions vous retrouver.",
@@ -421,6 +424,7 @@ const it: OrderStrings = {
   nameLabel: "Il tuo nome (facoltativo)",
   nameLabelRequired: "Il tuo nome",
   phoneLabel: "Numero di telefono",
+  phoneLabelOptional: "Numero di telefono (facoltativo)",
   phonePlaceholder: "es. 079 123 45 67",
   noTableHint:
     "Nessun tavolo scansionato. Indica nome e numero di telefono per permetterci di trovarti.",
@@ -540,6 +544,7 @@ const en: OrderStrings = {
   nameLabel: "Your name (optional)",
   nameLabelRequired: "Your name",
   phoneLabel: "Phone number",
+  phoneLabelOptional: "Phone number (optional)",
   phonePlaceholder: "e.g. 079 123 45 67",
   noTableHint:
     "No table scanned. Please provide your name and phone number so we can find you.",
@@ -659,6 +664,7 @@ const ar: OrderStrings = {
   nameLabel: "اسمك (اختياري)",
   nameLabelRequired: "اسمك",
   phoneLabel: "رقم الهاتف",
+  phoneLabelOptional: "رقم الهاتف (اختياري)",
   phonePlaceholder: "مثلاً 079 123 45 67",
   noTableHint: "لم يتم مسح رمز طاولة. يرجى كتابة اسمك ورقم هاتفك لنتمكن من الوصول إليك.",
   missingContactError: "يرجى كتابة الاسم ورقم الهاتف.",
