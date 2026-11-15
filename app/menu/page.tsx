@@ -123,6 +123,9 @@ export default function MenuPage() {
   const [uploadingCategoryImage, setUploadingCategoryImage] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
+  const [bulkCategory, setBulkCategory] = useState("");
+  const [bulkConfirming, setBulkConfirming] = useState(false);
+  const [bulkMoving, setBulkMoving] = useState(false);
   const [priceEditingId, setPriceEditingId] = useState<string | null>(null);
   const [priceDraft, setPriceDraft] = useState("");
   const [busyItemId, setBusyItemId] = useState<string | null>(null);
@@ -591,6 +594,54 @@ export default function MenuPage() {
     }
   }
 
+  async function moveFoundItemsToCategory(itemIds: string[]) {
+    const targetCategory = bulkCategory.trim();
+    if (!targetCategory || itemIds.length === 0) return;
+
+    setBulkMoving(true);
+    setMessage("");
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Nicht angemeldet.");
+
+      const response = await fetch("/api/menu-bulk-category", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ itemIds, category: targetCategory }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || "Kategorie konnte nicht geändert werden.");
+      }
+
+      const updatedIds = new Set<string>(data.updatedIds || []);
+      setItems((current) =>
+        current.map((item) =>
+          updatedIds.has(String(item.id)) ? { ...item, category: data.category } : item
+        )
+      );
+      setMessage(
+        `${updatedIds.size} Gerichte wurden nach «${data.category}» verschoben.`
+      );
+      setBulkConfirming(false);
+      setBulkCategory("");
+      setSearch("");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Kategorie konnte nicht geändert werden."
+      );
+    } finally {
+      setBulkMoving(false);
+    }
+  }
+
   async function importAIItems() {
     if (!restaurantId || aiItems.length === 0) return;
 
@@ -1028,6 +1079,15 @@ export default function MenuPage() {
         return groups;
       }, {})
   );
+
+  const foundItems = groupedItems.flatMap(([, groupItems]) => groupItems);
+  const existingCategories = Array.from(
+    new Set(items.map((item) => item.category?.trim() || "").filter(Boolean))
+  );
+  const bulkTarget = bulkCategory.trim();
+  const itemsToMove = bulkTarget
+    ? foundItems.filter((item) => (item.category?.trim() || "") !== bulkTarget)
+    : [];
 
   const missingCategoryCount = categoryArAvailable
     ? new Set(
@@ -1535,6 +1595,76 @@ export default function MenuPage() {
                   placeholder="Gericht suchen, z.B. calz"
                   className="w-full border rounded-xl px-4 py-3 text-base min-h-11"
                 />
+                {normalizedSearch !== "" && foundItems.length > 0 && (
+                  <div className="flex flex-col gap-2 border rounded-xl p-3 bg-white">
+                    <label
+                      htmlFor="bulk-category"
+                      className="text-sm font-bold"
+                    >
+                      {foundItems.length} Treffer in Kategorie verschieben
+                    </label>
+                    <input
+                      id="bulk-category"
+                      list="bulk-category-options"
+                      value={bulkCategory}
+                      onChange={(e) => {
+                        setBulkCategory(e.target.value);
+                        setBulkConfirming(false);
+                      }}
+                      placeholder="Zielkategorie, z.B. Pizza"
+                      maxLength={80}
+                      className="w-full border rounded-xl px-4 py-3 text-base min-h-11"
+                    />
+                    <datalist id="bulk-category-options">
+                      {existingCategories.map((name) => (
+                        <option key={name} value={name} />
+                      ))}
+                    </datalist>
+                    {bulkTarget && itemsToMove.length === 0 && (
+                      <p className="text-sm text-gray-500">
+                        Alle Treffer sind schon in «{bulkTarget}».
+                      </p>
+                    )}
+                    {bulkTarget && itemsToMove.length > 0 && !bulkConfirming && (
+                      <button
+                        type="button"
+                        onClick={() => setBulkConfirming(true)}
+                        className="w-full min-h-11 rounded-xl border-2 border-black font-bold px-4"
+                      >
+                        {itemsToMove.length} Gerichte nach «{bulkTarget}» verschieben
+                      </button>
+                    )}
+                    {bulkTarget && itemsToMove.length > 0 && bulkConfirming && (
+                      <div className="flex flex-col gap-2">
+                        <p className="text-sm font-semibold">
+                          {itemsToMove.length} Gerichte wirklich nach «{bulkTarget}» verschieben?
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            disabled={bulkMoving}
+                            onClick={() =>
+                              moveFoundItemsToCategory(
+                                itemsToMove.map((item) => String(item.id))
+                              )
+                            }
+                            className="flex-1 min-h-11 rounded-xl bg-black text-white font-bold px-4 disabled:opacity-50"
+                          >
+                            {bulkMoving ? "Verschiebe..." : "Ja, verschieben"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={bulkMoving}
+                            onClick={() => setBulkConfirming(false)}
+                            className="flex-1 min-h-11 rounded-xl border font-bold px-4"
+                          >
+                            Abbrechen
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {items.some((item) => !item.is_available) && (
                   <p className="text-sm text-gray-500">
                     {items.filter((item) => !item.is_available).length} ausverkauft
