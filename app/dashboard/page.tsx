@@ -7,6 +7,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { OrderBell } from "../../lib/order-bell";
 import { DashboardShell } from "../../components/dashboard/dashboard-shell";
+import { BaristaView } from "../../components/dashboard/barista-view";
 import { NewReservationsBanner } from "../../components/dashboard/new-reservations-banner";
 import { useNewReservations } from "../../lib/use-new-reservations";
 import type { Access } from "../../lib/subscription";
@@ -39,6 +40,7 @@ type OrderItem = {
 
 type Order = {
   id: string;
+  order_number: number | null;
   customer_name: string;
   customer_phone: string | null;
   customer_address: string | null;
@@ -164,6 +166,8 @@ export default function DashboardPage() {
   const [nowTick, setNowTick] = useState(() => Date.now());
   const [prepMinutes, setPrepMinutes] = useState(15);
   const [view, setView] = useState<"active" | "history">("active");
+  const [isCafeMode, setIsCafeMode] = useState(false);
+  const [baristaMode, setBaristaMode] = useState(false);
   const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
   const [dismissingMessageId, setDismissingMessageId] = useState<string | null>(null);
   const [onboarding, setOnboarding] = useState<{
@@ -226,6 +230,32 @@ export default function DashboardPage() {
   const restaurantId = restaurant?.id;
   const newReservations = useNewReservations(restaurantId);
   const shouldRing = hasPending || newReservations > 0;
+
+  useEffect(() => {
+    if (restaurantId === undefined) return;
+    let cancelled = false;
+
+    // venue_type may not exist yet; the barista toggle then stays hidden.
+    void supabase
+      .from("restaurants")
+      .select("venue_type")
+      .eq("id", restaurantId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data?.venue_type) return;
+        setIsCafeMode(data.venue_type !== "restaurant");
+      });
+
+    try {
+      setBaristaMode(window.localStorage.getItem("zelloo-barista-view") === "1");
+    } catch {
+      setBaristaMode(false);
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [restaurantId]);
 
   useEffect(() => {
     if (!soundOn || !shouldRing) return;
@@ -545,6 +575,7 @@ export default function DashboardPage() {
             .from("orders")
             .select(`
               id,
+              order_number,
               customer_name,
               customer_phone,
               customer_address,
@@ -674,6 +705,15 @@ export default function DashboardPage() {
       );
     } finally {
       setTogglingBusy(false);
+    }
+  }
+
+  function toggleBaristaMode(on: boolean) {
+    setBaristaMode(on);
+    try {
+      window.localStorage.setItem("zelloo-barista-view", on ? "1" : "0");
+    } catch {
+      // The preference is only a convenience; ignore storage failures.
     }
   }
 
@@ -893,6 +933,8 @@ export default function DashboardPage() {
   const visibleOrders = (view === "active" ? openOrders : historyOrders).filter(
     (order) => matchesFilter(order, orderFilter)
   );
+
+  const baristaActive = isCafeMode && baristaMode && view === "active";
 
   if (access && !access.allowed) {
     return (
@@ -1368,6 +1410,34 @@ export default function DashboardPage() {
             ))}
           </div>
 
+          {isCafeMode && view === "active" && (
+            <button
+              type="button"
+              aria-pressed={baristaMode}
+              onClick={() => toggleBaristaMode(!baristaMode)}
+              className={`w-full min-h-11 rounded-xl border-2 px-4 mb-3 text-sm font-bold ${
+                baristaMode
+                  ? "bg-black text-white border-black"
+                  : "bg-white text-black border-gray-300"
+              }`}
+            >
+              {baristaMode
+                ? "Barista-Ansicht an – zur Liste wechseln"
+                : "Barista-Ansicht einschalten"}
+            </button>
+          )}
+
+          {baristaActive ? (
+            <BaristaView
+              orders={openOrders}
+              highlighted={highlighted}
+              savingId={savingId}
+              prepMinutes={prepMinutes}
+              waitingMinutes={waitingMinutes}
+              onChangeStatus={changeStatus}
+            />
+          ) : (
+          <>
           <div className="relative mb-3">
             <div
               role="tablist"
@@ -1462,8 +1532,16 @@ export default function DashboardPage() {
               >
                 <div className="flex flex-wrap justify-between gap-3">
                   <div>
+                    {order.order_number !== null && (
+                      <p className="text-2xl font-black leading-none tabular-nums mb-1">
+                        #{order.order_number}
+                      </p>
+                    )}
                     <p className="text-xs text-gray-500">
-                      #{order.id.slice(0, 8)} · {formatDate(order.created_at)}
+                      {order.order_number === null
+                        ? `#${order.id.slice(0, 8)} · `
+                        : ""}
+                      {formatDate(order.created_at)}
                     </p>
 
                     {(order.status === "new" ||
@@ -1669,6 +1747,8 @@ export default function DashboardPage() {
               </article>
             ))}
           </div>
+          </>
+          )}
         </section>
 
         <section className="bg-white border rounded-2xl p-5 mb-6">
@@ -1806,8 +1886,14 @@ export default function DashboardPage() {
       {printingOrder && (
         <div className="hidden print:block p-6 font-mono text-black">
           <h1 className="text-lg font-bold mb-1">{restaurantName}</h1>
+          {printingOrder.order_number !== null && (
+            <p className="text-4xl font-bold m-0">#{printingOrder.order_number}</p>
+          )}
           <p className="text-sm m-0">
-            #{printingOrder.id.slice(0, 8)} · {formatDate(printingOrder.created_at)}
+            {printingOrder.order_number === null
+              ? `#${printingOrder.id.slice(0, 8)} · `
+              : ""}
+            {formatDate(printingOrder.created_at)}
           </p>
           <p className="text-sm m-0">
             {printingOrder.table_number

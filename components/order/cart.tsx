@@ -92,7 +92,11 @@ export function Cart({
   const [notes, setNotes] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-  const [confirmed, setConfirmed] = useState<{ id: string; totalCents: number } | null>(null);
+  const [confirmed, setConfirmed] = useState<{
+    id: string;
+    orderNumber: number | null;
+    totalCents: number;
+  } | null>(null);
   const [orderStatus, setOrderStatus] = useState<OrderStatus>("new");
   const [prepMinutes, setPrepMinutes] = useState<number | null>(null);
   const [rating, setRating] = useState<number | null>(null);
@@ -316,7 +320,12 @@ export function Cart({
           })),
         });
       }
-      setConfirmed({ id: String(data.orderId), totalCents: data.totalCents });
+      setConfirmed({
+        id: String(data.orderId),
+        orderNumber:
+          typeof data.orderNumber === "number" ? data.orderNumber : null,
+        totalCents: data.totalCents,
+      });
       setNotes("");
       onOrdered();
     } catch (err) {
@@ -390,8 +399,22 @@ export function Cart({
             </ol>
           )}
 
+          {confirmed.orderNumber !== null && (
+            <div className="flex items-baseline gap-3 mt-1">
+              <span className="text-sm font-bold text-white/70">{t.pickupNumber}</span>
+              <span dir="ltr" className="text-5xl font-black tabular-nums leading-none">
+                #{confirmed.orderNumber}
+              </span>
+            </div>
+          )}
+
           <p className="text-sm text-white/70 mt-1">
-            {t.orderNumber(confirmed.id.slice(0, 8), formatChf(confirmed.totalCents))}
+            {t.orderNumber(
+              confirmed.orderNumber !== null
+                ? String(confirmed.orderNumber)
+                : confirmed.id.slice(0, 8),
+              formatChf(confirmed.totalCents)
+            )}
           </p>
 
           {isReady && (
