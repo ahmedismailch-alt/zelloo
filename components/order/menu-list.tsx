@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getAuthHeaders, useDealOwner } from "../../lib/use-deal-owner";
+import { DealSheet } from "./deal-sheet";
 import type { OrderStrings } from "../../lib/order-i18n";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import type { CartLine } from "./cart";
@@ -19,6 +22,7 @@ type Props = {
   onSetNote: (id: string, note: string) => void;
   onPickOptions: (item: PublicMenuItem) => void;
   popularItemNames?: string[];
+  restaurantId?: string;
 };
 
 export function MenuList({
@@ -33,8 +37,38 @@ export function MenuList({
   onSetNote,
   onPickOptions,
   popularItemNames = [],
+  restaurantId,
 }: Props) {
   const popularSet = useMemo(() => new Set(popularItemNames), [popularItemNames]);
+  const router = useRouter();
+  const isDealOwner = useDealOwner(restaurantId);
+  const [dealSheetOpen, setDealSheetOpen] = useState(false);
+  const [endingDealId, setEndingDealId] = useState<string | null>(null);
+  const [endingBusy, setEndingBusy] = useState(false);
+  const [dealError, setDealError] = useState("");
+
+  async function endDeal(itemId: string) {
+    setEndingBusy(true);
+    setDealError("");
+    const headers = await getAuthHeaders();
+    if (!headers) {
+      setDealError("Bitte melden Sie sich erneut an.");
+      setEndingBusy(false);
+      return;
+    }
+    const response = await fetch("/api/deal", {
+      method: "DELETE",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId }),
+    }).catch(() => null);
+    setEndingBusy(false);
+    if (!response?.ok) {
+      setDealError("Angebot konnte nicht beendet werden.");
+      return;
+    }
+    setEndingDealId(null);
+    router.refresh();
+  }
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
@@ -229,6 +263,32 @@ export function MenuList({
         </div>
       )}
 
+      {isDealOwner &&
+        !query.trim() &&
+        activeCategory === null &&
+        ![...groups.keys()].some((key) => isDealCategory(key)) && (
+          <div
+            className="order-[-1] flex flex-col gap-3 rounded-2xl border-2 border-[var(--brand,#f97316)] p-3"
+            style={{
+              background: "color-mix(in srgb, var(--brand,#f97316) 10%, white)",
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-black">Tagesangebote</h2>
+              <button
+                type="button"
+                onClick={() => setDealSheetOpen(true)}
+                className="min-h-11 shrink-0 rounded-full bg-[var(--brand,#f97316)] px-4 text-sm font-black text-[var(--brand-fg,#000)]"
+              >
+                + Angebot hinzufügen
+              </button>
+            </div>
+            <p className="text-sm text-gray-600">
+              Nur Sie sehen diesen Bereich. Gäste sehen ihn erst, wenn ein Angebot aktiv ist.
+            </p>
+          </div>
+        )}
+
       {filteredMenu.length === 0 ? (
         <div className="bg-white border rounded-2xl p-6 text-center">
           <p className="font-bold">{t.searchNoResults}</p>
@@ -250,6 +310,8 @@ export function MenuList({
               : undefined
           }
         >
+          <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
           {(() => {
             const coverUrl =
               compact && category && !failedImages.has(`cat:${category}`)
@@ -294,6 +356,22 @@ export function MenuList({
               </div>
             );
           })()}
+          </div>
+          {isDealOwner && isDealCategory(category) && (
+            <button
+              type="button"
+              onClick={() => setDealSheetOpen(true)}
+              className="min-h-11 shrink-0 rounded-full bg-[var(--brand,#f97316)] px-4 text-sm font-black text-[var(--brand-fg,#000)]"
+            >
+              + Angebot hinzufügen
+            </button>
+          )}
+          </div>
+          {isDealOwner && isDealCategory(category) && dealError && (
+            <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">
+              {dealError}
+            </p>
+          )}
           {groupBySubcategory(items).map(([subcategory, subItems]) => (
           <div key={subcategory || "__no_sub"} className="flex flex-col gap-2">
             {subcategory && (
@@ -398,6 +476,40 @@ export function MenuList({
                           {formatChf(item.priceCents)}
                         </p>
                       )}
+                      {isDealOwner && isDeal && (
+                        endingDealId === item.id ? (
+                          <div className="mt-1 flex flex-wrap items-center gap-2" dir="ltr">
+                            <button
+                              type="button"
+                              disabled={endingBusy}
+                              onClick={() => void endDeal(item.id)}
+                              className="min-h-11 rounded-full bg-red-600 px-4 text-sm font-bold text-white disabled:opacity-60"
+                            >
+                              {endingBusy ? "Wird beendet..." : "Ja, beenden"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={endingBusy}
+                              onClick={() => setEndingDealId(null)}
+                              className="min-h-11 rounded-full border bg-white px-4 text-sm font-bold"
+                            >
+                              Abbrechen
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDealError("");
+                              setEndingDealId(item.id);
+                            }}
+                            className="mt-1 min-h-11 self-start rounded-full border bg-white px-4 text-sm font-bold text-red-600"
+                            dir="ltr"
+                          >
+                            Angebot beenden
+                          </button>
+                        )
+                      )}
                     </div>
 
                     {hasOptions ? (
@@ -473,6 +585,13 @@ export function MenuList({
           ))}
         </div>
       )))}
+      {isDealOwner && (
+        <DealSheet
+          open={dealSheetOpen}
+          onClose={() => setDealSheetOpen(false)}
+          onCreated={() => router.refresh()}
+        />
+      )}
     </section>
   );
 }

@@ -512,6 +512,7 @@ export function OrderApp({
               onSetNote={setNote}
               onPickOptions={setPendingItem}
               popularItemNames={popularItemNames}
+  restaurantId={restaurantId}
             />
           </div>
         )}
