@@ -13,6 +13,8 @@ type Props = {
   t: OrderStrings;
   showArabic: boolean;
   categoryAr: Record<string, string>;
+  compact?: boolean;
+  categoryImages?: Record<string, string>;
   onSetQuantity: (id: string, quantity: number) => void;
   onSetNote: (id: string, note: string) => void;
   onPickOptions: (item: PublicMenuItem) => void;
@@ -25,6 +27,8 @@ export function MenuList({
   t,
   showArabic,
   categoryAr,
+  compact = false,
+  categoryImages = {},
   onSetQuantity,
   onSetNote,
   onPickOptions,
@@ -170,18 +174,50 @@ export function MenuList({
         .map((category) => [category, groups.get(category)!] as const)
         .map(([category, items]) => (
         <div key={category || "__other"} className="flex flex-col gap-3">
-          {showArabic && category && categoryAr[category] ? (
-            <div className="flex flex-col">
-              <h2 className="text-lg font-black" dir="rtl" lang="ar">
-                {categoryAr[category]}
-              </h2>
-              <p className="text-xs text-gray-400" dir="ltr" lang="de">
-                {category}
-              </p>
-            </div>
-          ) : (
-            <h2 className="text-lg font-black" dir="auto">{category || t.otherCategory}</h2>
-          )}
+          {(() => {
+            const coverUrl =
+              compact && category && !failedImages.has(`cat:${category}`)
+                ? categoryImages[category]
+                : undefined;
+            const onImage = Boolean(coverUrl);
+            const heading =
+              showArabic && category && categoryAr[category] ? (
+                <div className="flex flex-col">
+                  <h2 className="text-lg font-black" dir="rtl" lang="ar">
+                    {categoryAr[category]}
+                  </h2>
+                  <p
+                    className={`text-xs ${onImage ? "text-white/80" : "text-gray-400"}`}
+                    dir="ltr"
+                    lang="de"
+                  >
+                    {category}
+                  </p>
+                </div>
+              ) : (
+                <h2 className="text-lg font-black" dir="auto">
+                  {category || t.otherCategory}
+                </h2>
+              );
+
+            if (!coverUrl) return heading;
+
+            return (
+              <div className="relative h-36 overflow-hidden rounded-2xl bg-gray-200 text-white">
+                <img
+                  src={coverUrl}
+                  alt=""
+                  className="absolute inset-0 size-full object-cover"
+                  onError={() => markImageFailed(`cat:${category}`)}
+                />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-4">{heading}</div>
+              </div>
+            );
+          })()}
           {groupBySubcategory(items).map(([subcategory, subItems]) => (
           <div key={subcategory || "__no_sub"} className="flex flex-col gap-2">
             {subcategory && (
@@ -189,18 +225,29 @@ export function MenuList({
                 {subcategory}
               </h3>
             )}
-          <ul className="flex flex-col gap-2">
+          <ul
+            className={
+              compact
+                ? "flex flex-col bg-white border rounded-2xl divide-y overflow-hidden"
+                : "flex flex-col gap-2"
+            }
+          >
             {subItems.map((item) => {
               const hasOptions = item.options.length > 0;
               const quantity = quantityOf(item.id);
               const label = showArabic && item.nameAr ? item.nameAr : item.name;
               const note = cart[item.id]?.note ?? "";
-              const usingRealPhoto = Boolean(item.imageUrl) && !failedImages.has(item.id);
+              const usingRealPhoto =
+                !compact && Boolean(item.imageUrl) && !failedImages.has(item.id);
               const imageLoaded = !usingRealPhoto || loadedImages.has(item.id);
               return (
                 <li
                   key={item.id}
-                  className="bg-white border rounded-2xl p-4 flex flex-col gap-3"
+                  className={
+                    compact
+                      ? "p-4 flex flex-col gap-3"
+                      : "bg-white border rounded-2xl p-4 flex flex-col gap-3"
+                  }
                 >
                   <div className="flex items-center justify-between gap-3">
                     {usingRealPhoto && (

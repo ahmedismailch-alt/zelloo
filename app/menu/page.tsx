@@ -118,6 +118,9 @@ export default function MenuPage() {
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [categoryDraft, setCategoryDraft] = useState("");
   const [savingCategory, setSavingCategory] = useState(false);
+  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
+  const [categoryImagesAvailable, setCategoryImagesAvailable] = useState(false);
+  const [uploadingCategoryImage, setUploadingCategoryImage] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [priceEditingId, setPriceEditingId] = useState<string | null>(null);
@@ -170,6 +173,16 @@ export default function MenuPage() {
       if (!categoryError) {
         setCategoryArAvailable(true);
         setCategoryAr(readCategoryMap(categoryData?.category_translations));
+      }
+
+      const { data: imageData, error: imageError } = await supabase
+        .from("restaurants")
+        .select("category_images")
+        .eq("id", restaurant.id)
+        .maybeSingle();
+      if (!imageError) {
+        setCategoryImagesAvailable(true);
+        setCategoryImages(readCategoryMap(imageData?.category_images));
       }
 
       const { data: menuData, error: menuError } =
@@ -512,6 +525,69 @@ export default function MenuPage() {
       setMessage("Arabischer Kategoriename konnte nicht gespeichert werden.");
     } finally {
       setSavingCategory(false);
+    }
+  }
+
+  async function saveCategoryImage(categoryName: string, url: string | null) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) throw new Error("no session");
+
+    const response = await fetch("/api/category-image", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ category: categoryName, url }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data?.error || "Speichern fehlgeschlagen.");
+    setCategoryImages(readCategoryMap(data.categoryImages));
+  }
+
+  async function handleCategoryImageUpload(
+    categoryName: string,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setUploadingCategoryImage(categoryName);
+    setMessage("");
+    try {
+      const url = await uploadImageFile(file);
+      if (url) {
+        await saveCategoryImage(categoryName, url);
+        setMessage("Kategorie-Foto gespeichert.");
+      }
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Kategorie-Foto konnte nicht gespeichert werden."
+      );
+    } finally {
+      setUploadingCategoryImage(null);
+    }
+  }
+
+  async function removeCategoryImage(categoryName: string) {
+    setUploadingCategoryImage(categoryName);
+    setMessage("");
+    try {
+      await saveCategoryImage(categoryName, null);
+      setMessage("Kategorie-Foto entfernt.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Kategorie-Foto konnte nicht entfernt werden."
+      );
+    } finally {
+      setUploadingCategoryImage(null);
     }
   }
 
@@ -1508,6 +1584,41 @@ export default function MenuPage() {
                             </button>
                           </div>
                         )
+                      )}
+                      {categoryImagesAvailable && groupName !== "Ohne Kategorie" && (
+                        <div className="flex items-center gap-2">
+                          {categoryImages[groupName] && (
+                            <img
+                              src={categoryImages[groupName]}
+                              alt={`Kategorie-Foto ${groupName}`}
+                              className="size-11 shrink-0 rounded-xl border object-cover"
+                            />
+                          )}
+                          <label className="min-h-11 inline-flex items-center border rounded-xl px-4 text-sm font-bold cursor-pointer">
+                            {uploadingCategoryImage === groupName
+                              ? "Lädt..."
+                              : categoryImages[groupName]
+                                ? "Foto ändern"
+                                : "Kategorie-Foto"}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="sr-only"
+                              disabled={uploadingCategoryImage !== null}
+                              onChange={(e) => handleCategoryImageUpload(groupName, e)}
+                            />
+                          </label>
+                          {categoryImages[groupName] && (
+                            <button
+                              type="button"
+                              onClick={() => removeCategoryImage(groupName)}
+                              disabled={uploadingCategoryImage !== null}
+                              className="min-h-11 px-3 text-sm font-bold text-red-600 disabled:opacity-50"
+                            >
+                              Entfernen
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                     <span className="shrink-0 bg-gray-100 rounded-full px-3 py-1 text-xs font-bold">

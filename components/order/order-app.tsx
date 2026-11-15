@@ -2,7 +2,7 @@
 
 import { Logo } from "@/components/logo";
 import { useEffect, useMemo, useState } from "react";
-import type { PublicMenuItem } from "../../lib/supabase-server";
+import type { PublicMenuItem, VenueType } from "../../lib/supabase-server";
 import {
   LANG_LABELS,
   LANG_STORAGE_KEY,
@@ -68,6 +68,8 @@ type Props = {
   table: string | null;
   menu: PublicMenuItem[];
   categoryAr: Record<string, string>;
+  venueType?: VenueType;
+  categoryImages?: Record<string, string>;
   popularItemNames?: string[];
   reservation?: { maxParty: number; openingHours: OpeningHours | null } | null;
 };
@@ -83,6 +85,8 @@ export function OrderApp({
   table,
   menu,
   categoryAr,
+  venueType = "restaurant",
+  categoryImages = {},
   popularItemNames = [],
   reservation = null,
 }: Props) {
@@ -477,6 +481,8 @@ export function OrderApp({
               t={t}
               showArabic={lang === "ar"}
               categoryAr={categoryAr}
+              compact={venueType !== "restaurant"}
+              categoryImages={categoryImages}
               onSetQuantity={setQuantity}
               onSetNote={setNote}
               onPickOptions={setPendingItem}
