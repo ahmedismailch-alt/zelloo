@@ -61,6 +61,7 @@ type Props = {
   showArabic: boolean;
   delivery: DeliveryInfo;
   isDemo?: boolean;
+  quickOrder?: boolean;
   onSetQuantity: (key: string, quantity: number) => void;
   onOrdered: () => void;
 };
@@ -76,6 +77,7 @@ export function Cart({
   showArabic,
   delivery,
   isDemo = false,
+  quickOrder = false,
   onSetQuantity,
   onOrdered,
 }: Props) {
@@ -221,7 +223,8 @@ export function Cart({
     (sum, line) => sum + line.quantity * line.unitCents,
     0
   );
-  const isDelivery = !table && orderType === "delivery";
+  const pickupOnly = Boolean(table) || quickOrder;
+  const isDelivery = !pickupOnly && orderType === "delivery";
   const deliveryFeeCents = isDelivery ? delivery.feeCents : 0;
   const estimatedCents = subtotalCents + deliveryFeeCents;
   const belowMinimum =
@@ -231,12 +234,12 @@ export function Cart({
     event.preventDefault();
     if (sending || lines.length === 0) return;
 
-    if (!table && (!name.trim() || !phone.trim())) {
+    if (!table && (!name.trim() || (!quickOrder && !phone.trim()))) {
       setError(t.missingContactError);
       return;
     }
 
-    if (!table && orderType === "delivery" && !address.trim()) {
+    if (isDelivery && !address.trim()) {
       setError(t.missingAddressError);
       return;
     }
@@ -258,8 +261,8 @@ export function Cart({
           table,
           customerName: name,
           customerPhone: phone,
-          orderType: table ? "pickup" : orderType,
-          customerAddress: table ? "" : orderType === "delivery" ? address : "",
+          orderType: pickupOnly ? "pickup" : orderType,
+          customerAddress: isDelivery ? address : "",
           notes,
           items: lines.map((line) => ({
             menuItemId: line.menuItemId,
@@ -302,11 +305,11 @@ export function Cart({
         setDemoSummary({
           orderId: String(data.orderId),
           totalCents: data.totalCents,
-          orderType: table ? "pickup" : orderType,
+          orderType: pickupOnly ? "pickup" : orderType,
           table,
           customerName: name.trim(),
           customerPhone: phone.trim(),
-          customerAddress: orderType === "delivery" ? address.trim() : "",
+          customerAddress: isDelivery ? address.trim() : "",
           lines: lines.map((line) => ({
             name: [labelFor(line.item), ...line.optionNames].join(", "),
             quantity: line.quantity,
@@ -515,7 +518,7 @@ export function Cart({
               </p>
             )}
 
-            {!table && (
+            {!pickupOnly && (
               <div className="flex flex-col gap-2 text-sm font-semibold">
                 {t.orderTypeLabel}
                 <div className="flex gap-2" dir="ltr">
@@ -560,7 +563,7 @@ export function Cart({
               </p>
             )}
 
-            {!table && orderType === "delivery" && (
+            {isDelivery && (
               <label className="flex flex-col gap-1 text-sm font-semibold">
                 {t.addressLabel}
                 <input
@@ -590,13 +593,13 @@ export function Cart({
 
             {!table && (
               <label className="flex flex-col gap-1 text-sm font-semibold">
-                {t.phoneLabel}
+                {quickOrder ? t.phoneLabelOptional : t.phoneLabel}
                 <input
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
                   maxLength={30}
                   type="tel"
-                  required
+                  required={!quickOrder}
                   autoComplete="tel"
                   placeholder={t.phonePlaceholder}
                   className="rounded-xl border p-3 text-base font-normal"

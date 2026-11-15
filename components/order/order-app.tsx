@@ -560,6 +560,7 @@ export function OrderApp({
         showArabic={lang === "ar"}
         delivery={delivery}
         isDemo={isDemo}
+        quickOrder={venueType !== "restaurant"}
         onSetQuantity={setQuantity}
         onOrdered={() => {
           setCart({});

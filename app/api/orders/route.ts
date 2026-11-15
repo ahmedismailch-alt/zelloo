@@ -4,6 +4,7 @@ import {
   getOrderAvailability,
   getRestaurant,
   getSupabaseAdmin,
+  getVenueType,
   isDemoRestaurant,
   isValidRestaurantId,
   normalizeTable,
@@ -60,11 +61,15 @@ export async function POST(request: Request) {
     const customerName = cleanText(body.customerName, 60);
     const customerPhone = cleanText(body.customerPhone, 30);
     const orderNote = cleanText(body.notes, 300);
-    const orderType = body.orderType === "delivery" && !table ? "delivery" : "pickup";
+    const quickOrder = (await getVenueType(restaurantId)) !== "restaurant";
+    const orderType =
+      body.orderType === "delivery" && !table && !quickOrder
+        ? "delivery"
+        : "pickup";
     const customerAddress =
       orderType === "delivery" ? cleanText(body.customerAddress, 200) : null;
 
-    if (!table && (!customerName || !customerPhone)) {
+    if (!table && (!customerName || (!quickOrder && !customerPhone))) {
       return badRequest("Bitte Name und Telefonnummer angeben.");
     }
 
