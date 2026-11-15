@@ -251,8 +251,16 @@ export async function POST(request: Request) {
       throw itemsError;
     }
 
+    // order_number is assigned by a database trigger; a failed read must never fail the order.
+    const { data: numbered } = await supabase
+      .from("orders")
+      .select("order_number")
+      .eq("id", order.id)
+      .maybeSingle();
+
     return NextResponse.json({
       orderId: order.id,
+      orderNumber: numbered?.order_number ?? null,
       totalCents,
     });
   } catch (error) {

@@ -87,6 +87,7 @@ export type OrderStrings = {
   statusLabel: string;
   steps: { new: string; accepted: string; preparing: string; ready: string };
   badgeSent: string;
+  pickupNumber: string;
   pausedTitle: string;
   pausedText: string;
   pausedError: string;
@@ -204,6 +205,7 @@ const de: OrderStrings = {
   statusLabel: "Bestellstatus",
   steps: { new: "Eingegangen", accepted: "Angenommen", preparing: "In Zubereitung", ready: "Bereit" },
   badgeSent: "BESTELLUNG GESENDET",
+  pickupNumber: "Ihre Nummer",
   pausedTitle: "Bestellungen derzeit pausiert",
   pausedText:
     "Das Restaurant nimmt im Moment keine Bestellungen an. Bitte versuchen Sie es später erneut.",
@@ -324,6 +326,7 @@ const fr: OrderStrings = {
   statusLabel: "Statut de la commande",
   steps: { new: "Reçue", accepted: "Accept��e", preparing: "En préparation", ready: "Prête" },
   badgeSent: "COMMANDE ENVOYÉE",
+  pickupNumber: "Votre numéro",
   pausedTitle: "Commandes en pause",
   pausedText:
     "Le restaurant n'accepte pas de commandes pour le moment. Veuillez réessayer plus tard.",
@@ -444,6 +447,7 @@ const it: OrderStrings = {
   statusLabel: "Stato dell'ordine",
   steps: { new: "Ricevuto", accepted: "Accettato", preparing: "In preparazione", ready: "Pronto" },
   badgeSent: "ORDINE INVIATO",
+  pickupNumber: "Il tuo numero",
   pausedTitle: "Ordini in pausa",
   pausedText:
     "Il ristorante al momento non accetta ordini. Riprovi più tardi.",
@@ -564,6 +568,7 @@ const en: OrderStrings = {
   statusLabel: "Order status",
   steps: { new: "Received", accepted: "Accepted", preparing: "Preparing", ready: "Ready" },
   badgeSent: "ORDER SENT",
+  pickupNumber: "Your number",
   pausedTitle: "Orders are paused",
   pausedText:
     "The restaurant is not taking orders right now. Please try again later.",
@@ -683,6 +688,7 @@ const ar: OrderStrings = {
   statusLabel: "حالة الطلب",
   steps: { new: "تم الاستلام", accepted: "تم القبول", preparing: "قيد التحضير", ready: "جاهز" },
   badgeSent: "تم إرسال الطلب",
+  pickupNumber: "رقمك",
   pausedTitle: "الطلبات متوقفة مؤقتاً",
   pausedText: "المطعم لا يستقبل طلبات حالياً. يرجى المحاولة لاحقاً.",
   pausedError: "المطعم لا يستقبل طلبات حالياً.",
@@ -690,7 +696,7 @@ const ar: OrderStrings = {
   unavailableText:
     "الطلبات عبر الإنترنت غير متاحة في هذا المطعم حالياً. يرجى الطلب مباشرة في المطعم أو عبر الهاتف.",
   prepTime: (minutes) => `جاهز خلال حوالي ${minutes} دقيقة`,
-  busyNotice: "المطعم مزدحم حالياً، وقد يستغرق التحضير وقتاً أطول.",
+  busyNotice: "المطعم مزدحم حالياً، وقد يستغرق التحضير وقتاً أط��ل.",
   closedTitle: "المطعم مغلق حالياً",
     closedText: "المطعم خارج ساعات العمل. يرجى المحاولة لاحقاً.",
     opensToday: (time) => `يفتح اليوم الساعة ${time}.`,
