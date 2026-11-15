@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
           <h1>
             <Logo size="lg" />
           </h1>
-          <p className="text-gray-400 mt-2">RESTAURANT · AI</p>
+          <p className="text-gray-400 mt-2">ORDER · AI</p>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
