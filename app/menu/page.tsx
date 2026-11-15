@@ -126,6 +126,9 @@ export default function MenuPage() {
   const [bulkCategory, setBulkCategory] = useState("");
   const [bulkConfirming, setBulkConfirming] = useState(false);
   const [bulkMoving, setBulkMoving] = useState(false);
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false);
+  const [deleteAllWord, setDeleteAllWord] = useState("");
+  const [deletingAll, setDeletingAll] = useState(false);
   const [priceEditingId, setPriceEditingId] = useState<string | null>(null);
   const [priceDraft, setPriceDraft] = useState("");
   const [busyItemId, setBusyItemId] = useState<string | null>(null);
@@ -639,6 +642,46 @@ export default function MenuPage() {
       );
     } finally {
       setBulkMoving(false);
+    }
+  }
+
+  async function deleteEntireMenu() {
+    if (deleteAllWord.trim() !== "LÖSCHEN") return;
+
+    setDeletingAll(true);
+    setMessage("");
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Nicht angemeldet.");
+
+      const response = await fetch("/api/menu-delete-all", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ confirm: "LÖSCHEN" }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || "Speisekarte konnte nicht gelöscht werden.");
+      }
+
+      setItems([]);
+      setSearch("");
+      setDeleteAllOpen(false);
+      setDeleteAllWord("");
+      setMessage(`Speisekarte wurde gelöscht (${data.deletedCount} Gerichte).`);
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Speisekarte konnte nicht gelöscht werden."
+      );
+    } finally {
+      setDeletingAll(false);
     }
   }
 
@@ -2040,6 +2083,62 @@ export default function MenuPage() {
               ))}
                 </section>
               ))}
+
+              <div className="border-t pt-5">
+                {!deleteAllOpen ? (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteAllOpen(true)}
+                    className="w-full min-h-11 rounded-xl border border-red-300 text-red-600 font-bold px-4"
+                  >
+                    Gesamte Speisekarte löschen
+                  </button>
+                ) : (
+                  <div className="flex flex-col gap-3 border-2 border-red-300 rounded-xl p-4">
+                    <p className="text-sm font-bold text-red-700">
+                      {items.length} Gerichte werden endgültig gelöscht. Das kann
+                      nicht rückgängig gemacht werden.
+                    </p>
+                    <label
+                      htmlFor="delete-all-word"
+                      className="text-sm text-gray-600"
+                    >
+                      Zur Bestätigung «LÖSCHEN» eingeben:
+                    </label>
+                    <input
+                      id="delete-all-word"
+                      value={deleteAllWord}
+                      onChange={(e) => setDeleteAllWord(e.target.value)}
+                      autoComplete="off"
+                      autoCapitalize="characters"
+                      className="w-full border rounded-xl px-4 py-3 text-base min-h-11"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={deleteEntireMenu}
+                        disabled={
+                          deletingAll || deleteAllWord.trim() !== "LÖSCHEN"
+                        }
+                        className="flex-1 min-h-11 rounded-xl bg-red-600 text-white font-bold px-4 disabled:opacity-40"
+                      >
+                        {deletingAll ? "Wird gelöscht..." : "Alles löschen"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deletingAll}
+                        onClick={() => {
+                          setDeleteAllOpen(false);
+                          setDeleteAllWord("");
+                        }}
+                        className="flex-1 min-h-11 rounded-xl border font-bold px-4"
+                      >
+                        Abbrechen
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
