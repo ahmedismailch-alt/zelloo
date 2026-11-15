@@ -32,7 +32,36 @@ const SUBCATEGORY_SUGGESTIONS: Record<string, string[]> = {
   vorspeisen: ["Kalt", "Warm"],
   desserts: ["Kalt", "Warm"],
   snacks: ["Herzhaft", "Süss"],
+  kaffee: ["Espresso", "Milchkaffee", "Kalt"],
+  tee: ["Schwarztee", "Grüntee", "Kräutertee"],
+  "kalte getränke": ["Säfte", "Limonaden", "Smoothies"],
+  frühstück: ["Süss", "Herzhaft"],
+  shisha: ["Klassisch", "Frucht", "Mix"],
 };
+
+const RESTAURANT_CATEGORY_CHIPS = [
+  "Getränke",
+  "Vorspeisen",
+  "Hauptgerichte",
+  "Desserts",
+  "Snacks",
+];
+
+const CAFE_CATEGORY_CHIPS = [
+  "Kaffee",
+  "Tee",
+  "Kalte Getränke",
+  "Frühstück",
+  "Gebäck",
+  "Kuchen & Süsses",
+  "Snacks",
+];
+
+function categoryChipsForVenue(venueType: string): string[] {
+  if (venueType === "shisha_bar") return [...CAFE_CATEGORY_CHIPS, "Shisha"];
+  if (venueType === "cafe") return CAFE_CATEGORY_CHIPS;
+  return RESTAURANT_CATEGORY_CHIPS;
+}
 
 function getSubcategorySuggestions(categoryValue: string): string[] {
   const key = categoryValue.trim().toLowerCase();
@@ -54,6 +83,13 @@ function arabicNameOf(item: MenuItem) {
 }
 
 const CATEGORY_NAME_EXAMPLES: Array<{ match: RegExp; example: string }> = [
+  { match: /kaffee|coffee|café|caffè/i, example: "Cappuccino" },
+  { match: /\btee\b|tea|thé/i, example: "Chai Latte" },
+  { match: /kalte getränk|saft|smoothie|limonad/i, example: "Eistee" },
+  { match: /frühstück|breakfast|petit/i, example: "Birchermüesli" },
+  { match: /gebäck|croissant|pâtisserie/i, example: "Butterhörnchen" },
+  { match: /kuchen|süss|torte|gâteau/i, example: "Schokoladenkuchen" },
+  { match: /shisha|wasserpfeife|nargil/i, example: "Doppelapfel" },
   { match: /getränk|drink|bevand|boisson|bevuta/i, example: "Coca-Cola" },
   { match: /vorspeis|starter|antipast|entrée/i, example: "Bruschetta" },
   { match: /pizza/i, example: "Margherita" },
@@ -115,6 +151,7 @@ export default function MenuPage() {
   const [uploadingEditImage, setUploadingEditImage] = useState(false);
   const [generatingArabic, setGeneratingArabic] = useState(false);
   const [categoryAr, setCategoryAr] = useState<Record<string, string>>({});
+  const [venueType, setVenueType] = useState("restaurant");
   const [categoryArAvailable, setCategoryArAvailable] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [categoryDraft, setCategoryDraft] = useState("");
@@ -180,6 +217,15 @@ export default function MenuPage() {
       if (!categoryError) {
         setCategoryArAvailable(true);
         setCategoryAr(readCategoryMap(categoryData?.category_translations));
+      }
+
+      const { data: venueData, error: venueError } = await supabase
+        .from("restaurants")
+        .select("venue_type")
+        .eq("id", restaurant.id)
+        .maybeSingle();
+      if (!venueError && venueData?.venue_type) {
+        setVenueType(venueData.venue_type);
       }
 
       const { data: imageData, error: imageError } = await supabase
@@ -1424,13 +1470,7 @@ export default function MenuPage() {
               />
 
               <div className="flex flex-wrap gap-2 mt-2">
-                {[
-                  "Getränke",
-                  "Vorspeisen",
-                  "Hauptgerichte",
-                  "Desserts",
-                  "Snacks",
-                ].map((suggestion) => (
+                {categoryChipsForVenue(venueType).map((suggestion) => (
                   <button
                     key={suggestion}
                     type="button"
