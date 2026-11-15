@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { OrderLang, OrderStrings } from "../../lib/order-i18n";
+import { playReadyChime, unlockReadyChime } from "../../lib/ready-chime";
 import { DemoResult, type DemoSummary } from "./demo-result";
 import type { PublicMenuItem } from "../../lib/supabase-server";
 import { optionsKey, resolveSelection } from "../../lib/menu-options";
@@ -98,6 +99,7 @@ export function Cart({
     totalCents: number;
   } | null>(null);
   const [orderStatus, setOrderStatus] = useState<OrderStatus>("new");
+  const lastStatusRef = useRef<OrderStatus>("new");
   const [prepMinutes, setPrepMinutes] = useState<number | null>(null);
   const [rating, setRating] = useState<number | null>(null);
   const [ratingSent, setRatingSent] = useState(false);
@@ -185,6 +187,10 @@ export function Cart({
             prepMinutes?: number | null;
           };
           if (cancelled) return;
+          if (data.status === "ready" && lastStatusRef.current !== "ready") {
+            playReadyChime();
+          }
+          lastStatusRef.current = data.status;
           setOrderStatus(data.status);
           setPrepMinutes(
             typeof data.prepMinutes === "number" ? data.prepMinutes : null
@@ -237,6 +243,7 @@ export function Cart({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (sending || lines.length === 0) return;
+    unlockReadyChime();
 
     if (!table && (!name.trim() || (!quickOrder && !phone.trim()))) {
       setError(t.missingContactError);
@@ -303,6 +310,7 @@ export function Cart({
         // Storage can be blocked; reordering is a convenience only.
       }
 
+      lastStatusRef.current = "new";
       setOrderStatus("new");
       setPrepMinutes(null);
       if (isDemo) {
@@ -400,9 +408,24 @@ export function Cart({
           )}
 
           {confirmed.orderNumber !== null && (
-            <div className="flex items-baseline gap-3 mt-1">
-              <span className="text-sm font-bold text-white/70">{t.pickupNumber}</span>
-              <span dir="ltr" className="text-5xl font-black tabular-nums leading-none">
+            <div
+              className={
+                isReady
+                  ? "flex flex-col items-center gap-1 mt-3 py-4 rounded-2xl bg-white/15"
+                  : "flex items-baseline gap-3 mt-1"
+              }
+            >
+              <span
+                className={`text-sm font-bold ${isReady ? "text-white" : "text-white/70"}`}
+              >
+                {t.pickupNumber}
+              </span>
+              <span
+                dir="ltr"
+                className={`font-black tabular-nums leading-none ${
+                  isReady ? "text-8xl" : "text-5xl"
+                }`}
+              >
                 #{confirmed.orderNumber}
               </span>
             </div>
