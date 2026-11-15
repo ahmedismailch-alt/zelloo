@@ -26,6 +26,7 @@ export default function TablesPage() {
   const [pageError, setPageError] = useState("");
   const [tableInput, setTableInput] = useState("10");
   const [copied, setCopied] = useState(false);
+  const [isCafe, setIsCafe] = useState(false);
   const generalQrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,6 +53,18 @@ export default function TablesPage() {
           .maybeSingle();
 
         if (error) throw error;
+        if (cancelled) return;
+
+        if (data) {
+          const { data: venue } = await supabase
+            .from("restaurants")
+            .select("venue_type")
+            .eq("id", data.id)
+            .maybeSingle();
+          if (!cancelled && venue?.venue_type) {
+            setIsCafe(venue.venue_type !== "restaurant");
+          }
+        }
         if (cancelled) return;
 
         setOrigin(window.location.origin);
@@ -145,17 +158,22 @@ export default function TablesPage() {
 
           <Logo size="sm" className="mt-2 text-orange-500" />
           <h1 className="text-3xl font-black mt-1 text-balance">
-            QR-Codes für Tische
+            {isCafe ? "QR-Code für Ihr Café" : "QR-Codes für Tische"}
           </h1>
           <p className="text-gray-500 mt-2 leading-relaxed text-pretty">
-            Jeder QR-Code öffnet Ihre Speisekarte mit der richtigen
-            Tischnummer. Bestellungen erscheinen danach im Dashboard.
+            {isCafe
+              ? "Gäste scannen den Code, bestellen am Handy und holen ihr Getränk mit Bestellnummer am Tresen ab. Tischcodes sind optional."
+              : "Jeder QR-Code öffnet Ihre Speisekarte mit der richtigen Tischnummer. Bestellungen erscheinen danach im Dashboard."}
           </p>
 
           <section className="bg-white border rounded-2xl p-5 mt-6">
-            <h2 className="text-lg font-black">Ihr Restaurant-Link</h2>
+            <h2 className="text-lg font-black">
+              {isCafe ? "Ihr Café-Link" : "Ihr Restaurant-Link"}
+            </h2>
             <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-              Für Abholung oder Bestellungen ohne feste Tischnummer.
+              {isCafe
+                ? "Für Bestellungen am Tresen und zum Mitnehmen, ohne Tischnummer."
+                : "Für Abholung oder Bestellungen ohne feste Tischnummer."}
             </p>
             <p className="font-mono text-sm break-all bg-gray-50 rounded-xl p-3 mt-3">
               {restaurantLink}
@@ -191,7 +209,7 @@ export default function TablesPage() {
 
           <section className="bg-white border rounded-2xl p-5 mt-4 mb-6">
             <label htmlFor="table-count" className="text-lg font-black">
-              Anzahl Tische
+              {isCafe ? "Anzahl Tische (optional)" : "Anzahl Tische"}
             </label>
             <p className="text-sm text-gray-500 mt-1">
               {`Zwischen ${MIN_TABLES} und ${MAX_TABLES}`}

@@ -76,6 +76,13 @@ export function MenuList({
     });
   }, [menu, query, activeCategory]);
 
+  const popularItems = useMemo(
+    () => menu.filter((item) => popularSet.has(item.name)).slice(0, 6),
+    [menu, popularSet]
+  );
+  const showPopularRow =
+    compact && popularItems.length >= 2 && !query.trim() && activeCategory === null;
+
   const groups = new Map<string, PublicMenuItem[]>();
   for (const item of filteredMenu) {
     const key = item.category?.trim() || "";
@@ -99,7 +106,13 @@ export function MenuList({
 
   return (
     <section aria-label={t.menuLabel} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3">
+      <div
+        className={
+          compact
+            ? "sticky top-0 z-10 -mx-4 flex flex-col gap-3 bg-[#f8f9fb] px-4 py-2"
+            : "flex flex-col gap-3"
+        }
+      >
         <label className="relative block">
           <span className="sr-only">{t.searchPlaceholder}</span>
           <svg
@@ -164,6 +177,57 @@ export function MenuList({
           </ul>
         )}
       </div>
+
+      {showPopularRow && (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-black" dir="auto">
+            {t.popularBadge}
+          </h2>
+          <ul className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1" dir="ltr">
+            {popularItems.map((item) => {
+              const quantity = quantityOf(item.id);
+              const label = showArabic && item.nameAr ? item.nameAr : item.name;
+              const hasOptions = item.options.length > 0;
+              return (
+                <li
+                  key={item.id}
+                  className="flex w-40 shrink-0 flex-col justify-between gap-3 rounded-2xl border bg-white p-3"
+                >
+                  <p
+                    className="line-clamp-2 min-h-10 font-bold leading-tight break-words"
+                    dir="auto"
+                  >
+                    {label}
+                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold">{formatChf(item.priceCents)}</p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        hasOptions
+                          ? onPickOptions(item)
+                          : onSetQuantity(item.id, quantity + 1)
+                      }
+                      aria-label={t.add(label)}
+                      className="relative flex size-11 shrink-0 items-center justify-center rounded-full bg-black text-2xl font-bold text-white"
+                    >
+                      +
+                      {quantity > 0 && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand,#f97316)] px-1 text-xs font-black text-[var(--brand-fg,#000)]"
+                        >
+                          {quantity}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {filteredMenu.length === 0 ? (
         <div className="bg-white border rounded-2xl p-6 text-center">

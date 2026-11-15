@@ -1444,7 +1444,10 @@ export default function DashboardPage() {
               aria-label="Bestellungen filtern"
               className="flex gap-1.5 overflow-x-auto pr-6"
             >
-              {filterOptions.map((option) => {
+              {(isCafeMode
+                ? filterOptions.filter((option) => option.value !== "delivery")
+                : filterOptions
+              ).map((option) => {
                 const active = orderFilter === option.value;
                 const count = openOrders.filter((order) =>
                   matchesFilter(order, option.value)
