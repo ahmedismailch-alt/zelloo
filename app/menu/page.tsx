@@ -823,6 +823,34 @@ export default function MenuPage() {
     );
   }
 
+  async function changeItemImage(item: MenuItem, file: File) {
+    setBusyItemId(item.id);
+    setMessage("");
+
+    const url = await uploadImageFile(file);
+    if (!url) {
+      setBusyItemId(null);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("menu_items")
+      .update({ image_url: url })
+      .eq("id", item.id)
+      .select()
+      .single();
+
+    setBusyItemId(null);
+
+    if (error || !data) {
+      setMessage("Foto konnte nicht gespeichert werden.");
+      return;
+    }
+
+    replaceItem(data);
+    setMessage(`Foto für "${item.name}" wurde gespeichert.`);
+  }
+
   async function toggleAvailable(item: MenuItem) {
     setBusyItemId(item.id);
     setMessage("");
@@ -1740,7 +1768,12 @@ export default function MenuPage() {
                     <>
                       <div className="flex justify-between gap-4">
                         <div className="min-w-0 flex gap-3">
-                          <MenuItemThumb imageUrl={item.image_url} />
+                          <MenuItemThumb
+                            imageUrl={item.image_url}
+                            itemName={item.name}
+                            busy={busyItemId === item.id}
+                            onPickFile={(file) => changeItemImage(item, file)}
+                          />
                           <div className="min-w-0">
                           <p className="font-black text-lg text-pretty">
                             {item.name}
