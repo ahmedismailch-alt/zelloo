@@ -7,6 +7,7 @@ import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import { StatsBars } from "../../../components/dashboard/stats-bars";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { DayClosing } from "../../../components/dashboard/day-closing";
 import {
   computeStats,
   formatChf,
@@ -149,18 +150,25 @@ export default function StatsPage() {
 
   return (
     <>
-    <DashboardShell restaurantName={restaurant.name} />
-    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 md:pl-[17rem] pb-24 md:pb-12">
+    <div className="print:hidden">
+      <DashboardShell restaurantName={restaurant.name} />
+    </div>
+    <main className="min-h-screen bg-[#f8f9fb] text-black p-5 md:pl-[17rem] pb-24 md:pb-12 print:min-h-0 print:bg-white print:p-0">
       <div className="max-w-3xl mx-auto">
-        <Link href="/dashboard" className="inline-flex items-center min-h-11 text-sm font-semibold text-gray-600">
-          {"← Zurück zum Dashboard"}
-        </Link>
-        <Logo size="sm" className="mt-2 text-orange-500" />
-        <h1 className="text-3xl font-black mt-1 text-balance">Statistik</h1>
-        <p className="text-gray-500 mt-2 leading-relaxed text-pretty">
-          {restaurant.name} · Stornierte Bestellungen werden nicht gezählt. Zeiten in Schweizer Zeit.
-        </p>
+        <div className="print:hidden">
+          <Link href="/dashboard" className="inline-flex items-center min-h-11 text-sm font-semibold text-gray-600">
+            {"← Zurück zum Dashboard"}
+          </Link>
+          <Logo size="sm" className="mt-2 text-orange-500" />
+          <h1 className="text-3xl font-black mt-1 text-balance">Statistik</h1>
+          <p className="text-gray-500 mt-2 leading-relaxed text-pretty">
+            {restaurant.name} · Stornierte Bestellungen werden nicht gezählt. Zeiten in Schweizer Zeit.
+          </p>
+        </div>
 
+        <DayClosing restaurantId={restaurant.id} restaurantName={restaurant.name} />
+
+        <div className="print:hidden">
         <div className="grid grid-cols-4 gap-2 mt-5" role="group" aria-label="Zeitraum">
           {PERIODS.map((item) => (
             <button
@@ -258,6 +266,7 @@ export default function StatsPage() {
               />
             </>
           )}
+        </div>
         </div>
       </div>
     </main>

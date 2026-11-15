@@ -198,6 +198,82 @@ export function computeStats(orders: StatsOrder[], period: StatsPeriod, now = ne
   };
 }
 
+export type DayOption = { key: string; label: string };
+
+export type DaySummary = {
+  orderCount: number;
+  revenueCents: number;
+  averageCents: number;
+  cancelledCount: number;
+  cancelledCents: number;
+  topItems: TopItem[];
+};
+
+/** The last `count` Zurich calendar days, newest first, for the day picker. */
+export function dayOptions(count = 30, now = new Date()): DayOption[] {
+  const today = calendarDate(toZurich(now));
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(today.getTime() - index * DAY_MS);
+    const formatted = `${WEEKDAY_LABELS[mondayIndex(date)]} ${dayLabel(date)}${date.getUTCFullYear()}`;
+    const prefix = index === 0 ? "Heute · " : index === 1 ? "Gestern · " : "";
+    return { key: dayKeyFromUtc(date), label: `${prefix}${formatted}` };
+  });
+}
+
+/** UTC window that safely contains the whole Zurich calendar day `dayKey`. */
+export function dayFetchWindow(dayKey: string) {
+  const midnightUtc = new Date(`${dayKey}T00:00:00Z`).getTime();
+  return {
+    fromIso: new Date(midnightUtc - DAY_MS).toISOString(),
+    toIso: new Date(midnightUtc + 2 * DAY_MS).toISOString(),
+  };
+}
+
+export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySummary {
+  const items = new Map<string, TopItem>();
+  let orderCount = 0;
+  let revenueCents = 0;
+  let cancelledCount = 0;
+  let cancelledCents = 0;
+
+  for (const order of orders) {
+    const key = dayKeyFromUtc(calendarDate(toZurich(new Date(order.created_at))));
+    if (key !== dayKey) continue;
+
+    const total = Number(order.total_cents) || 0;
+    if (order.status === "cancelled") {
+      cancelledCount += 1;
+      cancelledCents += total;
+      continue;
+    }
+
+    orderCount += 1;
+    revenueCents += total;
+
+    for (const item of order.order_items || []) {
+      const name = item.item_name?.trim() || "—";
+      const quantity = Number(item.quantity) || 0;
+      const entry = items.get(name) || { name, quantity: 0, revenueCents: 0 };
+      entry.quantity += quantity;
+      entry.revenueCents += quantity * (Number(item.unit_price_cents) || 0);
+      items.set(name, entry);
+    }
+  }
+
+  const topItems = [...items.values()]
+    .sort((a, b) => b.quantity - a.quantity || b.revenueCents - a.revenueCents)
+    .slice(0, 5);
+
+  return {
+    orderCount,
+    revenueCents,
+    averageCents: orderCount ? Math.round(revenueCents / orderCount) : 0,
+    cancelledCount,
+    cancelledCents,
+    topItems,
+  };
+}
+
 export function formatChf(cents: number) {
   return new Intl.NumberFormat("de-CH", { style: "currency", currency: "CHF" }).format(cents / 100);
 }
