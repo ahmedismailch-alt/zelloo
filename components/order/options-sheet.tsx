@@ -322,7 +322,7 @@ export function OptionsSheet({
             type="button"
             disabled={!resolved.ok}
             onClick={confirm}
-            className="min-h-14 rounded-xl bg-orange-500 px-4 py-3 text-base font-black text-black disabled:opacity-50"
+            className="min-h-14 rounded-xl bg-[var(--brand,#f97316)] px-4 py-3 text-base font-black text-[var(--brand-fg,#000)] disabled:opacity-50"
           >
             <span dir="ltr">{t.addQtyToCart(quantity, formatChf(totalCents))}</span>
           </button>

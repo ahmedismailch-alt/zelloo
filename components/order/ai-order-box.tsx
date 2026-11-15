@@ -343,7 +343,7 @@ export function AiOrderBox({ restaurantId, t, lang, showArabic, onItems }: Props
         <button
           type="submit"
           disabled={loading || micState !== "idle" || !text.trim()}
-          className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-bold text-black disabled:opacity-70"
+          className="min-h-11 flex items-center justify-center gap-2 rounded-xl bg-[var(--brand,#f97316)] px-4 py-3 font-bold text-[var(--brand-fg,#000)] disabled:opacity-70"
         >
           {loading && (
             <span

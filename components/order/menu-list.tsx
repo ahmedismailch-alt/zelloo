@@ -314,7 +314,7 @@ export function MenuList({
                         {quantity > 0 && (
                           <span
                             aria-hidden="true"
-                            className="absolute -top-1 -right-1 min-w-5 h-5 rounded-full bg-orange-500 px-1 text-xs font-black text-black flex items-center justify-center"
+                            className="absolute -top-1 -right-1 min-w-5 h-5 rounded-full bg-[var(--brand,#f97316)] px-1 text-xs font-black text-[var(--brand-fg,#000)] flex items-center justify-center"
                           >
                             {quantity}
                           </span>
@@ -332,7 +332,7 @@ export function MenuList({
                     ) : (
                       <div
                         dir="ltr"
-                        className="shrink-0 flex items-center gap-1 bg-orange-500 rounded-full p-1"
+                        className="shrink-0 flex items-center gap-1 bg-[var(--brand,#f97316)] text-[var(--brand-fg,#000)] rounded-full p-1"
                       >
                         <button
                           type="button"
