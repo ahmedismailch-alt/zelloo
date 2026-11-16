@@ -1,4 +1,4 @@
-import webpush from "web-push";
+import { sendNotification, setVapidDetails } from "web-push";
 import { getSupabaseAdmin } from "./supabase-server";
 
 const READY_MESSAGES: Record<
@@ -37,7 +37,7 @@ function configureWebPush(): boolean {
   const subject = process.env.VAPID_SUBJECT;
   if (!publicKey || !privateKey || !subject) return false;
 
-  webpush.setVapidDetails(subject, publicKey, privateKey);
+  setVapidDetails(subject, publicKey, privateKey);
   configured = true;
   return true;
 }
@@ -77,7 +77,7 @@ export async function sendReadyPush(params: {
     rows.map(async (row) => {
       const message = READY_MESSAGES[row.lang] ?? READY_MESSAGES.de;
       try {
-        await webpush.sendNotification(
+        await sendNotification(
           { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
           JSON.stringify({
             title: message.title,
