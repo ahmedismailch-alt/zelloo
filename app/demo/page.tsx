@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSupabaseAdmin } from "../../lib/supabase-server";
+import { DemoChooser, isDemoLang } from "../../components/demo/demo-chooser";
 
 export const dynamic = "force-dynamic";
 
@@ -8,19 +9,48 @@ export const metadata = {
   robots: { index: false },
 };
 
-// Kept per warm server instance so only the first visit queries the database.
-let cachedDemoId: string | number | null = null;
+type DemoRow = { id: string | number; venue_type?: string | null };
 
-export default async function DemoPage() {
-  if (cachedDemoId === null) {
-    const { data } = await getSupabaseAdmin()
-      .from("restaurants")
-      .select("id")
-      .eq("is_demo", true)
-      .limit(1)
-      .maybeSingle();
-    cachedDemoId = data?.id ?? null;
+function isCafe(row: DemoRow) {
+  return (row.venue_type ?? "restaurant") !== "restaurant";
+}
+
+async function findDemoId(type: "restaurant" | "cafe") {
+  const db = getSupabaseAdmin();
+
+  let rows: DemoRow[] = [];
+  const withType = await db
+    .from("restaurants")
+    .select("id, venue_type")
+    .eq("is_demo", true)
+    .order("id")
+    .limit(20);
+
+  if (!withType.error && withType.data) {
+    rows = withType.data as DemoRow[];
+  } else {
+    // The venue_type column may not exist yet; fall back to any demo.
+    const plain = await db.from("restaurants").select("id").eq("is_demo", true).order("id").limit(20);
+    rows = (plain.data ?? []) as DemoRow[];
   }
 
-  redirect(cachedDemoId !== null ? `/r/${cachedDemoId}` : "/");
+  const match = rows.find((row) => isCafe(row) === (type === "cafe")) ?? rows[0];
+  return match?.id ?? null;
+}
+
+export default async function DemoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string | string[]; lang?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const type = params.type;
+  const lang = isDemoLang(params.lang) ? params.lang : "de";
+
+  if (type !== "restaurant" && type !== "cafe") {
+    return <DemoChooser lang={lang} />;
+  }
+
+  const demoId = await findDemoId(type);
+  redirect(demoId !== null ? `/r/${demoId}` : "/");
 }
