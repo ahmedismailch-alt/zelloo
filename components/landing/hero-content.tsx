@@ -39,7 +39,7 @@ export function HeroContent() {
             {t.cta}
           </a>
           <a
-            href="/demo"
+            href={`/demo?lang=${lang}`}
             className="border border-black text-black font-bold px-8 py-3 rounded-lg min-h-11 flex items-center"
           >
             {t.demo}

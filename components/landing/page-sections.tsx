@@ -51,7 +51,7 @@ export function PageSections() {
               ))}
             </ul>
             <a
-              href="/demo"
+              href={`/demo?lang=${lang}`}
               className="inline-flex items-center border border-black text-black font-bold px-8 py-3 rounded-lg mt-6 min-h-11"
             >
               {rv.cta}
