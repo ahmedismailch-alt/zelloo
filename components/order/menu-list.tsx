@@ -393,11 +393,10 @@ export function MenuList({
               const note = cart[item.id]?.note ?? "";
               const isDeal = isDealCategory(category);
               const photoSize = isDeal ? "size-20" : "size-16";
-              const usingRealPhoto =
-                (!compact || isDeal) &&
-                Boolean(item.imageUrl) &&
-                !failedImages.has(item.id);
+              const usingRealPhoto = Boolean(item.imageUrl) && !failedImages.has(item.id);
               const imageLoaded = !usingRealPhoto || loadedImages.has(item.id);
+              const canOpenSheet = compact && !hasOptions && usingRealPhoto;
+              const openSheet = () => onPickOptions(item);
               return (
                 <li
                   key={item.id}
@@ -431,6 +430,14 @@ export function MenuList({
                           onLoad={() => markImageLoaded(item.id)}
                           onError={() => markImageFailed(item.id)}
                         />
+                        {canOpenSheet && (
+                          <button
+                            type="button"
+                            onClick={openSheet}
+                            aria-label={label}
+                            className="absolute inset-0 rounded-xl"
+                          />
+                        )}
                       </div>
                     )}
                     <div className="min-w-0 flex flex-col gap-1 flex-1" dir="auto">
@@ -443,18 +450,34 @@ export function MenuList({
                           {t.popularBadge}
                         </span>
                       )}
-                      {showArabic && item.nameAr ? (
-                        <>
-                          <p className="font-bold break-words" dir="rtl" lang="ar">
-                            {item.nameAr}
-                          </p>
-                          <p className="text-xs text-gray-400 break-words" dir="ltr" lang="de">
-                            {item.name}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="font-bold break-words" dir="auto">{item.name}</p>
-                      )}
+                      {(() => {
+                        const nameBlock =
+                          showArabic && item.nameAr ? (
+                            <>
+                              <p className="font-bold break-words" dir="rtl" lang="ar">
+                                {item.nameAr}
+                              </p>
+                              <p className="text-xs text-gray-400 break-words" dir="ltr" lang="de">
+                                {item.name}
+                              </p>
+                            </>
+                          ) : (
+                            <p className="font-bold break-words" dir="auto">
+                              {item.name}
+                            </p>
+                          );
+                        return canOpenSheet ? (
+                          <button
+                            type="button"
+                            onClick={openSheet}
+                            className="flex flex-col gap-1 text-start"
+                          >
+                            {nameBlock}
+                          </button>
+                        ) : (
+                          nameBlock
+                        );
+                      })()}
                       {item.description && (
                         <p className="text-sm text-gray-500 leading-relaxed" dir="auto">
                           {item.description}
