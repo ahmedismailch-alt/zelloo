@@ -4,6 +4,7 @@ import { parseOptionGroups, type OptionGroup } from "./menu-options";
 import { computeAccess, type Access } from "./subscription";
 import {
   readBrandColor,
+  readHexColor,
   readGoogleReviewUrl,
   readLogoUrl,
   type Branding,
@@ -132,10 +133,22 @@ export async function getBranding(
     .eq("id", restaurantId)
     .maybeSingle();
 
-  if (error || !data) return { logoUrl: null, brandColor: null };
+  if (error || !data) {
+    return { logoUrl: null, brandColor: null, themeBg: null, themeText: null };
+  }
+
+  // Separate read: missing theme columns must not hide the logo and accent.
+  const { data: theme, error: themeError } = await getSupabaseAdmin()
+    .from("restaurants")
+    .select("theme_bg, theme_text")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
   return {
     logoUrl: readLogoUrl(data.logo_url),
     brandColor: readBrandColor(data.brand_color),
+    themeBg: themeError || !theme ? null : readHexColor(theme.theme_bg),
+    themeText: themeError || !theme ? null : readHexColor(theme.theme_text),
   };
 }
 

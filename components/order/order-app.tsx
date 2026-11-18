@@ -73,6 +73,8 @@ type Props = {
   categoryImages?: Record<string, string>;
   logoUrl?: string | null;
   brandColor?: string | null;
+  themeBg?: string | null;
+  themeText?: string | null;
   googleReviewUrl?: string | null;
   popularItemNames?: string[];
   reservation?: { maxParty: number; openingHours: OpeningHours | null } | null;
@@ -93,16 +95,33 @@ export function OrderApp({
   categoryImages = {},
   logoUrl = null,
   brandColor = null,
+  themeBg = null,
+  themeText = null,
   googleReviewUrl = null,
   popularItemNames = [],
   reservation = null,
 }: Props) {
-  const brandStyle = brandColor
-    ? ({
-        "--brand": brandColor,
-        "--brand-fg": readableTextColor(brandColor),
-      } as CSSProperties)
-    : undefined;
+  const themed = Boolean(themeBg && themeText);
+  const brandStyle =
+    brandColor || themed
+      ? ({
+          ...(brandColor
+            ? {
+                "--brand": brandColor,
+                "--brand-fg": readableTextColor(brandColor),
+              }
+            : {}),
+          ...(themeBg && themeText
+            ? {
+                "--theme-bg": themeBg,
+                "--theme-fg": themeText,
+                "--theme-surface": `color-mix(in srgb, ${themeBg} 90%, ${themeText} 10%)`,
+                "--theme-muted": `color-mix(in srgb, ${themeText} 65%, ${themeBg} 35%)`,
+                "--theme-line": `color-mix(in srgb, ${themeText} 25%, ${themeBg} 75%)`,
+              }
+            : {}),
+        } as CSSProperties)
+      : undefined;
   const [reservationOpen, setReservationOpen] = useState(false);
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [lang, setLang] = useState<OrderLang>("de");
@@ -320,6 +339,7 @@ export function OrderApp({
       lang={lang}
       dir={dir}
       style={brandStyle}
+      data-themed={themed ? "" : undefined}
       className="min-h-screen bg-[#f8f9fb] text-black"
     >
       {isDemo && (
@@ -330,7 +350,7 @@ export function OrderApp({
           {DEMO_BANNER[lang]}
         </p>
       )}
-      <header className="bg-black text-white px-5 pt-6 pb-6">
+      <header className="themed-header bg-black text-white px-5 pt-6 pb-6">
         <div className="max-w-xl mx-auto flex flex-col gap-4">
           <nav aria-label={t.languageLabel}>
             <ul className="flex flex-wrap gap-1" dir="ltr">

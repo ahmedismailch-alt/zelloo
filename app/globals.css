@@ -24,3 +24,78 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Owner-chosen theme on the customer order page (see OrderApp data-themed). */
+main[data-themed] {
+  background-color: var(--theme-bg);
+  color: var(--theme-fg);
+}
+[data-themed] .bg-white,
+[data-themed] .bg-gray-50,
+[data-themed] .bg-gray-100 {
+  background-color: var(--theme-surface);
+}
+[data-themed] .text-black,
+[data-themed] .text-gray-700,
+[data-themed] .text-gray-800,
+[data-themed] .text-gray-900 {
+  color: var(--theme-fg);
+}
+[data-themed] .text-gray-400,
+[data-themed] .text-gray-500,
+[data-themed] .text-gray-600 {
+  color: var(--theme-muted);
+}
+[data-themed] .border,
+[data-themed] .border-t,
+[data-themed] .border-b,
+[data-themed] .border-gray-200,
+[data-themed] .border-gray-300,
+[data-themed] .divide-y > * {
+  border-color: var(--theme-line);
+}
+[data-themed] .bg-black.text-white:not(.themed-header) {
+  background-color: var(--brand, #f97316);
+  color: var(--brand-fg, #000);
+}
+[data-themed] .themed-header {
+  background-color: var(--theme-bg);
+  color: var(--theme-fg);
+  border-bottom: 1px solid var(--brand, #f97316);
+}
+[data-themed] .themed-header .text-white,
+[data-themed] .themed-header .text-gray-300,
+[data-themed] .themed-header .text-gray-400 {
+  color: var(--theme-fg);
+}
+
+/* Printed-menu look for cafés: framed sections, outlined titles, accent prices. */
+[data-themed] .menu-frame {
+  background-color: transparent;
+  border: 1.5px solid var(--brand, #f97316);
+  border-radius: 1.5rem;
+}
+[data-themed] .menu-frame > li {
+  border-color: var(--theme-line);
+}
+[data-themed] .menu-section-title {
+  display: inline-block;
+  border: 1.5px solid var(--brand, #f97316);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+[data-themed] .menu-frame .menu-item-name {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+[data-themed] .menu-frame .menu-price {
+  color: var(--brand, #f97316);
+  font-weight: 700;
+}
+[data-themed] .menu-frame .menu-add {
+  background-color: transparent;
+  color: var(--brand, #f97316);
+  border: 1.5px solid var(--brand, #f97316);
+}
