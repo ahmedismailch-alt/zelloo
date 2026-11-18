@@ -86,6 +86,8 @@ export default async function RestaurantOrderPage({
       categoryImages={categoryImages}
       logoUrl={branding.logoUrl}
       brandColor={branding.brandColor}
+      themeBg={branding.themeBg}
+      themeText={branding.themeText}
       googleReviewUrl={googleReviewUrl}
       popularItemNames={popularItemNames}
       reservation={

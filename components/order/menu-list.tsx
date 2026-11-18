@@ -333,7 +333,10 @@ export function MenuList({
                   </p>
                 </div>
               ) : (
-                <h2 className="text-lg font-black" dir="auto">
+                <h2
+                  className={`text-lg font-black${compact ? " menu-section-title" : ""}`}
+                  dir="auto"
+                >
                   {category || t.otherCategory}
                 </h2>
               );
@@ -382,7 +385,7 @@ export function MenuList({
           <ul
             className={
               compact
-                ? "flex flex-col bg-white border rounded-2xl divide-y overflow-hidden"
+                ? "menu-frame flex flex-col bg-white border rounded-2xl divide-y overflow-hidden"
                 : "flex flex-col gap-2"
             }
           >
@@ -462,7 +465,7 @@ export function MenuList({
                               </p>
                             </>
                           ) : (
-                            <p className="font-bold break-words" dir="auto">
+                            <p className="menu-item-name font-bold break-words" dir="auto">
                               {item.name}
                             </p>
                           );
@@ -495,7 +498,7 @@ export function MenuList({
                           </span>
                         </p>
                       ) : (
-                        <p className="text-sm font-semibold" dir="ltr">
+                        <p className="menu-price text-sm font-semibold" dir="ltr">
                           {formatChf(item.priceCents)}
                         </p>
                       )}
@@ -540,7 +543,7 @@ export function MenuList({
                         type="button"
                         onClick={() => onPickOptions(item)}
                         aria-label={t.add(label)}
-                        className="relative shrink-0 size-11 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center"
+                        className="menu-add relative shrink-0 size-11 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center"
                       >
                         +
                         {quantity > 0 && (
@@ -557,7 +560,7 @@ export function MenuList({
                         type="button"
                         onClick={() => onSetQuantity(item.id, 1)}
                         aria-label={t.add(label)}
-                        className="shrink-0 size-11 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center"
+                        className="menu-add shrink-0 size-11 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center"
                       >
                         +
                       </button>

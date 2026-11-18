@@ -4,11 +4,22 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import {
   BRAND_COLORS,
+  THEME_PRESETS,
+  contrastRatio,
   readBrandColor,
   readGoogleReviewUrl,
+  readHexColor,
   readLogoUrl,
   readableTextColor,
 } from "../../lib/branding";
+
+type ThemeColors = {
+  bg: string | null;
+  text: string | null;
+  accent: string | null;
+};
+
+const EMPTY_THEME: ThemeColors = { bg: null, text: null, accent: null };
 
 const MAX_LOGO_SIDE = 512;
 
@@ -36,7 +47,9 @@ export function BrandingSettings({
 }) {
   const [available, setAvailable] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [brandColor, setBrandColor] = useState<string | null>(null);
+  const [savedTheme, setSavedTheme] = useState<ThemeColors>(EMPTY_THEME);
+  const [draftTheme, setDraftTheme] = useState<ThemeColors>(EMPTY_THEME);
+  const [themeAvailable, setThemeAvailable] = useState(false);
   const [googleAvailable, setGoogleAvailable] = useState(false);
   const [googleSaved, setGoogleSaved] = useState("");
   const [googleDraft, setGoogleDraft] = useState("");
@@ -58,8 +71,25 @@ export function BrandingSettings({
       // The columns may not exist yet; keep the card hidden.
       if (cancelled || readError || !data) return;
       setLogoUrl(readLogoUrl(data.logo_url));
-      setBrandColor(readBrandColor(data.brand_color));
+      const accent = readBrandColor(data.brand_color);
       setAvailable(true);
+
+      // Separate read: missing theme columns must not hide the card.
+      const { data: theme, error: themeError } = await supabase
+        .from("restaurants")
+        .select("theme_bg, theme_text")
+        .eq("id", restaurantId)
+        .maybeSingle();
+
+      if (cancelled) return;
+      const loaded: ThemeColors = {
+        bg: themeError || !theme ? null : readHexColor(theme.theme_bg),
+        text: themeError || !theme ? null : readHexColor(theme.theme_text),
+        accent,
+      };
+      setSavedTheme(loaded);
+      setDraftTheme(loaded);
+      setThemeAvailable(!themeError && Boolean(theme));
 
       // Separate read: a missing google_review_url column must not hide the card.
       const { data: google, error: googleError } = await supabase
@@ -85,6 +115,8 @@ export function BrandingSettings({
   async function save(change: {
     logoUrl?: string | null;
     brandColor?: string | null;
+    themeBg?: string | null;
+    themeText?: string | null;
     googleReviewUrl?: string | null;
   }) {
     const {
@@ -154,12 +186,39 @@ export function BrandingSettings({
     });
   }
 
-  function handleColor(hex: string | null) {
+  function handleThemeSave() {
     void run(async () => {
-      await save({ brandColor: hex });
-      setBrandColor(hex);
+      await save(
+        themeAvailable
+          ? {
+              brandColor: draftTheme.accent,
+              themeBg: draftTheme.bg,
+              themeText: draftTheme.text,
+            }
+          : { brandColor: draftTheme.accent }
+      );
+      setSavedTheme(draftTheme);
     });
   }
+
+  function handleThemeReset() {
+    setDraftTheme(EMPTY_THEME);
+  }
+
+  const themeDirty =
+    draftTheme.bg !== savedTheme.bg ||
+    draftTheme.text !== savedTheme.text ||
+    draftTheme.accent !== savedTheme.accent;
+
+  const previewBg = draftTheme.bg ?? "#f8f9fb";
+  const previewText = draftTheme.text ?? "#000000";
+  const previewAccent = draftTheme.accent ?? "#f97316";
+  const textContrastLow =
+    Boolean(draftTheme.bg && draftTheme.text) &&
+    contrastRatio(previewBg, previewText) < 4.5;
+  const accentContrastLow =
+    Boolean(draftTheme.bg && draftTheme.accent) &&
+    contrastRatio(previewBg, previewAccent) < 3;
 
   function handleGoogleSave(next: string) {
     void run(async () => {
@@ -226,42 +285,182 @@ export function BrandingSettings({
         </div>
       </div>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-sm font-semibold mb-1">Farbe</legend>
-        <div className="flex flex-wrap gap-3">
-          {BRAND_COLORS.map((color) => {
-            const active = brandColor === color.hex;
-            return (
-              <button
-                key={color.hex}
-                type="button"
+      <fieldset className="flex flex-col gap-3">
+        <legend className="text-sm font-semibold mb-1">Farben</legend>
+
+        {themeAvailable && (
+          <>
+            <p className="text-xs text-gray-500">
+              Wählen Sie ein Design oder stellen Sie Hintergrund, Schrift und
+              Akzent selbst ein.
+            </p>
+            <ul className="flex flex-wrap gap-2">
+              {THEME_PRESETS.map((preset) => {
+                const active =
+                  draftTheme.bg === preset.bg &&
+                  draftTheme.text === preset.text &&
+                  draftTheme.accent === preset.accent;
+                return (
+                  <li key={preset.label}>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      aria-pressed={active}
+                      onClick={() =>
+                        setDraftTheme({
+                          bg: preset.bg,
+                          text: preset.text,
+                          accent: preset.accent,
+                        })
+                      }
+                      style={{
+                        backgroundColor: preset.bg,
+                        color: preset.text,
+                        borderColor: preset.accent,
+                      }}
+                      className={`min-h-11 rounded-xl border-2 px-3 text-sm font-bold disabled:opacity-60 ${
+                        active ? "ring-2 ring-offset-2 ring-black" : ""
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1 text-xs font-semibold text-gray-600">
+                Hintergrund
+                <input
+                  type="color"
+                  value={draftTheme.bg ?? "#ffffff"}
+                  disabled={busy}
+                  onChange={(e) =>
+                    setDraftTheme((prev) => ({ ...prev, bg: e.target.value }))
+                  }
+                  className="h-11 w-full rounded-xl border border-gray-300 bg-white p-1"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-xs font-semibold text-gray-600">
+                Schrift
+                <input
+                  type="color"
+                  value={draftTheme.text ?? "#000000"}
+                  disabled={busy}
+                  onChange={(e) =>
+                    setDraftTheme((prev) => ({ ...prev, text: e.target.value }))
+                  }
+                  className="h-11 w-full rounded-xl border border-gray-300 bg-white p-1"
+                />
+              </label>
+            </div>
+          </>
+        )}
+
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-semibold text-gray-600">
+            Akzent (Rahmen, Preise, Knöpfe)
+          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            {BRAND_COLORS.map((color) => {
+              const active = draftTheme.accent === color.hex;
+              return (
+                <button
+                  key={color.hex}
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    setDraftTheme((prev) => ({ ...prev, accent: color.hex }))
+                  }
+                  aria-label={color.label}
+                  aria-pressed={active}
+                  style={{
+                    backgroundColor: color.hex,
+                    color: readableTextColor(color.hex),
+                  }}
+                  className={`size-11 rounded-full text-lg font-black flex items-center justify-center disabled:opacity-60 ${
+                    active ? "ring-2 ring-offset-2 ring-black" : ""
+                  }`}
+                >
+                  {active ? "\u2713" : ""}
+                </button>
+              );
+            })}
+            <label className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+              <span className="sr-only">Eigene Akzentfarbe</span>
+              <input
+                type="color"
+                aria-label="Eigene Akzentfarbe"
+                value={draftTheme.accent ?? "#f97316"}
                 disabled={busy}
-                onClick={() => handleColor(color.hex)}
-                aria-label={color.label}
-                aria-pressed={active}
-                style={{
-                  backgroundColor: color.hex,
-                  color: readableTextColor(color.hex),
-                }}
-                className={`size-11 rounded-full text-lg font-black flex items-center justify-center disabled:opacity-60 ${
-                  active ? "ring-2 ring-offset-2 ring-black" : ""
-                }`}
-              >
-                {active ? "\u2713" : ""}
-              </button>
-            );
-          })}
+                onChange={(e) =>
+                  setDraftTheme((prev) => ({ ...prev, accent: e.target.value }))
+                }
+                className="h-11 w-14 rounded-xl border border-gray-300 bg-white p-1"
+              />
+              Eigene
+            </label>
+          </div>
         </div>
-        {brandColor && (
+
+        {themeAvailable && (draftTheme.bg || draftTheme.text) && (
+          <div
+            aria-label="Vorschau"
+            role="img"
+            style={{ backgroundColor: previewBg, color: previewText }}
+            className="flex flex-col gap-3 rounded-2xl border border-gray-300 p-4"
+          >
+            <p
+              style={{ borderColor: previewAccent }}
+              className="self-start rounded-md border px-3 py-1 text-sm font-bold uppercase"
+            >
+              Getränke
+            </p>
+            <div className="flex items-end justify-between gap-3">
+              <div className="flex flex-col">
+                <span className="font-bold uppercase">Cappuccino</span>
+                <span className="text-sm opacity-70">Espresso, Milch</span>
+              </div>
+              <span style={{ color: previewAccent }} className="font-bold">
+                5.00 CHF
+              </span>
+            </div>
+          </div>
+        )}
+
+        {textContrastLow && (
+          <p role="alert" className="text-sm font-semibold text-red-600">
+            Schrift und Hintergrund sind zu ähnlich. Ihre Kunden können den Text
+            schlecht lesen.
+          </p>
+        )}
+        {accentContrastLow && !textContrastLow && (
+          <p role="alert" className="text-sm font-semibold text-amber-700">
+            Der Akzent hebt sich kaum vom Hintergrund ab.
+          </p>
+        )}
+
+        <div className="flex gap-2">
           <button
             type="button"
-            disabled={busy}
-            onClick={() => handleColor(null)}
-            className="self-start min-h-11 text-sm font-semibold text-gray-600 underline disabled:opacity-60"
+            disabled={busy || !themeDirty}
+            onClick={handleThemeSave}
+            className="min-h-11 flex-1 rounded-xl bg-black px-4 text-sm font-bold text-white disabled:opacity-40"
           >
-            Standardfarbe verwenden
+            Farben speichern
           </button>
-        )}
+          {(draftTheme.bg || draftTheme.text || draftTheme.accent) && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={handleThemeReset}
+              className="min-h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold disabled:opacity-60"
+            >
+              Standard
+            </button>
+          )}
+        </div>
       </fieldset>
 
       {googleAvailable && (

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "../../../lib/supabase-server";
-import { readBrandColor, readGoogleReviewUrl } from "../../../lib/branding";
+import {
+  readBrandColor,
+  readGoogleReviewUrl,
+  readHexColor,
+} from "../../../lib/branding";
 
 export const runtime = "nodejs";
 
@@ -37,6 +41,8 @@ export async function POST(request: Request) {
     const body = (await request.json().catch(() => null)) as {
       logoUrl?: unknown;
       brandColor?: unknown;
+      themeBg?: unknown;
+      themeText?: unknown;
       googleReviewUrl?: unknown;
     } | null;
 
@@ -67,6 +73,23 @@ export async function POST(request: Request) {
         }
         update.brand_color = color;
       }
+    }
+
+    for (const [key, column] of [
+      ["themeBg", "theme_bg"],
+      ["themeText", "theme_text"],
+    ] as const) {
+      if (!body || !(key in body)) continue;
+      const value = (body as Record<string, unknown>)[key];
+      if (value === null) {
+        update[column] = null;
+        continue;
+      }
+      const color = readHexColor(value);
+      if (!color) {
+        return NextResponse.json({ error: "Ungültige Farbe." }, { status: 400 });
+      }
+      update[column] = color;
     }
 
     if (body && "googleReviewUrl" in body) {
