@@ -26,7 +26,8 @@ main[data-themed] {
 }
 [data-themed] .bg-white,
 [data-themed] .bg-gray-50,
-[data-themed] .bg-gray-100 {
+[data-themed] .bg-gray-100,
+[data-themed] .bg-\[\#f8f9fb\] {
   background-color: var(--theme-surface);
 }
 [data-themed] .text-black,
