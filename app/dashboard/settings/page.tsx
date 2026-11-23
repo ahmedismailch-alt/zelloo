@@ -7,6 +7,7 @@ import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { OperationsSettings } from "../../../components/dashboard/operations-settings";
+import { PrintSettings } from "../../../components/dashboard/print-settings";
 import { ChannelStatus } from "../../../components/dashboard/channel-status";
 import { BrandingSettings } from "../../../components/dashboard/branding-settings";
 import { WHATSAPP_ORDERS_ENABLED } from "../../../lib/feature-flags";
@@ -435,6 +436,7 @@ export default function SettingsPage() {
           <>
             <OperationsSettings restaurantId={restaurantId} />
             <BrandingSettings restaurantId={restaurantId} />
+<PrintSettings />
             <ChannelStatus
               restaurantId={restaurantId}
               whatsappConnected={
