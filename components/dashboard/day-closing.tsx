@@ -18,17 +18,28 @@ async function fetchDayOrders([, restaurantId, dayKey]: [string, number | string
   const { fromIso, toIso } = dayFetchWindow(dayKey);
   const collected: StatsOrder[] = [];
 
+  const itemColumns = "order_items (item_name, quantity, unit_price_cents)";
+  let columns = `status, total_cents, created_at, paid_at, ${itemColumns}`;
+
   for (let from = 0; from < MAX_ORDERS; from += PAGE_SIZE) {
-    const { data, error } = await supabase
-      .from("orders")
-      .select("status, total_cents, created_at, order_items (item_name, quantity, unit_price_cents)")
-      .eq("restaurant_id", restaurantId)
-      .gte("created_at", fromIso)
-      .lt("created_at", toIso)
-      .order("created_at", { ascending: false })
-      .range(from, from + PAGE_SIZE - 1);
+    const fetchPage = (select: string) =>
+      supabase
+        .from("orders")
+        .select(select)
+        .eq("restaurant_id", restaurantId)
+        .gte("created_at", fromIso)
+        .lt("created_at", toIso)
+        .order("created_at", { ascending: false })
+        .range(from, from + PAGE_SIZE - 1);
+
+    let { data, error } = await fetchPage(columns);
+    if (error) {
+      // paid_at column may not exist yet.
+      columns = `status, total_cents, created_at, ${itemColumns}`;
+      ({ data, error } = await fetchPage(columns));
+    }
     if (error) throw error;
-    collected.push(...((data || []) as StatsOrder[]));
+    collected.push(...((data || []) as unknown as StatsOrder[]));
     if (!data || data.length < PAGE_SIZE) break;
   }
 
@@ -151,6 +162,20 @@ export function DayClosing({
               <div className="flex items-baseline justify-between gap-3 py-3 border-b">
                 <dt className="text-gray-600">Ø pro Bestellung</dt>
                 <dd className="font-black">{formatChf(summary.averageCents)}</dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-3 py-3 border-b">
+                <dt className="text-gray-600">Bezahlt</dt>
+                <dd className="font-black">
+                  {summary.paidCount}
+                  <span className="font-semibold text-gray-500"> · {formatChf(summary.paidCents)}</span>
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-3 py-3 border-b">
+                <dt className="text-gray-600">Noch offen</dt>
+                <dd className="font-black">
+                  {summary.unpaidCount}
+                  <span className="font-semibold text-gray-500"> · {formatChf(summary.unpaidCents)}</span>
+                </dd>
               </div>
               <div className="flex items-baseline justify-between gap-3 py-3 border-b">
                 <dt className="text-gray-600">Storniert (nicht im Umsatz)</dt>

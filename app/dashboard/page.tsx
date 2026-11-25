@@ -52,8 +52,41 @@ type Order = {
   notes: string | null;
   table_number: string | null;
   created_at: string;
+  paid_at?: string | null;
   order_items: OrderItem[];
 };
+
+type PaidFilter = "all" | "unpaid" | "paid";
+
+const paidFilterOptions: { value: PaidFilter; label: string }[] = [
+  { value: "all", label: "Alle" },
+  { value: "unpaid", label: "Offen" },
+  { value: "paid", label: "Bezahlt" },
+];
+
+function orderColumns(withPaid: boolean) {
+  return `
+    id,
+    order_number,
+    customer_name,
+    customer_phone,
+    customer_address,
+    order_type,
+    status,
+    total_cents,
+    notes,
+    table_number,
+    created_at,
+    ${withPaid ? "paid_at," : ""}
+    order_items (
+      id,
+      item_name,
+      quantity,
+      unit_price_cents,
+      notes
+    )
+  `;
+}
 
 type DashboardStats = {
   orders_today: number | string;
@@ -127,6 +160,14 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat("de-CH", {
+    timeZone: "Europe/Zurich",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 function safeRestaurantUrl(value: string | null) {
   if (!value) return null;
 
@@ -161,6 +202,8 @@ export default function DashboardPage() {
   const [soundOn, setSoundOn] = useState(false);
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
+  const [orderSearch, setOrderSearch] = useState("");
+  const [paidFilter, setPaidFilter] = useState<PaidFilter>("all");
   const [acceptingOrders, setAcceptingOrders] = useState(true);
   const [togglingAccepting, setTogglingAccepting] = useState(false);
   const [busyMode, setBusyMode] = useState(false);
@@ -584,45 +627,33 @@ export default function DashboardPage() {
       setOrdersLoading(true);
 
       try {
-        const [statsResult, ordersResult] = await Promise.all([
+        const fetchOrders = (withPaid: boolean) =>
+          supabase
+            .from("orders")
+            .select(orderColumns(withPaid))
+            .eq("restaurant_id", restaurantId)
+            .order("created_at", { ascending: false })
+            .limit(50);
+
+        const [statsResult, firstOrdersResult] = await Promise.all([
           supabase
             .rpc("get_dashboard_stats", {
               p_restaurant_id: restaurantId,
             })
             .single(),
-
-          supabase
-            .from("orders")
-            .select(`
-              id,
-              order_number,
-              customer_name,
-              customer_phone,
-              customer_address,
-              order_type,
-              status,
-              total_cents,
-              notes,
-              table_number,
-              created_at,
-              order_items (
-                id,
-                item_name,
-                quantity,
-                unit_price_cents,
-                notes
-              )
-            `)
-            .eq("restaurant_id", restaurantId)
-            .order("created_at", { ascending: false })
-            .limit(50),
+          fetchOrders(true),
         ]);
+
+        // paid_at column may not exist yet; load orders without it.
+        const ordersResult = firstOrdersResult.error
+          ? await fetchOrders(false)
+          : firstOrdersResult;
 
         if (statsResult.error) throw statsResult.error;
         if (ordersResult.error) throw ordersResult.error;
         if (cancelled) return;
 
-        const fetched = (ordersResult.data || []) as Order[];
+        const fetched = (ordersResult.data || []) as unknown as Order[];
         const known = knownIdsRef.current;
 
         if (known) {
@@ -817,6 +848,38 @@ export default function DashboardPage() {
     }
   }
 
+  async function setPaid(order: Order, paid: boolean) {
+    if (restaurantId === undefined || savingId) return;
+
+    setSavingId(order.id);
+    setActionError("");
+
+    const paidAt = paid ? new Date().toISOString() : null;
+
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ paid_at: paidAt })
+        .eq("id", order.id)
+        .eq("restaurant_id", restaurantId);
+
+      if (error) throw error;
+
+      setOrders((current) =>
+        current.map((item) =>
+          item.id === order.id ? { ...item, paid_at: paidAt } : item
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      setActionError(
+        "Zahlung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+      );
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   async function notifyCustomerReady(orderId: string) {
     try {
       const { data } = await supabase.auth.getSession();
@@ -982,8 +1045,23 @@ export default function DashboardPage() {
     (order) => !isOpenStatus(order.status)
   );
 
+  const searchTerm = orderSearch.trim().toLowerCase().replace(/^#/, "");
+  const matchesSearch = (order: Order) => {
+    if (!searchTerm) return true;
+    return [
+      order.order_number !== null ? String(order.order_number) : "",
+      order.customer_name,
+      order.table_number ? `tisch ${order.table_number}` : "",
+      order.customer_phone ?? "",
+    ].some((value) => value.toLowerCase().includes(searchTerm));
+  };
+
   const visibleOrders = (view === "active" ? openOrders : historyOrders).filter(
-    (order) => matchesFilter(order, orderFilter)
+    (order) =>
+      matchesFilter(order, orderFilter) &&
+      matchesSearch(order) &&
+      (paidFilter === "all" ||
+        (paidFilter === "paid" ? Boolean(order.paid_at) : !order.paid_at))
   );
 
   const baristaActive = isCafeMode && baristaMode && view === "active";
@@ -1490,6 +1568,36 @@ export default function DashboardPage() {
             />
           ) : (
           <>
+          <input
+            type="search"
+            inputMode="search"
+            value={orderSearch}
+            onChange={(event) => setOrderSearch(event.target.value)}
+            placeholder="Suche: Nummer, Name oder Tisch"
+            aria-label="Bestellungen durchsuchen"
+            className="w-full min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-base mb-3"
+          />
+          <div
+            role="group"
+            aria-label="Nach Zahlung filtern"
+            className="flex gap-1.5 mb-3"
+          >
+            {paidFilterOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={paidFilter === option.value}
+                onClick={() => setPaidFilter(option.value)}
+                className={`min-h-9 rounded-full px-3 text-xs font-bold ${
+                  paidFilter === option.value
+                    ? "bg-green-700 text-white"
+                    : "bg-white border border-gray-300 text-gray-700"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
           <div className="relative mb-3">
             <div
               role="tablist"
@@ -1636,12 +1744,23 @@ export default function DashboardPage() {
                       {statusOptions.find((o) => o.value === order.status)
                         ?.label ?? order.status}
                     </span>
+                    {order.paid_at && order.status !== "cancelled" && (
+                      <span className="text-xs font-bold rounded-full px-2 py-1 bg-green-100 text-green-800">
+                        Bezahlt {formatTime(order.paid_at)}
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 {order.customer_phone && (
                   <p className="text-sm mt-3">
-                    Telefon: {order.customer_phone}
+                    Telefon:{" "}
+                    <a
+                      href={`tel:${order.customer_phone.replace(/[^\d+]/g, "")}`}
+                      className="inline-flex min-h-11 items-center font-bold text-orange-700 underline"
+                    >
+                      {order.customer_phone}
+                    </a>
                   </p>
                 )}
 
@@ -1685,7 +1804,7 @@ export default function DashboardPage() {
                 </ul>
 
                 {order.notes && (
-                  <p className="text-sm bg-gray-50 rounded-lg p-3 mt-3">
+                  <p className="text-sm font-bold bg-yellow-100 text-yellow-950 border border-yellow-300 rounded-lg p-3 mt-3">
                     Hinweis: {order.notes}
                   </p>
                 )}
@@ -1767,6 +1886,23 @@ export default function DashboardPage() {
                     Drucken
                   </button>
                 </div>
+
+                {order.status !== "cancelled" && (
+                  <button
+                    type="button"
+                    disabled={savingId !== null}
+                    onClick={() => void setPaid(order, !order.paid_at)}
+                    className={`w-full min-h-11 rounded-xl mt-2 text-sm font-bold px-3 py-2.5 disabled:opacity-50 ${
+                      order.paid_at
+                        ? "border border-gray-300 text-gray-600 bg-white"
+                        : "bg-green-700 text-white"
+                    }`}
+                  >
+                    {order.paid_at
+                      ? "Zahlung zurücknehmen"
+                      : "Als bezahlt markieren"}
+                  </button>
+                )}
 
                 <details className="mt-1">
                   <summary className="text-xs text-gray-400 cursor-pointer min-h-9 flex items-center">
