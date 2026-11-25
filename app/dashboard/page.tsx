@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { OrderBell } from "../../lib/order-bell";
+import { isAutoPrintEnabled } from "../../lib/auto-print";
 import { DashboardShell } from "../../components/dashboard/dashboard-shell";
 import { BaristaView } from "../../components/dashboard/barista-view";
 import { NewReservationsBanner } from "../../components/dashboard/new-reservations-banner";
@@ -180,6 +181,12 @@ export default function DashboardPage() {
   const knownIdsRef = useRef<Set<string> | null>(null);
   const bellRef = useRef<OrderBell | null>(null);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+  const printingRef = useRef<Order | null>(null);
+  const printQueueRef = useRef<Order[]>([]);
+
+  useEffect(() => {
+    printingRef.current = printingOrder;
+  }, [printingOrder]);
 
   useEffect(() => {
     if (!printingOrder) return;
@@ -189,7 +196,7 @@ export default function DashboardPage() {
     const frame = window.requestAnimationFrame(() => {
       window.print();
     });
-    const handleAfterPrint = () => setPrintingOrder(null);
+    const handleAfterPrint = () => setPrintingOrder(printQueueRef.current.shift() ?? null);
     window.addEventListener("afterprint", handleAfterPrint);
     return () => {
       window.cancelAnimationFrame(frame);
@@ -606,9 +613,22 @@ export default function DashboardPage() {
         const known = knownIdsRef.current;
 
         if (known) {
-          const arrived = fetched
-            .filter((order) => order.status === "new" && !known.has(order.id))
-            .map((order) => order.id);
+          const arrivedOrders = fetched.filter(
+            (order) => order.status === "new" && !known.has(order.id)
+          );
+          const arrived = arrivedOrders.map((order) => order.id);
+
+          if (arrivedOrders.length > 0 && isAutoPrintEnabled()) {
+            const oldestFirst = [...arrivedOrders].reverse();
+            if (printingRef.current) {
+              printQueueRef.current.push(...oldestFirst);
+            } else {
+              const [first, ...rest] = oldestFirst;
+              printingRef.current = first;
+              printQueueRef.current.push(...rest);
+              setPrintingOrder(first);
+            }
+          }
 
           if (arrived.length > 0) {
             setHighlighted((current) => new Set([...current, ...arrived]));
