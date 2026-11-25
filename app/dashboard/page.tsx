@@ -1950,6 +1950,9 @@ export default function DashboardPage() {
             />
           )}
           <h1 className="text-lg font-bold mb-1 text-center">{restaurantName}</h1>
+          {restaurant.phone && (
+            <p className="text-sm mb-2 text-center">Tel. {restaurant.phone}</p>
+          )}
           {printingOrder.order_number !== null && (
             <p className="text-4xl font-bold m-0">#{printingOrder.order_number}</p>
           )}
