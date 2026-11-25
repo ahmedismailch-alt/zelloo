@@ -161,6 +161,7 @@ export default function DashboardPage() {
   const [soundOn, setSoundOn] = useState(false);
   const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
+  const [orderSearch, setOrderSearch] = useState("");
   const [acceptingOrders, setAcceptingOrders] = useState(true);
   const [togglingAccepting, setTogglingAccepting] = useState(false);
   const [busyMode, setBusyMode] = useState(false);
@@ -982,8 +983,19 @@ export default function DashboardPage() {
     (order) => !isOpenStatus(order.status)
   );
 
+  const searchTerm = orderSearch.trim().toLowerCase().replace(/^#/, "");
+  const matchesSearch = (order: Order) => {
+    if (!searchTerm) return true;
+    return [
+      order.order_number !== null ? String(order.order_number) : "",
+      order.customer_name,
+      order.table_number ? `tisch ${order.table_number}` : "",
+      order.customer_phone ?? "",
+    ].some((value) => value.toLowerCase().includes(searchTerm));
+  };
+
   const visibleOrders = (view === "active" ? openOrders : historyOrders).filter(
-    (order) => matchesFilter(order, orderFilter)
+    (order) => matchesFilter(order, orderFilter) && matchesSearch(order)
   );
 
   const baristaActive = isCafeMode && baristaMode && view === "active";
@@ -1490,6 +1502,15 @@ export default function DashboardPage() {
             />
           ) : (
           <>
+          <input
+            type="search"
+            inputMode="search"
+            value={orderSearch}
+            onChange={(event) => setOrderSearch(event.target.value)}
+            placeholder="Suche: Nummer, Name oder Tisch"
+            aria-label="Bestellungen durchsuchen"
+            className="w-full min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-base mb-3"
+          />
           <div className="relative mb-3">
             <div
               role="tablist"
@@ -1641,7 +1662,13 @@ export default function DashboardPage() {
 
                 {order.customer_phone && (
                   <p className="text-sm mt-3">
-                    Telefon: {order.customer_phone}
+                    Telefon:{" "}
+                    <a
+                      href={`tel:${order.customer_phone.replace(/[^\d+]/g, "")}`}
+                      className="inline-flex min-h-11 items-center font-bold text-orange-700 underline"
+                    >
+                      {order.customer_phone}
+                    </a>
                   </p>
                 )}
 
@@ -1685,7 +1712,7 @@ export default function DashboardPage() {
                 </ul>
 
                 {order.notes && (
-                  <p className="text-sm bg-gray-50 rounded-lg p-3 mt-3">
+                  <p className="text-sm font-bold bg-yellow-100 text-yellow-950 border border-yellow-300 rounded-lg p-3 mt-3">
                     Hinweis: {order.notes}
                   </p>
                 )}
