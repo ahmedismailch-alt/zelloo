@@ -4,6 +4,7 @@ export type StatsOrder = {
   status: string;
   total_cents: number;
   created_at: string;
+  paid_at?: string | null;
   order_items: { item_name: string; quantity: number; unit_price_cents: number }[] | null;
 };
 
@@ -204,6 +205,10 @@ export type DaySummary = {
   orderCount: number;
   revenueCents: number;
   averageCents: number;
+  paidCount: number;
+  paidCents: number;
+  unpaidCount: number;
+  unpaidCents: number;
   cancelledCount: number;
   cancelledCents: number;
   topItems: TopItem[];
@@ -233,6 +238,8 @@ export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySumm
   const items = new Map<string, TopItem>();
   let orderCount = 0;
   let revenueCents = 0;
+  let paidCount = 0;
+  let paidCents = 0;
   let cancelledCount = 0;
   let cancelledCents = 0;
 
@@ -249,6 +256,10 @@ export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySumm
 
     orderCount += 1;
     revenueCents += total;
+    if (order.paid_at) {
+      paidCount += 1;
+      paidCents += total;
+    }
 
     for (const item of order.order_items || []) {
       const name = item.item_name?.trim() || "—";
@@ -268,6 +279,10 @@ export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySumm
     orderCount,
     revenueCents,
     averageCents: orderCount ? Math.round(revenueCents / orderCount) : 0,
+    paidCount,
+    paidCents,
+    unpaidCount: orderCount - paidCount,
+    unpaidCents: revenueCents - paidCents,
     cancelledCount,
     cancelledCents,
     topItems,
