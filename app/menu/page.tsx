@@ -957,7 +957,7 @@ export default function MenuPage() {
 
     const compareChanged = parsedComparePrice !== (item.compare_price ?? null);
 
-    let { data, error } = await supabase
+    const { data, error } = await supabase
       .from("menu_items")
       .update({
         ...baseUpdate,

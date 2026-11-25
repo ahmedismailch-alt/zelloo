@@ -1,10 +1,9 @@
 "use client";
 
 import { Logo } from "@/components/logo";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { QRCodeCanvas } from "qrcode.react";
 import { supabase } from "../../../lib/supabase";
 import {
   GeneralQrCard,
@@ -27,7 +26,6 @@ export default function TablesPage() {
   const [tableInput, setTableInput] = useState("10");
   const [copied, setCopied] = useState(false);
   const [isCafe, setIsCafe] = useState(false);
-  const generalQrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -131,16 +129,6 @@ export default function TablesPage() {
     } catch (error) {
       console.error(error);
     }
-  }
-
-  function downloadGeneralQrPng() {
-    const canvas = generalQrRef.current?.querySelector("canvas");
-    if (!canvas) return;
-
-    const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
-    link.download = "zelloo-restaurant-qr.png";
-    link.click();
   }
 
   return (

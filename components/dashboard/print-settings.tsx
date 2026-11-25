@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { isAutoPrintEnabled, setAutoPrintEnabled } from "../../lib/auto-print";
 
-export function PrintSettings() {
-  const [enabled, setEnabled] = useState(false);
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    setEnabled(isAutoPrintEnabled());
-  }, []);
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+export function PrintSettings() {
+  const enabled = useSyncExternalStore(subscribe, isAutoPrintEnabled, () => false);
 
   function toggle() {
-    const next = !enabled;
-    setEnabled(next);
-    setAutoPrintEnabled(next);
+    setAutoPrintEnabled(!enabled);
+    listeners.forEach((listener) => listener());
   }
 
   return (
