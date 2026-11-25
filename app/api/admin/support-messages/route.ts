@@ -3,6 +3,15 @@ import { requireAdmin } from "../../../../lib/supabase-server";
 
 export const runtime = "nodejs";
 
+type SupportMessageRow = {
+  id: string | number;
+  restaurant_id: string | number;
+  message: string;
+  created_at: string;
+  read_at: string | null;
+  restaurants: { name: string | null } | null;
+};
+
 export async function GET(request: Request) {
   const auth = await requireAdmin(request);
   if (!auth.ok) return auth.response;
@@ -18,7 +27,7 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    const messages = (data || []).map((row: any) => ({
+    const messages = ((data || []) as unknown as SupportMessageRow[]).map((row) => ({
       id: row.id,
       restaurantId: row.restaurant_id,
       restaurantName: row.restaurants?.name || "Unbekannt",

@@ -110,6 +110,10 @@ export default function SettingsPage() {
     }
 
     void load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   useEffect(() => {

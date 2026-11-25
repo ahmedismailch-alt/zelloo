@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type { OrderLang, OrderStrings } from "../../lib/order-i18n";
 import {
   isPushBlocked,
@@ -15,14 +15,14 @@ type Props = {
   t: OrderStrings;
 };
 
-type State = "hidden" | "idle" | "loading" | "on" | "denied" | "error";
+type State = "idle" | "loading" | "on" | "denied" | "error";
+
+const subscribeNoop = () => () => {};
+const canOfferPush = () => isPushSupported() && !isPushBlocked();
 
 export function NotifyReadyButton({ orderId, restaurantId, lang, t }: Props) {
-  const [state, setState] = useState<State>("hidden");
-
-  useEffect(() => {
-    if (isPushSupported() && !isPushBlocked()) setState("idle");
-  }, []);
+  const [state, setState] = useState<State>("idle");
+  const pushAvailable = useSyncExternalStore(subscribeNoop, canOfferPush, () => false);
 
   async function enable() {
     setState("loading");
@@ -30,7 +30,7 @@ export function NotifyReadyButton({ orderId, restaurantId, lang, t }: Props) {
     setState(result === "ok" ? "on" : result === "denied" ? "denied" : "error");
   }
 
-  if (state === "hidden") return null;
+  if (state === "idle" && !pushAvailable) return null;
 
   if (state === "on") {
     return <p className="mt-2 text-sm font-bold text-white">{t.notifyOn}</p>;

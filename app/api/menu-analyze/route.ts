@@ -3,19 +3,13 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const STANDARD_CATEGORIES = [
-  "Getränke",
-  "Vorspeisen",
-  "Hauptgerichte",
-  "Desserts",
-  "Snacks",
-] as const;
+type StandardCategory = "Getränke" | "Vorspeisen" | "Hauptgerichte" | "Desserts" | "Snacks";
 
 // Keyword groups used to normalize whatever free-text category the AI
 // extracted from the menu photo into one of our standard dashboard
 // categories. Order matters: first match wins.
 const CATEGORY_KEYWORDS: Array<{
-  category: (typeof STANDARD_CATEGORIES)[number];
+  category: StandardCategory;
   keywords: string[];
 }> = [
   {

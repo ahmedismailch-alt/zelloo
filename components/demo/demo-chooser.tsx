@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export type DemoLang = "de" | "fr" | "it" | "en" | "ar" | "tr";
 
 export const DEMO_LANGS: { code: DemoLang; label: string }[] = [
@@ -129,9 +131,9 @@ export function DemoChooser({ lang }: { lang: DemoLang }) {
         </div>
       </div>
 
-      <a href="/" className="flex min-h-11 items-center text-sm font-semibold text-gray-500">
+      <Link href="/" className="flex min-h-11 items-center text-sm font-semibold text-gray-500">
         {t.back}
-      </a>
+      </Link>
     </main>
   );
 }

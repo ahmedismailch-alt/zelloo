@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Logo } from "@/components/logo";
 export const metadata = {
   title: "Über uns · Zelloo",
@@ -9,9 +10,9 @@ export default function AboutPage() {
   return (
     <div className="bg-white min-h-screen">
       <div className="max-w-[1200px] mx-auto px-6 py-4 flex justify-between items-center">
-        <a href="/" aria-label="ZELLOO.CH">
+        <Link href="/" aria-label="ZELLOO.CH">
           <Logo size="md" label="ZELLOO.CH" />
-        </a>
+        </Link>
         <a href="/dashboard" className="text-sm font-semibold border border-black/10 px-4 py-2 rounded-full hover:bg-gray-50">
           Zum Dashboard
         </a>

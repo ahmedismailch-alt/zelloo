@@ -445,7 +445,7 @@ export async function getOrderableMenu(
   if (result.error) result = await query(baseColumns);
   if (result.error) throw result.error;
 
-  const rows = (result.data || []) as unknown as Record<string, any>[];
+  const rows = (result.data || []) as unknown as Record<string, unknown>[];
 
   return rows
     .filter(
@@ -460,10 +460,10 @@ export async function getOrderableMenu(
       const compareCents = Number.isFinite(rawCompare) ? Math.round(rawCompare * 100) : 0;
       return {
       id: String(item.id),
-      name: item.name,
-      category: item.category,
+      name: String(item.name ?? ""),
+      category: String(item.category ?? ""),
       subcategory: typeof item.subcategory === "string" && item.subcategory.trim() ? item.subcategory : null,
-      description: item.description,
+      description: typeof item.description === "string" ? item.description : null,
       priceCents,
       comparePriceCents: compareCents > priceCents ? compareCents : null,
       nameAr: readArabicName(item.name_translations),
