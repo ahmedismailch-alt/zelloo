@@ -105,10 +105,12 @@ export const pageCopy: Record<
       { title: string; description: string },
       { title: string; description: string },
     ]
-    whatsappBadge: string
-    whatsappTitle: [string, string]
-    whatsappParagraph: string
-    whatsappChecks: [string, string, string]
+    shareBadge: string
+    shareTitle: [string, string]
+    shareParagraph: string
+    shareChecks: [string, string, string]
+    shareCopy: string
+    shareNote: string
     directTitle: string
     directParagraph: string
     directPoints: [string, string, string]
@@ -144,15 +146,17 @@ export const pageCopy: Record<
       { title: "Menü öffnen & bestellen", description: "Das Menü öffnet sich direkt im Browser. Der Gast wählt Gerichte und bestätigt." },
       { title: "Bestellung kommt im Dashboard an", description: "Ein lauter Ton weckt das Team — die Bestellung ist sofort sichtbar, bereit zur Zubereitung." },
     ],
-    whatsappBadge: "WhatsApp-Bestellung · bald verfügbar",
-    whatsappTitle: ["Ihr Gast schreibt \"Hallo\".", "Die Bestellung kommt an."],
-    whatsappParagraph:
-      "Bald: Kein App-Download, keine Registrierung. Ihr Gast schreibt einfach eine WhatsApp-Nachricht und bestellt direkt im Chat. Die Bestellung landet in Ihrem Dashboard. Diese Funktion ist noch in Vorbereitung.",
-    whatsappChecks: [
-      "Keine App, keine Wartezeit — Bestellung direkt im Chat",
-      "Gemäss den vom Restaurant festgelegten Öffnungszeiten",
-      "Im selben Dashboard wie alle anderen Bestellungen",
+    shareBadge: "Ein Link für alle Kanäle",
+    shareTitle: ["Ein Link.", "Überall teilen."],
+    shareParagraph:
+      "Teilen Sie Ihre Bestellseite per WhatsApp, Instagram, Facebook, Telegram, SMS oder E-Mail. Ihre Gäste sehen das Menü und bestellen direkt, ohne App und ohne Kommission.",
+    shareChecks: [
+      "Link kopieren und überall einfügen",
+      "Menü sehen, bevor man bestellt",
+      "Bestellung landet direkt in Ihrem Dashboard",
     ],
+    shareCopy: "Link kopieren",
+    shareNote: "Instagram und TikTok erlauben kein direktes Teilen. Fügen Sie den Link einfach in Ihre Bio oder Story ein.",
     directTitle: "Direkt bestellen, ohne Provision",
     directParagraph:
       "Ihre Stammgäste bestellen direkt bei Ihnen — zum Mitnehmen, mit Lieferung oder am Tisch. Sie sparen die Provision pro Bestellung. CHF 39 pro Monat, fix.",
@@ -161,7 +165,7 @@ export const pageCopy: Record<
       "Bestellung per Text oder Sprache",
       "Keine Provision, nie",
     ],
-    directNote: "Bestellungen per WhatsApp folgen bald.",
+    directNote: "Teilen Sie Ihren Link per WhatsApp, Instagram, Facebook und mehr.",
     featuresTitle: "Alles, was Ihr Restaurant braucht",
     featuresSubtitle: "Entwickelt für Schweizer Restaurants und Cafés.",
     features: [
@@ -192,15 +196,17 @@ export const pageCopy: Record<
       { title: "Ouvrir le menu et commander", description: "Le menu s'ouvre directement dans le navigateur. Le client choisit ses plats et confirme." },
       { title: "La commande arrive sur le tableau de bord", description: "Un son fort alerte l'équipe — la commande est visible immédiatement, prête à être préparée." },
     ],
-    whatsappBadge: "Commande WhatsApp · bientôt disponible",
-    whatsappTitle: ["Votre client écrit \"Bonjour\".", "La commande arrive."],
-    whatsappParagraph:
-      "Bientôt : aucune application, aucune inscription. Votre client enverra simplement un message WhatsApp et commandera directement dans le chat. La commande arrivera dans votre tableau de bord. Cette fonction est encore en préparation.",
-    whatsappChecks: [
-      "Pas d'app, pas d'attente — commande directement dans le chat",
-      "Selon les horaires d'ouverture définis par le restaurant",
-      "Dans le même tableau de bord que toutes les autres commandes",
+    shareBadge: "Un lien pour tous les canaux",
+    shareTitle: ["Un lien.", "À partager partout."],
+    shareParagraph:
+      "Partagez votre page de commande par WhatsApp, Instagram, Facebook, Telegram, SMS ou e-mail. Vos clients voient le menu et commandent directement, sans application et sans commission.",
+    shareChecks: [
+      "Copiez le lien et collez-le partout",
+      "Voir le menu avant de commander",
+      "La commande arrive directement dans votre tableau de bord",
     ],
+    shareCopy: "Copier le lien",
+    shareNote: "Instagram et TikTok n'autorisent pas le partage direct. Collez simplement le lien dans votre bio ou votre story.",
     directTitle: "Commandez en direct, sans commission",
     directParagraph:
       "Vos clients habituels commandent directement chez vous — à emporter, en livraison ou à table. Vous économisez la commission sur chaque commande. CHF 39 par mois, fixe.",
@@ -209,7 +215,7 @@ export const pageCopy: Record<
       "Commande par texte ou par la voix",
       "Aucune commission, jamais",
     ],
-    directNote: "Les commandes par WhatsApp arrivent bientôt.",
+    directNote: "Partagez votre lien par WhatsApp, Instagram, Facebook et plus.",
     featuresTitle: "Tout ce dont votre restaurant a besoin",
     featuresSubtitle: "Conçu pour les restaurants et cafés suisses.",
     features: [
@@ -240,15 +246,17 @@ export const pageCopy: Record<
       { title: "Apri il menu e ordina", description: "Il menu si apre direttamente nel browser. Il cliente scegli i piatti e confirma." },
       { title: "L'ordine arriva nella dashboard", description: "Un suono forte avvisa il team — l'ordine è visibile subito, pronto per la preparazione." },
     ],
-    whatsappBadge: "Ordine via WhatsApp · in arrivo",
-    whatsappTitle: ["Il cliente scrive \"Ciao\".", "L'ordine arriva."],
-    whatsappParagraph:
-      "Presto: nessuna app, nessuna registrazione. Il cliente scriverà semplicemente un messaggio WhatsApp e ordinerà direttamente in chat. L'ordine arriverà nella tua dashboard. Questa funzione è ancora in preparazione.",
-    whatsappChecks: [
-      "Nessuna app, nessuna attesa — ordine diretto nella chat",
-      "Secondo gli orari di apertura definiti dal ristorante",
-      "Nella stessa dashboard di tutti gli altri ordini",
+    shareBadge: "Un link per tutti i canali",
+    shareTitle: ["Un link.", "Condividilo ovunque."],
+    shareParagraph:
+      "Condividi la tua pagina d'ordine via WhatsApp, Instagram, Facebook, Telegram, SMS o e-mail. I tuoi clienti vedono il menu e ordinano direttamente, senza app e senza commissioni.",
+    shareChecks: [
+      "Copia il link e incollalo ovunque",
+      "Vedere il menu prima di ordinare",
+      "L'ordine arriva direttamente nella tua dashboard",
     ],
+    shareCopy: "Copia link",
+    shareNote: "Instagram e TikTok non permettono la condivisione diretta. Incolla semplicemente il link nella tua bio o nella tua storia.",
     directTitle: "Ordina direttamente, senza commissioni",
     directParagraph:
       "I tuoi clienti abituali ordinano direttamente da te — da asporto, a domicilio o al tavolo. Risparmi la commissione su ogni ordine. CHF 39 al mese, fissi.",
@@ -257,7 +265,7 @@ export const pageCopy: Record<
       "Ordine con testo o voce",
       "Nessuna commissione, mai",
     ],
-    directNote: "Gli ordini via WhatsApp arriveranno presto.",
+    directNote: "Condividi il tuo link su WhatsApp, Instagram, Facebook e altro.",
     featuresTitle: "Tutto ciò di cui il tuo ristorante ha bisogno",
     featuresSubtitle: "Pensato per ristoranti e caffè svizzeri.",
     features: [
@@ -288,15 +296,17 @@ export const pageCopy: Record<
       { title: "Open the menu & order", description: "The menu opens directly in the browser. The guest picks dishes and confirms." },
       { title: "Order arrives on the dashboard", description: "A loud tone alerts the team — the order is instantly visible, ready to prepare." },
     ],
-    whatsappBadge: "WhatsApp ordering · coming soon",
-    whatsappTitle: ["Your guest types \"Hi\".", "The order comes in."],
-    whatsappParagraph:
-      "Coming soon: no app download, no sign-up. Your guest will simply send a WhatsApp message and order right in the chat. The order will land in your dashboard. This feature is still in preparation.",
-    whatsappChecks: [
-      "No app, no waiting — order directly in chat",
-      "Based on the opening hours the restaurant sets",
-      "In the same dashboard as every other order",
+    shareBadge: "One link for every channel",
+    shareTitle: ["One link.", "Share it anywhere."],
+    shareParagraph:
+      "Share your ordering page on WhatsApp, Instagram, Facebook, Telegram, SMS or email. Your guests see the menu and order directly, with no app and no commission.",
+    shareChecks: [
+      "Copy the link and paste it anywhere",
+      "See the menu before ordering",
+      "Orders land straight in your dashboard",
     ],
+    shareCopy: "Copy link",
+    shareNote: "Instagram and TikTok don't allow direct link sharing. Just paste the link into your bio or story.",
     directTitle: "Order direct, no commission",
     directParagraph:
       "Your regular guests order straight from you — takeaway, delivery or at the table. You save the commission on every order. CHF 39 per month, fixed.",
@@ -305,7 +315,7 @@ export const pageCopy: Record<
       "Order by text or voice",
       "No commission, ever",
     ],
-    directNote: "WhatsApp ordering is coming soon.",
+    directNote: "Share your link on WhatsApp, Instagram, Facebook and more.",
     featuresTitle: "Everything your restaurant needs",
     featuresSubtitle: "Built for Swiss restaurants and cafés.",
     features: [
@@ -336,15 +346,17 @@ export const pageCopy: Record<
       { title: "فتح المنيو والطلب", description: "المنيو يفتح مباشرة بالمتصفح. الزبون يختار الأطباق ويؤكد." },
       { title: "الطلب يصل للوحة التحكم", description: "صوت عالي ينبّه الفريق — الطلب يظهر فوراً، جاهز للتحضير." },
     ],
-    whatsappBadge: "طلب عبر واتساب · قريباً",
-    whatsappTitle: ["الزبون يكتب \"سلام\".", "الطلب يصل."],
-    whatsappParagraph:
-      "قريباً: بلا تحميل تطبيق، بلا تسجيل. الزبون رح يبعت رسالة واتساب ويطلب مباشرة بالمحادثة، والطلب رح يوصل لصفحة التحكم. هالميزة لسا قيد التحضير.",
-    whatsappChecks: [
-      "بلا تطبيق، بلا انتظار — الطلب مباشرة بالمحادثة",
-      "وفق ساعات العمل اللي بيحددها المطعم",
-      "بنفس لوحة التحكم مع كل الطلبات الأخرى",
+    shareBadge: "رابط واحد لكل القنوات",
+    shareTitle: ["رابط واحد.", "شاركه بأي مكان."],
+    shareParagraph:
+      "شارك صفحة الطلب عبر واتساب أو إنستغرام أو فيسبوك أو تيليغرام أو SMS أو البريد. زبائنك بيشوفوا القائمة وبيطلبوا مباشرة، بلا تطبيق وبلا عمولة.",
+    shareChecks: [
+      "انسخ الرابط والصقه بأي مكان",
+      "الزبون بيشوف القائمة قبل ما يطلب",
+      "الطلب بيوصل مباشرة للوحة التحكم",
     ],
+    shareCopy: "نسخ الرابط",
+    shareNote: "إنستغرام وتيك توك ما بيسمحوا بمشاركة الروابط مباشرة. بس الصق الرابط بالبايو أو الستوري.",
     directTitle: "اطلب مباشرة، بدون عمولة",
     directParagraph:
       "زبائنك المعتادين بيطلبوا مباشرة منك — استلام أو توصيل أو على الطاولة. بتوفّر العمولة على كل طلب. 39 فرنك بالشهر، ثابتة.",
@@ -353,7 +365,7 @@ export const pageCopy: Record<
       "الطلب بالنص أو بالصوت",
       "بدون عمولة، أبداً",
     ],
-    directNote: "الطلب عبر واتساب قريباً.",
+    directNote: "شارك رابطك عبر واتساب وإنستغرام وفيسبوك وغيرها.",
     featuresTitle: "كل شي مطعمك محتاجه",
     featuresSubtitle: "مصمم خصيصاً للمطاعم والمقاهي السويسرية.",
     features: [
@@ -384,15 +396,17 @@ export const pageCopy: Record<
       { title: "Menüyü açın ve sipariş verin", description: "Menü doğrudan tarayıcıda açılır. Müşteri yemekleri seçer ve onaylar." },
       { title: "Sipariş panele ulaşır", description: "Yüksek bir ses ekibi uyarır — sipariş anında görünür, hazırlanmaya hazırdır." },
     ],
-    whatsappBadge: "WhatsApp siparişi · çok yakında",
-    whatsappTitle: ["Müşteriniz \"Merhaba\" yazar.", "Sipariş gelir."],
-    whatsappParagraph:
-      "Çok yakında: uygulama indirme yok, kayıt yok. Müşteriniz sadece bir WhatsApp mesajı gönderip doğrudan sohbette sipariş verecek. Sipariş panelinize ulaşacak. Bu özellik henüz hazırlık aşamasında.",
-    whatsappChecks: [
-      "Uygulama yok, bekleme yok — sipariş doğrudan sohbette",
-      "Restoranın belirlediği çalışma saatlerine göre",
-      "Diğer tüm siparişlerle aynı panelde",
+    shareBadge: "Tüm kanallar için tek bağlantı",
+    shareTitle: ["Tek bağlantı.", "Her yerde paylaşın."],
+    shareParagraph:
+      "Sipariş sayfanızı WhatsApp, Instagram, Facebook, Telegram, SMS veya e-posta ile paylaşın. Misafirleriniz menüyü görür ve doğrudan sipariş verir, uygulama ve komisyon yok.",
+    shareChecks: [
+      "Bağlantıyı kopyalayıp her yere yapıştırın",
+      "Sipariş vermeden önce menüyü görün",
+      "Sipariş doğrudan panelinize düşer",
     ],
+    shareCopy: "Bağlantıyı kopyala",
+    shareNote: "Instagram ve TikTok doğrudan paylaşıma izin vermez. Bağlantıyı biyografinize veya hikayenize yapıştırmanız yeterli.",
     directTitle: "Doğrudan sipariş, komisyonsuz",
     directParagraph:
       "Müdavimleriniz size doğrudan sipariş verir — paket servis, teslimat veya masada. Her siparişte komisyon ödemezsiniz. Ayda sabit CHF 39.",
@@ -401,7 +415,7 @@ export const pageCopy: Record<
       "Metin veya sesle sipariş",
       "Komisyon yok, asla",
     ],
-    directNote: "WhatsApp ile sipariş yakında geliyor.",
+    directNote: "Bağlantınızı WhatsApp, Instagram, Facebook ve daha fazlasında paylaşın.",
     featuresTitle: "Restoranınızın ihtiyacı olan her şey",
     featuresSubtitle: "İsviçre restoranları ve kafeleri için geliştirildi.",
     features: [
