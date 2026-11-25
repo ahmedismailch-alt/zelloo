@@ -7,6 +7,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { OrderBell } from "../../lib/order-bell";
 import { isAutoPrintEnabled } from "../../lib/auto-print";
+import { readLogoUrl } from "../../lib/branding";
 import { DashboardShell } from "../../components/dashboard/dashboard-shell";
 import { BaristaView } from "../../components/dashboard/barista-view";
 import { NewReservationsBanner } from "../../components/dashboard/new-reservations-banner";
@@ -168,6 +169,7 @@ export default function DashboardPage() {
   const [prepMinutes, setPrepMinutes] = useState(15);
   const [view, setView] = useState<"active" | "history">("active");
   const [isCafeMode, setIsCafeMode] = useState(false);
+  const [receiptLogoUrl, setReceiptLogoUrl] = useState<string | null>(null);
   const [baristaMode, setBaristaMode] = useState(false);
   const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
   const [dismissingMessageId, setDismissingMessageId] = useState<string | null>(null);
@@ -251,6 +253,17 @@ export default function DashboardPage() {
       .then(({ data }) => {
         if (cancelled || !data?.venue_type) return;
         setIsCafeMode(data.venue_type !== "restaurant");
+      });
+
+    // logo_url may not exist yet; the receipt then prints the name only.
+    void supabase
+      .from("restaurants")
+      .select("logo_url")
+      .eq("id", restaurantId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setReceiptLogoUrl(readLogoUrl(data?.logo_url));
       });
 
     try {
@@ -1927,7 +1940,16 @@ export default function DashboardPage() {
 
       {printingOrder && (
         <div className="hidden print:block p-6 font-mono text-black">
-          <h1 className="text-lg font-bold mb-1">{restaurantName}</h1>
+          {receiptLogoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={receiptLogoUrl}
+              alt=""
+              crossOrigin="anonymous"
+              className="mx-auto mb-2 max-h-20 max-w-[60%] object-contain grayscale contrast-200"
+            />
+          )}
+          <h1 className="text-lg font-bold mb-1 text-center">{restaurantName}</h1>
           {printingOrder.order_number !== null && (
             <p className="text-4xl font-bold m-0">#{printingOrder.order_number}</p>
           )}
