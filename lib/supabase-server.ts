@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { parseOptionGroups, type OptionGroup } from "./menu-options";
+import {
+  readAllergens,
+  readDietTags,
+  type AllergenKey,
+  type DietKey,
+} from "./allergens";
 import { computeAccess, type Access } from "./subscription";
 import {
   readBrandColor,
@@ -67,6 +73,8 @@ export type PublicMenuItem = {
   nameAr: string | null;
   imageUrl: string | null;
   options: OptionGroup[];
+  allergens: AllergenKey[];
+  dietary: DietKey[];
 };
 
 export function readArabicName(translations: unknown): string | null {
@@ -439,8 +447,11 @@ export async function getOrderableMenu(
       .order("name", { ascending: true });
   }
 
-  // The options and compare_price columns may not exist until their SQL migrations have been run.
-  let result = await query(`${baseColumns}, options, compare_price`);
+  // The allergens, dietary_tags, options and compare_price columns may not exist until their SQL migrations have been run.
+  let result = await query(
+    `${baseColumns}, options, compare_price, allergens, dietary_tags`
+  );
+  if (result.error) result = await query(`${baseColumns}, options, compare_price`);
   if (result.error) result = await query(`${baseColumns}, options`);
   if (result.error) result = await query(baseColumns);
   if (result.error) throw result.error;
@@ -469,6 +480,8 @@ export async function getOrderableMenu(
       nameAr: readArabicName(item.name_translations),
       imageUrl: typeof item.image_url === "string" && item.image_url.trim() ? item.image_url : null,
       options: parseOptionGroups(item.options),
+      allergens: readAllergens(item.allergens),
+      dietary: readDietTags(item.dietary_tags),
       };
     });
 }

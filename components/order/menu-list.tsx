@@ -4,8 +4,17 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAuthHeaders, useDealOwner } from "../../lib/use-deal-owner";
 import { DealSheet } from "./deal-sheet";
-import type { OrderStrings } from "../../lib/order-i18n";
+import type { OrderLang, OrderStrings } from "../../lib/order-i18n";
 import type { PublicMenuItem } from "../../lib/supabase-server";
+import {
+  ALLERGEN_KEYS,
+  ALLERGEN_LABELS,
+  DIET_KEYS,
+  DIET_LABELS,
+  FILTER_STRINGS,
+  type AllergenKey,
+  type DietKey,
+} from "../../lib/allergens";
 import type { CartLine } from "./cart";
 import { formatChf } from "./format";
 import { isDealCategory, sortCategoriesByMenuOrder } from "../../lib/menu-category-order";
@@ -14,6 +23,7 @@ type Props = {
   menu: PublicMenuItem[];
   cart: Record<string, CartLine>;
   t: OrderStrings;
+  lang?: OrderLang;
   showArabic: boolean;
   categoryAr: Record<string, string>;
   compact?: boolean;
@@ -29,6 +39,7 @@ export function MenuList({
   menu,
   cart,
   t,
+  lang = "de",
   showArabic,
   categoryAr,
   compact = false,
@@ -95,10 +106,39 @@ export function MenuList({
     return sortCategoriesByMenuOrder(list);
   }, [menu]);
 
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [requiredDiets, setRequiredDiets] = useState<DietKey[]>([]);
+  const [excludedAllergens, setExcludedAllergens] = useState<AllergenKey[]>([]);
+  const filterText = FILTER_STRINGS[lang];
+
+  const availableDiets = useMemo(
+    () => DIET_KEYS.filter((key) => menu.some((item) => item.dietary.includes(key))),
+    [menu]
+  );
+  const availableAllergens = useMemo(
+    () => ALLERGEN_KEYS.filter((key) => menu.some((item) => item.allergens.includes(key))),
+    [menu]
+  );
+  const hasFilters = availableDiets.length > 0 || availableAllergens.length > 0;
+  const activeFilterCount = requiredDiets.length + excludedAllergens.length;
+
+  function toggleInList<T>(list: T[], value: T): T[] {
+    return list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
+  }
+
   const filteredMenu = useMemo(() => {
     const q = query.trim().toLowerCase();
     return menu.filter((item) => {
       if (activeCategory !== null && (item.category?.trim() || "") !== activeCategory) {
+        return false;
+      }
+      for (const diet of requiredDiets) {
+        const matches =
+          item.dietary.includes(diet) ||
+          (diet === "vegetarian" && item.dietary.includes("vegan"));
+        if (!matches) return false;
+      }
+      if (excludedAllergens.some((allergen) => item.allergens.includes(allergen))) {
         return false;
       }
       if (!q) return true;
@@ -108,7 +148,7 @@ export function MenuList({
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [menu, query, activeCategory]);
+  }, [menu, query, activeCategory, requiredDiets, excludedAllergens]);
 
   const popularItems = useMemo(
     () => menu.filter((item) => popularSet.has(item.name)).slice(0, 6),
@@ -209,6 +249,120 @@ export function MenuList({
               );
             })}
           </ul>
+        )}
+
+        {hasFilters && (
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setFilterOpen((open) => !open)}
+              aria-expanded={filterOpen}
+              aria-controls="allergen-filter-panel"
+              dir="auto"
+              className="flex min-h-11 items-center justify-between gap-2 rounded-2xl border bg-white px-4 text-sm font-bold"
+            >
+              <span>{filterText.button}</span>
+              <span className="flex items-center gap-2">
+                {activeFilterCount > 0 && (
+                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[var(--brand,#f97316)] px-1.5 text-xs font-black text-[var(--brand-fg,#000)]">
+                    {activeFilterCount}
+                  </span>
+                )}
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className={`size-4 transition-transform ${filterOpen ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            </button>
+
+            {filterOpen && (
+              <div
+                id="allergen-filter-panel"
+                className="flex flex-col gap-4 rounded-2xl border bg-white p-4"
+              >
+                {availableDiets.length > 0 && (
+                  <fieldset className="flex flex-col gap-2">
+                    <legend className="text-sm font-black" dir="auto">
+                      {filterText.diet}
+                    </legend>
+                    <div className="flex flex-wrap gap-2">
+                      {availableDiets.map((key) => {
+                        const active = requiredDiets.includes(key);
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => setRequiredDiets((list) => toggleInList(list, key))}
+                            dir="auto"
+                            className={`min-h-10 rounded-full px-4 text-sm font-bold ${
+                              active ? "bg-black text-white" : "border bg-white text-gray-600"
+                            }`}
+                          >
+                            {DIET_LABELS[key][lang]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                )}
+
+                {availableAllergens.length > 0 && (
+                  <fieldset className="flex flex-col gap-2">
+                    <legend className="text-sm font-black" dir="auto">
+                      {filterText.withoutAllergens}
+                    </legend>
+                    <div className="flex flex-wrap gap-2">
+                      {availableAllergens.map((key) => {
+                        const active = excludedAllergens.includes(key);
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() =>
+                              setExcludedAllergens((list) => toggleInList(list, key))
+                            }
+                            dir="auto"
+                            className={`min-h-10 rounded-full px-4 text-sm font-bold ${
+                              active ? "bg-red-600 text-white" : "border bg-white text-gray-600"
+                            }`}
+                          >
+                            {ALLERGEN_LABELS[key][lang]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                )}
+
+                <div className="flex flex-col gap-2">
+                  {activeFilterCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRequiredDiets([]);
+                        setExcludedAllergens([]);
+                      }}
+                      dir="auto"
+                      className="min-h-11 self-start rounded-full border px-4 text-sm font-bold"
+                    >
+                      {filterText.reset}
+                    </button>
+                  )}
+                  <p className="text-xs text-gray-500" dir="auto">
+                    {filterText.disclaimer}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -484,6 +638,24 @@ export function MenuList({
                       {item.description && (
                         <p className="text-sm text-gray-500 leading-relaxed" dir="auto">
                           {item.description}
+                        </p>
+                      )}
+                      {item.dietary.length > 0 && (
+                        <ul className="flex flex-wrap gap-1" dir="auto">
+                          {item.dietary.map((key) => (
+                            <li
+                              key={key}
+                              className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-bold text-green-800"
+                            >
+                              {DIET_LABELS[key][lang]}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {item.allergens.length > 0 && (
+                        <p className="text-xs text-gray-500" dir="auto">
+                          {filterText.contains}:{" "}
+                          {item.allergens.map((key) => ALLERGEN_LABELS[key][lang]).join(", ")}
                         </p>
                       )}
                       {item.comparePriceCents ? (

@@ -9,6 +9,16 @@ import { DashboardShell } from "../../components/dashboard/dashboard-shell";
 import { OptionsEditor } from "../../components/menu/options-editor";
 import { CoffeeOptionsPanel } from "../../components/menu/coffee-options-panel";
 import { parseOptionGroups, type OptionGroup } from "../../lib/menu-options";
+import {
+  ALLERGEN_KEYS,
+  ALLERGEN_LABELS,
+  DIET_KEYS,
+  DIET_LABELS,
+  readAllergens,
+  readDietTags,
+  type AllergenKey,
+  type DietKey,
+} from "../../lib/allergens";
 
 type MenuItem = {
   id: string;
@@ -25,6 +35,8 @@ type MenuItem = {
   image_url: string | null;
   compare_price?: number | null;
   options?: unknown;
+  allergens?: unknown;
+  dietary_tags?: unknown;
 };
 
 const SUBCATEGORY_SUGGESTIONS: Record<string, string[]> = {
@@ -150,6 +162,8 @@ export default function MenuPage() {
   const [editArabic, setEditArabic] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editOptions, setEditOptions] = useState<OptionGroup[]>([]);
+  const [editAllergens, setEditAllergens] = useState<AllergenKey[]>([]);
+  const [editDietTags, setEditDietTags] = useState<DietKey[]>([]);
   const [uploadingEditImage, setUploadingEditImage] = useState(false);
   const [generatingArabic, setGeneratingArabic] = useState(false);
   const [categoryAr, setCategoryAr] = useState<Record<string, string>>({});
@@ -872,6 +886,8 @@ export default function MenuPage() {
     setEditArabic(arabicNameOf(item));
     setEditImageUrl(item.image_url || "");
     setEditOptions(parseOptionGroups(item.options));
+    setEditAllergens(readAllergens(item.allergens));
+    setEditDietTags(readDietTags(item.dietary_tags));
     setMessage("");
   }
 
@@ -885,6 +901,8 @@ export default function MenuPage() {
     setEditArabic("");
     setEditImageUrl("");
     setEditOptions([]);
+    setEditAllergens([]);
+    setEditDietTags([]);
   }
 
   async function saveEdit(item: MenuItem) {
@@ -956,6 +974,12 @@ export default function MenuPage() {
       JSON.stringify(cleanedOptions) !== JSON.stringify(parseOptionGroups(item.options));
 
     const compareChanged = parsedComparePrice !== (item.compare_price ?? null);
+    const allergensChanged =
+      JSON.stringify([...editAllergens].sort()) !==
+      JSON.stringify([...readAllergens(item.allergens)].sort());
+    const dietChanged =
+      JSON.stringify([...editDietTags].sort()) !==
+      JSON.stringify([...readDietTags(item.dietary_tags)].sort());
 
     const { data, error } = await supabase
       .from("menu_items")
@@ -963,10 +987,20 @@ export default function MenuPage() {
         ...baseUpdate,
         ...(compareChanged ? { compare_price: parsedComparePrice } : {}),
         ...(optionsChanged ? { options: cleanedOptions } : {}),
+        ...(allergensChanged ? { allergens: editAllergens } : {}),
+        ...(dietChanged ? { dietary_tags: editDietTags } : {}),
       })
       .eq("id", item.id)
       .select()
       .single();
+
+    if (error && (allergensChanged || dietChanged)) {
+      setMessage(
+        "Allergene konnten nicht gespeichert werden. Bitte die Datenbank-Aktualisierung ausführen."
+      );
+      setSaving(false);
+      return;
+    }
 
     if (error && compareChanged) {
       setMessage(
@@ -2050,6 +2084,61 @@ export default function MenuPage() {
                   className="w-full border rounded-xl px-4 py-3 text-sm font-normal"
                 />
               </label>
+
+              <fieldset className="flex flex-col gap-2 rounded-xl border bg-white p-3">
+                <legend className="px-1 text-sm font-bold">Ernährung</legend>
+                <div className="flex flex-wrap gap-2">
+                  {DIET_KEYS.map((key) => {
+                    const active = editDietTags.includes(key);
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() =>
+                          setEditDietTags((list) =>
+                            active ? list.filter((entry) => entry !== key) : [...list, key]
+                          )
+                        }
+                        className={`min-h-11 rounded-full px-4 text-sm font-bold ${
+                          active ? "bg-green-600 text-white" : "border bg-white text-gray-600"
+                        }`}
+                      >
+                        {DIET_LABELS[key].de}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              <fieldset className="flex flex-col gap-2 rounded-xl border bg-white p-3">
+                <legend className="px-1 text-sm font-bold">Enthält Allergene</legend>
+                <div className="flex flex-wrap gap-2">
+                  {ALLERGEN_KEYS.map((key) => {
+                    const active = editAllergens.includes(key);
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() =>
+                          setEditAllergens((list) =>
+                            active ? list.filter((entry) => entry !== key) : [...list, key]
+                          )
+                        }
+                        className={`min-h-11 rounded-full px-4 text-sm font-bold ${
+                          active ? "bg-red-600 text-white" : "border bg-white text-gray-600"
+                        }`}
+                      >
+                        {ALLERGEN_LABELS[key].de}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500">
+                  Sie sind für die Richtigkeit der Angaben verantwortlich.
+                </p>
+              </fieldset>
 
               <OptionsEditor value={editOptions} onChange={setEditOptions} />
 
