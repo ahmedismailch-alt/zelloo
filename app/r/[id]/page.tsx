@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { OrderApp } from "../../../components/order/order-app";
-import { getNextOpening } from "../../../lib/restaurant-settings";
+import {
+  getNextOpening,
+  type OpeningHours,
+} from "../../../lib/restaurant-settings";
+import { getRestaurantLocation } from "../../../lib/restaurant-directory";
+import { restaurantUrl } from "../../../lib/restaurant-location";
 import { getReservationConfig } from "../../../lib/reservations-server";
 import {
   getBranding,
@@ -30,18 +35,26 @@ export async function generateMetadata({
   const { id } = await params;
   if (!isValidRestaurantId(id)) return {};
 
-  const restaurant = await getRestaurant(id).catch(() => null);
+  const [restaurant, location] = await Promise.all([
+    getRestaurant(id).catch(() => null),
+    getRestaurantLocation(id).catch(() => ({ city: null, address: null })),
+  ]);
   if (!restaurant?.name) return {};
 
-  const title = `${restaurant.name} – Menü und Bestellung`;
-  const description = `Menü von ${restaurant.name} ansehen und direkt online bestellen. Ohne App, ohne Wartezeit.`;
+  const inCity = location.city ? ` in ${location.city}` : "";
+  const title = `${restaurant.name}${inCity} – Menü und online bestellen`;
+  const description = location.city
+    ? `Menü von ${restaurant.name} in ${location.city} ansehen und direkt online bestellen. Ohne App, ohne Wartezeit.`
+    : `Menü von ${restaurant.name} ansehen und direkt online bestellen. Ohne App, ohne Wartezeit.`;
 
   return {
     title,
     description,
+    alternates: { canonical: restaurantUrl(id) },
     openGraph: {
       title,
       description,
+      url: restaurantUrl(id),
       type: "website",
       siteName: restaurant.name,
       locale: "de_CH",
@@ -76,6 +89,7 @@ export default async function RestaurantOrderPage({
     categoryImages,
     branding,
     googleReviewUrl,
+    location,
   ] = await Promise.all([
     getRestaurant(id),
     getOrderableMenu(id),
@@ -90,11 +104,33 @@ export default async function RestaurantOrderPage({
     getCategoryImages(id),
     getBranding(id),
     getGoogleReviewUrl(id),
+    getRestaurantLocation(id).catch(() => ({ city: null, address: null })),
   ]);
 
   if (!restaurant) notFound();
 
+  const structuredData = isDemo
+    ? null
+    : buildRestaurantJsonLd({
+        id,
+        name: restaurant.name,
+        phone: restaurant.phone,
+        city: location.city,
+        address: location.address,
+        logoUrl: branding.logoUrl,
+        openingHours: settings.openingHours,
+      });
+
   return (
+    <>
+    {structuredData && (
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
+      />
+    )}
     <OrderApp
       restaurantId={id}
       isDemo={isDemo}
@@ -130,5 +166,74 @@ export default async function RestaurantOrderPage({
             : null
       }
     />
+    </>
   );
+}
+
+const SCHEMA_DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+function buildRestaurantJsonLd(input: {
+  id: string;
+  name: string;
+  phone: string | null;
+  city: string | null;
+  address: string | null;
+  logoUrl: string | null;
+  openingHours: OpeningHours | null;
+}) {
+  const url = restaurantUrl(input.id);
+  const hours = (input.openingHours ?? [])
+    .map((day, index) =>
+      day.closed
+        ? null
+        : {
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: SCHEMA_DAYS[index],
+            opens: day.open,
+            closes: day.close,
+          }
+    )
+    .filter(Boolean);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    "@id": `${url}#restaurant`,
+    name: input.name,
+    url,
+    hasMenu: url,
+    acceptsReservations: false,
+    ...(input.phone ? { telephone: input.phone } : {}),
+    ...(input.logoUrl ? { image: input.logoUrl } : {}),
+    ...(input.city || input.address
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            ...(input.address ? { streetAddress: input.address } : {}),
+            ...(input.city ? { addressLocality: input.city } : {}),
+            addressCountry: "CH",
+          },
+        }
+      : {}),
+    ...(hours.length > 0 ? { openingHoursSpecification: hours } : {}),
+    potentialAction: {
+      "@type": "OrderAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: url,
+        actionPlatform: [
+          "http://schema.org/DesktopWebPlatform",
+          "http://schema.org/MobileWebPlatform",
+        ],
+      },
+    },
+  };
 }
