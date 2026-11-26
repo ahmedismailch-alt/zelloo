@@ -109,6 +109,25 @@ function IconStats() {
   );
 }
 
+function IconMarketing() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+      <path
+        d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M16 9.5a4 4 0 0 1 0 5M18.5 7a7.5 7.5 0 0 1 0 10"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function IconSettings() {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
@@ -156,6 +175,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard/tables", label: "Tische", icon: <IconTables /> },
   { href: "/dashboard/reservations", label: "Reservierungen", icon: <IconReservations /> },
   { href: "/dashboard/stats", label: "Statistiken", icon: <IconStats /> },
+  { href: "/dashboard/marketing", label: "Marketing", icon: <IconMarketing /> },
   { href: "/dashboard/settings", label: "Einstellungen", icon: <IconSettings /> },
 ];
 
@@ -212,6 +232,7 @@ function MobileBottomNav() {
   const moreActive =
     pathname?.startsWith("/dashboard/reservations") ||
     pathname?.startsWith("/dashboard/stats") ||
+    pathname?.startsWith("/dashboard/marketing") ||
     pathname?.startsWith("/dashboard/settings");
 
   async function handleLogout() {
@@ -262,6 +283,15 @@ function MobileBottomNav() {
             >
               <IconStats />
               Statistiken
+            </Link>
+            <Link
+              href="/dashboard/marketing"
+              role="menuitem"
+              onClick={() => setMoreOpen(false)}
+              className="flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-black active:bg-gray-100"
+            >
+              <IconMarketing />
+              Marketing
             </Link>
             <Link
               href="/dashboard/settings"
@@ -344,7 +374,7 @@ function DesktopSidebar({ restaurantName }: { restaurantName?: string }) {
   return (
     <nav
       aria-label="Dashboard-Navigation"
-      className="hidden md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:w-64 md:flex-col md:border-r md:border-black/10 md:bg-white"
+      className="hidden print:!hidden md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:w-64 md:flex-col md:border-r md:border-black/10 md:bg-white"
     >
       <div className="flex h-16 items-center gap-2 border-b border-black/10 px-6">
         <Logo size="sm" className="text-black" />
