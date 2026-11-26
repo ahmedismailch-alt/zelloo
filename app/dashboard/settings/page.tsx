@@ -11,6 +11,7 @@ import { PrintSettings } from "../../../components/dashboard/print-settings";
 import { ChannelStatus } from "../../../components/dashboard/channel-status";
 import { ShareMenu } from "../../../components/dashboard/share-menu";
 import { BrandingSettings } from "../../../components/dashboard/branding-settings";
+import { GooglePresence } from "../../../components/dashboard/google-presence";
 import { WHATSAPP_ORDERS_ENABLED } from "../../../lib/feature-flags";
 
 export default function SettingsPage() {
@@ -442,6 +443,7 @@ export default function SettingsPage() {
             <ShareMenu restaurantId={restaurantId} />
             <OperationsSettings restaurantId={restaurantId} />
             <BrandingSettings restaurantId={restaurantId} />
+            <GooglePresence restaurantId={restaurantId} />
 <PrintSettings />
             <ChannelStatus
               restaurantId={restaurantId}

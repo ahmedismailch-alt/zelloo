@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next"
+import { listDirectoryRestaurants } from "@/lib/restaurant-directory"
 
 const BASE_URL = "https://zelloo.ch"
 
@@ -17,10 +18,27 @@ const publicPages: {
   { path: "/impressum", changeFrequency: "yearly", priority: 0.3 },
 ]
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return publicPages.map(({ path, changeFrequency, priority }) => ({
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const pages: MetadataRoute.Sitemap = publicPages.map(({ path, changeFrequency, priority }) => ({
     url: `${BASE_URL}${path}`,
     changeFrequency,
     priority,
   }))
+
+  try {
+    const restaurants = await listDirectoryRestaurants()
+    const citySlugs = [...new Set(restaurants.map((restaurant) => restaurant.citySlug))]
+
+    pages.push({ url: `${BASE_URL}/restaurants`, changeFrequency: "daily", priority: 0.8 })
+    for (const slug of citySlugs) {
+      pages.push({ url: `${BASE_URL}/restaurants/${slug}`, changeFrequency: "daily", priority: 0.7 })
+    }
+    for (const restaurant of restaurants) {
+      pages.push({ url: `${BASE_URL}/r/${restaurant.id}`, changeFrequency: "weekly", priority: 0.6 })
+    }
+  } catch {
+    return pages
+  }
+
+  return pages
 }
