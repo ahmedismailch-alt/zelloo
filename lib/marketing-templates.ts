@@ -228,7 +228,8 @@ function drawPrintTemplate(
   const nameHeight = drawParagraph(ctx, opts.name, w / 2, cursor, w * 0.84, nameSize, 800, "#111111", "center", font);
   cursor += nameHeight + h * 0.025;
 
-  const footerReserve = h * 0.15;
+  const tableLabelReserve = opts.tableNumber !== null ? 74 * u * 1.2 + h * 0.008 : 0;
+  const footerReserve = h * 0.15 + tableLabelReserve;
   const available = h - cursor - footerReserve;
   const boxSize = Math.min(w * 0.64, available);
   const boxX = (w - boxSize) / 2;

@@ -67,8 +67,10 @@ export function MarketingKit({
   );
   const [copied, setCopied] = useState(false);
   const [printSrc, setPrintSrc] = useState<string | null>(null);
-  const [busy, setBusy] = useState<"share" | "pdf" | null>(null);
+  const [busy, setBusy] = useState<"pdf" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [saveSheetSrc, setSaveSheetSrc] = useState<string | null>(null);
+  const shareFileRef = useRef<File | null>(null);
 
   const isTouch = useSyncExternalStore(subscribeNever, isTouchDevice, () => false);
   const canShare = useSyncExternalStore(subscribeNever, canShareImageFile, () => false);
@@ -122,8 +124,28 @@ export function MarketingKit({
   useEffect(() => {
     const canvas = previewRef.current;
     if (!canvas) return;
-    void render(canvas);
-  }, [render, qrUrl]);
+    let cancelled = false;
+    shareFileRef.current = null;
+    const filename = template.filename;
+    void render(canvas).then(async () => {
+      const blob = await canvasToBlob(canvas);
+      if (!cancelled && blob) {
+        shareFileRef.current = new File([blob], filename, { type: "image/png" });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [render, qrUrl, template.filename]);
+
+  useEffect(() => {
+    if (!saveSheetSrc) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setSaveSheetSrc(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [saveSheetSrc]);
 
   function download() {
     const canvas = previewRef.current;
@@ -139,23 +161,24 @@ export function MarketingKit({
     }, "image/png");
   }
 
-  async function share() {
+  function openSaveSheet() {
     const canvas = previewRef.current;
     if (!canvas) return;
+    setSaveSheetSrc(canvas.toDataURL("image/png"));
+  }
+
+  function share() {
+    const file = shareFileRef.current;
     setActionError(null);
-    setBusy("share");
-    try {
-      const blob = await canvasToBlob(canvas);
-      if (!blob) throw new Error("Bild konnte nicht erstellt werden");
-      const file = new File([blob], template.filename, { type: "image/png" });
-      await navigator.share({ files: [file], title: restaurantName });
-    } catch (error) {
+    if (!file) {
+      openSaveSheet();
+      return;
+    }
+    navigator.share({ files: [file], title: restaurantName }).catch((error: unknown) => {
       if (error instanceof DOMException && error.name === "AbortError") return;
       console.error(error);
-      setActionError("Teilen ist fehlgeschlagen. Bitte speichern Sie das Bild stattdessen.");
-    } finally {
-      setBusy(null);
-    }
+      openSaveSheet();
+    });
   }
 
   async function savePdf() {
@@ -288,14 +311,13 @@ export function MarketingKit({
           )}
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            {isTouch && canShare ? (
+            {isTouch ? (
               <button
                 type="button"
-                onClick={() => void share()}
-                disabled={busy !== null}
-                className="min-h-12 flex-1 rounded-xl bg-orange-500 px-4 font-bold text-black transition-colors hover:bg-orange-400 disabled:opacity-60"
+                onClick={canShare ? share : openSaveSheet}
+                className="min-h-12 flex-1 rounded-xl bg-orange-500 px-4 font-bold text-black transition-colors hover:bg-orange-400"
               >
-                {busy === "share" ? "Wird vorbereitet…" : "Teilen / Speichern"}
+                {canShare ? "Teilen / Speichern" : "Bild speichern"}
               </button>
             ) : (
               <button
@@ -338,9 +360,11 @@ export function MarketingKit({
                 : "Beim Drucken Seitengrösse und „Originalgrösse“ prüfen. Farben und Logo stammen aus Ihren Einstellungen."
               : "Teilen Sie das Bild direkt auf Instagram, Facebook oder WhatsApp. Instagram erlaubt keine klickbaren Links, der QR-Code übernimmt das."}
           </p>
-          {isTouch && canShare && (
+          {isTouch && (
             <p className="mt-2 text-xs leading-relaxed text-gray-500">
-              {"Tipp: Auf dem iPhone wählen Sie in der Auswahl „Bild sichern“, um das Bild in Ihren Fotos zu speichern."}
+              {canShare
+                ? "Tipp: Auf dem iPhone wählen Sie in der Auswahl „Bild sichern“, um das Bild in Ihren Fotos zu speichern."
+                : "Das Bild öffnet sich in Grossansicht. Halten Sie es gedrückt, um es in Ihren Fotos zu speichern."}
             </p>
           )}
         </section>
@@ -368,6 +392,32 @@ export function MarketingKit({
         <div ref={qrWrapperRef} aria-hidden="true" className="hidden">
           <QRCodeCanvas value={qrUrl} size={1024} marginSize={0} level="M" />
         </div>
+
+        {saveSheetSrc && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Bild speichern"
+            className="fixed inset-0 z-50 flex flex-col items-center gap-4 overflow-y-auto bg-black/90 p-4"
+          >
+            <p className="mt-2 max-w-sm text-center text-base font-bold leading-relaxed text-white text-balance">
+              Halten Sie das Bild gedrückt und wählen Sie „Zu Fotos hinzufügen“ oder „Bild sichern“.
+            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={saveSheetSrc}
+              alt={`${template.label} zum Speichern`}
+              className="h-auto w-full max-w-xs rounded-xl bg-white"
+            />
+            <button
+              type="button"
+              onClick={() => setSaveSheetSrc(null)}
+              className="mb-4 min-h-12 w-full max-w-xs rounded-xl bg-white px-4 font-bold text-black"
+            >
+              Schliessen
+            </button>
+          </div>
+        )}
       </div>
 
       {printSrc && (
