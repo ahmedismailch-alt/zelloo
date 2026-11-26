@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { drawTemplate, TEMPLATES, type TemplateId } from "@/lib/marketing-templates";
 
@@ -23,6 +29,29 @@ function loadLogo(url: string): Promise<HTMLImageElement | null> {
   });
 }
 
+const PDF_PAGE_MM: Record<string, [number, number]> = {
+  A6: [105, 148],
+  A4: [210, 297],
+};
+
+function subscribeNever() {
+  return () => {};
+}
+
+function isTouchDevice() {
+  return window.matchMedia("(pointer: coarse)").matches;
+}
+
+function canShareImageFile() {
+  if (typeof navigator.canShare !== "function") return false;
+  const probe = new File([""], "probe.png", { type: "image/png" });
+  return navigator.canShare({ files: [probe] });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+}
+
 export function MarketingKit({
   restaurantName,
   restaurantLink,
@@ -38,6 +67,13 @@ export function MarketingKit({
   );
   const [copied, setCopied] = useState(false);
   const [printSrc, setPrintSrc] = useState<string | null>(null);
+  const [busy, setBusy] = useState<"pdf" | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [saveSheetSrc, setSaveSheetSrc] = useState<string | null>(null);
+  const shareFileRef = useRef<File | null>(null);
+
+  const isTouch = useSyncExternalStore(subscribeNever, isTouchDevice, () => false);
+  const canShare = useSyncExternalStore(subscribeNever, canShareImageFile, () => false);
 
   const previewRef = useRef<HTMLCanvasElement>(null);
   const qrWrapperRef = useRef<HTMLDivElement>(null);
@@ -88,8 +124,28 @@ export function MarketingKit({
   useEffect(() => {
     const canvas = previewRef.current;
     if (!canvas) return;
-    void render(canvas);
-  }, [render, qrUrl]);
+    let cancelled = false;
+    shareFileRef.current = null;
+    const filename = template.filename;
+    void render(canvas).then(async () => {
+      const blob = await canvasToBlob(canvas);
+      if (!cancelled && blob) {
+        shareFileRef.current = new File([blob], filename, { type: "image/png" });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [render, qrUrl, template.filename]);
+
+  useEffect(() => {
+    if (!saveSheetSrc) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setSaveSheetSrc(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [saveSheetSrc]);
 
   function download() {
     const canvas = previewRef.current;
@@ -103,6 +159,49 @@ export function MarketingKit({
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     }, "image/png");
+  }
+
+  function openSaveSheet() {
+    const canvas = previewRef.current;
+    if (!canvas) return;
+    setSaveSheetSrc(canvas.toDataURL("image/png"));
+  }
+
+  function share() {
+    const file = shareFileRef.current;
+    setActionError(null);
+    if (!file) {
+      openSaveSheet();
+      return;
+    }
+    navigator.share({ files: [file], title: restaurantName }).catch((error: unknown) => {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      console.error(error);
+      openSaveSheet();
+    });
+  }
+
+  async function savePdf() {
+    const canvas = previewRef.current;
+    if (!canvas) return;
+    setActionError(null);
+    setBusy("pdf");
+    try {
+      const { jsPDF } = await import("jspdf");
+      const [pageWidth, pageHeight] = PDF_PAGE_MM[template.pageSize ?? "A4"] ?? PDF_PAGE_MM.A4;
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [pageWidth, pageHeight],
+      });
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pageWidth, pageHeight);
+      pdf.save(template.filename.replace(/\.png$/, ".pdf"));
+    } catch (error) {
+      console.error(error);
+      setActionError("Das PDF konnte nicht erstellt werden. Bitte versuchen Sie es erneut.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   function print() {
@@ -212,28 +311,62 @@ export function MarketingKit({
           )}
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={download}
-              className="min-h-12 flex-1 rounded-xl bg-orange-500 px-4 font-bold text-black transition-colors hover:bg-orange-400"
-            >
-              Als Bild speichern
-            </button>
-            {template.printable && (
+            {isTouch ? (
               <button
                 type="button"
-                onClick={print}
-                className="min-h-12 flex-1 rounded-xl border border-gray-300 px-4 font-semibold"
+                onClick={canShare ? share : openSaveSheet}
+                className="min-h-12 flex-1 rounded-xl bg-orange-500 px-4 font-bold text-black transition-colors hover:bg-orange-400"
               >
-                {`Drucken (${template.size})`}
+                {canShare ? "Teilen / Speichern" : "Bild speichern"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={download}
+                className="min-h-12 flex-1 rounded-xl bg-orange-500 px-4 font-bold text-black transition-colors hover:bg-orange-400"
+              >
+                Als Bild speichern
               </button>
             )}
+            {template.printable &&
+              (isTouch ? (
+                <button
+                  type="button"
+                  onClick={() => void savePdf()}
+                  disabled={busy !== null}
+                  className="min-h-12 flex-1 rounded-xl border border-gray-300 px-4 font-semibold disabled:opacity-60"
+                >
+                  {busy === "pdf" ? "Wird erstellt…" : `Als PDF speichern (${template.size})`}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={print}
+                  className="min-h-12 flex-1 rounded-xl border border-gray-300 px-4 font-semibold"
+                >
+                  {`Drucken (${template.size})`}
+                </button>
+              ))}
           </div>
+          {actionError && (
+            <p role="alert" className="mt-2 text-xs text-red-700">
+              {actionError}
+            </p>
+          )}
           <p className="mt-3 text-xs leading-relaxed text-gray-500">
             {template.printable
-              ? "Beim Drucken Seitengrösse und „Originalgrösse“ prüfen. Farben und Logo stammen aus Ihren Einstellungen."
-              : "Laden Sie das Bild herunter und laden Sie es auf Instagram, Facebook oder WhatsApp hoch. Instagram erlaubt keine klickbaren Links, der QR-Code übernimmt das."}
+              ? isTouch
+                ? "Das PDF können Sie an eine Druckerei senden oder von einem Gerät mit Drucker ausdrucken. Farben und Logo stammen aus Ihren Einstellungen."
+                : "Beim Drucken Seitengrösse und „Originalgrösse“ prüfen. Farben und Logo stammen aus Ihren Einstellungen."
+              : "Teilen Sie das Bild direkt auf Instagram, Facebook oder WhatsApp. Instagram erlaubt keine klickbaren Links, der QR-Code übernimmt das."}
           </p>
+          {isTouch && (
+            <p className="mt-2 text-xs leading-relaxed text-gray-500">
+              {canShare
+                ? "Tipp: Auf dem iPhone wählen Sie in der Auswahl „Bild sichern“, um das Bild in Ihren Fotos zu speichern."
+                : "Das Bild öffnet sich in Grossansicht. Halten Sie es gedrückt, um es in Ihren Fotos zu speichern."}
+            </p>
+          )}
         </section>
 
         <section className="mt-4 mb-6 rounded-2xl border bg-white p-4">
@@ -259,6 +392,32 @@ export function MarketingKit({
         <div ref={qrWrapperRef} aria-hidden="true" className="hidden">
           <QRCodeCanvas value={qrUrl} size={1024} marginSize={0} level="M" />
         </div>
+
+        {saveSheetSrc && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Bild speichern"
+            className="fixed inset-0 z-50 flex flex-col items-center gap-4 overflow-y-auto bg-black/90 p-4"
+          >
+            <p className="mt-2 max-w-sm text-center text-base font-bold leading-relaxed text-white text-balance">
+              Halten Sie das Bild gedrückt und wählen Sie „Zu Fotos hinzufügen“ oder „Bild sichern“.
+            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={saveSheetSrc}
+              alt={`${template.label} zum Speichern`}
+              className="h-auto w-full max-w-xs rounded-xl bg-white"
+            />
+            <button
+              type="button"
+              onClick={() => setSaveSheetSrc(null)}
+              className="mb-4 min-h-12 w-full max-w-xs rounded-xl bg-white px-4 font-bold text-black"
+            >
+              Schliessen
+            </button>
+          </div>
+        )}
       </div>
 
       {printSrc && (
