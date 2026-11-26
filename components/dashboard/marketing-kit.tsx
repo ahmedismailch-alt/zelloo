@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { drawTemplate, TEMPLATES, type TemplateId } from "@/lib/marketing-templates";
 
@@ -23,6 +29,29 @@ function loadLogo(url: string): Promise<HTMLImageElement | null> {
   });
 }
 
+const PDF_PAGE_MM: Record<string, [number, number]> = {
+  A6: [105, 148],
+  A4: [210, 297],
+};
+
+function subscribeNever() {
+  return () => {};
+}
+
+function isTouchDevice() {
+  return window.matchMedia("(pointer: coarse)").matches;
+}
+
+function canShareImageFile() {
+  if (typeof navigator.canShare !== "function") return false;
+  const probe = new File([""], "probe.png", { type: "image/png" });
+  return navigator.canShare({ files: [probe] });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+}
+
 export function MarketingKit({
   restaurantName,
   restaurantLink,
@@ -38,6 +67,11 @@ export function MarketingKit({
   );
   const [copied, setCopied] = useState(false);
   const [printSrc, setPrintSrc] = useState<string | null>(null);
+  const [busy, setBusy] = useState<"share" | "pdf" | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const isTouch = useSyncExternalStore(subscribeNever, isTouchDevice, () => false);
+  const canShare = useSyncExternalStore(subscribeNever, canShareImageFile, () => false);
 
   const previewRef = useRef<HTMLCanvasElement>(null);
   const qrWrapperRef = useRef<HTMLDivElement>(null);
@@ -103,6 +137,48 @@ export function MarketingKit({
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     }, "image/png");
+  }
+
+  async function share() {
+    const canvas = previewRef.current;
+    if (!canvas) return;
+    setActionError(null);
+    setBusy("share");
+    try {
+      const blob = await canvasToBlob(canvas);
+      if (!blob) throw new Error("Bild konnte nicht erstellt werden");
+      const file = new File([blob], template.filename, { type: "image/png" });
+      await navigator.share({ files: [file], title: restaurantName });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      console.error(error);
+      setActionError("Teilen ist fehlgeschlagen. Bitte speichern Sie das Bild stattdessen.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function savePdf() {
+    const canvas = previewRef.current;
+    if (!canvas) return;
+    setActionError(null);
+    setBusy("pdf");
+    try {
+      const { jsPDF } = await import("jspdf");
+      const [pageWidth, pageHeight] = PDF_PAGE_MM[template.pageSize ?? "A4"] ?? PDF_PAGE_MM.A4;
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [pageWidth, pageHeight],
+      });
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pageWidth, pageHeight);
+      pdf.save(template.filename.replace(/\.png$/, ".pdf"));
+    } catch (error) {
+      console.error(error);
+      setActionError("Das PDF konnte nicht erstellt werden. Bitte versuchen Sie es erneut.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   function print() {
@@ -212,28 +288,61 @@ export function MarketingKit({
           )}
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={download}
-              className="min-h-12 flex-1 rounded-xl bg-orange-500 px-4 font-bold text-black transition-colors hover:bg-orange-400"
-            >
-              Als Bild speichern
-            </button>
-            {template.printable && (
+            {isTouch && canShare ? (
               <button
                 type="button"
-                onClick={print}
-                className="min-h-12 flex-1 rounded-xl border border-gray-300 px-4 font-semibold"
+                onClick={() => void share()}
+                disabled={busy !== null}
+                className="min-h-12 flex-1 rounded-xl bg-orange-500 px-4 font-bold text-black transition-colors hover:bg-orange-400 disabled:opacity-60"
               >
-                {`Drucken (${template.size})`}
+                {busy === "share" ? "Wird vorbereitet…" : "Teilen / Speichern"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={download}
+                className="min-h-12 flex-1 rounded-xl bg-orange-500 px-4 font-bold text-black transition-colors hover:bg-orange-400"
+              >
+                Als Bild speichern
               </button>
             )}
+            {template.printable &&
+              (isTouch ? (
+                <button
+                  type="button"
+                  onClick={() => void savePdf()}
+                  disabled={busy !== null}
+                  className="min-h-12 flex-1 rounded-xl border border-gray-300 px-4 font-semibold disabled:opacity-60"
+                >
+                  {busy === "pdf" ? "Wird erstellt…" : `Als PDF speichern (${template.size})`}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={print}
+                  className="min-h-12 flex-1 rounded-xl border border-gray-300 px-4 font-semibold"
+                >
+                  {`Drucken (${template.size})`}
+                </button>
+              ))}
           </div>
+          {actionError && (
+            <p role="alert" className="mt-2 text-xs text-red-700">
+              {actionError}
+            </p>
+          )}
           <p className="mt-3 text-xs leading-relaxed text-gray-500">
             {template.printable
-              ? "Beim Drucken Seitengrösse und „Originalgrösse“ prüfen. Farben und Logo stammen aus Ihren Einstellungen."
-              : "Laden Sie das Bild herunter und laden Sie es auf Instagram, Facebook oder WhatsApp hoch. Instagram erlaubt keine klickbaren Links, der QR-Code übernimmt das."}
+              ? isTouch
+                ? "Das PDF können Sie an eine Druckerei senden oder von einem Gerät mit Drucker ausdrucken. Farben und Logo stammen aus Ihren Einstellungen."
+                : "Beim Drucken Seitengrösse und „Originalgrösse“ prüfen. Farben und Logo stammen aus Ihren Einstellungen."
+              : "Teilen Sie das Bild direkt auf Instagram, Facebook oder WhatsApp. Instagram erlaubt keine klickbaren Links, der QR-Code übernimmt das."}
           </p>
+          {isTouch && canShare && (
+            <p className="mt-2 text-xs leading-relaxed text-gray-500">
+              {"Tipp: Auf dem iPhone wählen Sie in der Auswahl „Bild sichern“, um das Bild in Ihren Fotos zu speichern."}
+            </p>
+          )}
         </section>
 
         <section className="mt-4 mb-6 rounded-2xl border bg-white p-4">
