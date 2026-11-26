@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { OrderApp } from "../../../components/order/order-app";
 import { getNextOpening } from "../../../lib/restaurant-settings";
@@ -20,6 +21,34 @@ import {
 export const dynamic = "force-dynamic";
 
 const DEMO_MAX_PARTY = 12;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  if (!isValidRestaurantId(id)) return {};
+
+  const restaurant = await getRestaurant(id).catch(() => null);
+  if (!restaurant?.name) return {};
+
+  const title = `${restaurant.name} – Menü und Bestellung`;
+  const description = `Menü von ${restaurant.name} ansehen und direkt online bestellen. Ohne App, ohne Wartezeit.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      siteName: restaurant.name,
+      locale: "de_CH",
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export default async function RestaurantOrderPage({
   params,

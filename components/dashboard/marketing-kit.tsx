@@ -358,7 +358,7 @@ export function MarketingKit({
               ? isTouch
                 ? "Das PDF können Sie an eine Druckerei senden oder von einem Gerät mit Drucker ausdrucken. Farben und Logo stammen aus Ihren Einstellungen."
                 : "Beim Drucken Seitengrösse und „Originalgrösse“ prüfen. Farben und Logo stammen aus Ihren Einstellungen."
-              : "Teilen Sie das Bild direkt auf Instagram, Facebook oder WhatsApp. Instagram erlaubt keine klickbaren Links, der QR-Code übernimmt das."}
+              : "Teilen Sie das Bild direkt auf Instagram, Facebook oder WhatsApp. Ein Bild selbst ist nicht klickbar: Fügen Sie in der Instagram-Story den Sticker „Link“ ein und kopieren Sie den Text unten. Auf Facebook und TikTok gehört der Link in die Beschreibung."}
           </p>
           {isTouch && (
             <p className="mt-2 text-xs leading-relaxed text-gray-500">
