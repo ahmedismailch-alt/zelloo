@@ -526,6 +526,7 @@ export function OrderApp({
               menu={menu}
               cart={cart}
               t={t}
+              lang={lang}
               showArabic={lang === "ar"}
               categoryAr={categoryAr}
               compact={venueType !== "restaurant"}
