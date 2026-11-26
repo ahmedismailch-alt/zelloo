@@ -587,6 +587,118 @@ export const reservationCopy: Record<
   },
 }
 
+export const googleCopy: Record<
+  Lang,
+  {
+    badge: string
+    title: string
+    paragraph: string
+    points: [string, string, string]
+    mockName: string
+    mockMeta: string
+    mockOrder: string
+    mockMenu: string
+    note: string
+  }
+> = {
+  de: {
+    badge: "Neu · Auf Google gefunden werden",
+    title: "Ihr Restaurant oder Café, schnell auf Google gefunden.",
+    paragraph:
+      "Gäste in Ihrer Nähe sehen Sie auf Google Maps und bestellen direkt bei Ihnen. Ohne Provision.",
+    points: [
+      "Bestell-Link für Google Maps, fertig zum Kopieren",
+      "Eigene Seite im Zelloo-Verzeichnis Ihrer Stadt",
+      "Marketing-Vorlagen mit Logo und QR-Code: Tischaufsteller, Poster, Instagram",
+    ],
+    mockName: "Café Sonnenhof",
+    mockMeta: "Café · Zürich · Geöffnet bis 18:00",
+    mockOrder: "Bestellen",
+    mockMenu: "Speisekarte",
+    note: "Sie tragen nur Ort und Adresse ein, den Rest erklärt Ihnen Zelloo Schritt für Schritt.",
+  },
+  fr: {
+    badge: "Nouveau · Être trouvé sur Google",
+    title: "Votre restaurant ou café, trouvé rapidement sur Google.",
+    paragraph:
+      "Les clients près de chez vous vous voient sur Google Maps et commandent directement chez vous. Sans commission.",
+    points: [
+      "Lien de commande pour Google Maps, prêt à copier",
+      "Votre propre page dans l'annuaire Zelloo de votre ville",
+      "Modèles marketing avec logo et code QR : chevalet de table, affiche, Instagram",
+    ],
+    mockName: "Café Sonnenhof",
+    mockMeta: "Café · Zurich · Ouvert jusqu'à 18h00",
+    mockOrder: "Commander",
+    mockMenu: "Menu",
+    note: "Vous saisissez seulement la ville et l'adresse, Zelloo vous guide pour le reste, étape par étape.",
+  },
+  it: {
+    badge: "Novità · Farsi trovare su Google",
+    title: "Il tuo ristorante o caffè, trovato subito su Google.",
+    paragraph:
+      "I clienti vicino a te ti vedono su Google Maps e ordinano direttamente da te. Senza commissioni.",
+    points: [
+      "Link per ordinare su Google Maps, pronto da copiare",
+      "Una tua pagina nell'elenco Zelloo della tua città",
+      "Modelli marketing con logo e codice QR: segnatavolo, poster, Instagram",
+    ],
+    mockName: "Café Sonnenhof",
+    mockMeta: "Caffè · Zurigo · Aperto fino alle 18:00",
+    mockOrder: "Ordina",
+    mockMenu: "Menu",
+    note: "Inserisci solo città e indirizzo, Zelloo ti guida passo dopo passo per il resto.",
+  },
+  en: {
+    badge: "New · Get found on Google",
+    title: "Your restaurant or café, quickly found on Google.",
+    paragraph:
+      "People nearby see you on Google Maps and order straight from you. No commission.",
+    points: [
+      "Order link for Google Maps, ready to copy",
+      "Your own page in the Zelloo directory for your city",
+      "Marketing templates with your logo and QR code: table stand, poster, Instagram",
+    ],
+    mockName: "Café Sonnenhof",
+    mockMeta: "Café · Zurich · Open until 6:00 pm",
+    mockOrder: "Order",
+    mockMenu: "Menu",
+    note: "You only enter your city and address, Zelloo walks you through the rest step by step.",
+  },
+  ar: {
+    badge: "جديد · ظهور على غوغل",
+    title: "مطعمك أو مقهاك، يظهر بسرعة على غوغل.",
+    paragraph:
+      "الناس القريبة منك يشوفوك على خرائط غوغل ويطلبوا مباشرة منك. بدون عمولة.",
+    points: [
+      "رابط طلب لخرائط غوغل، جاهز للنسخ",
+      "صفحة خاصة فيك في دليل Zelloo لمدينتك",
+      "قوالب تسويق بلوغو ورمز QR: ملصق للطاولة وبوستر وإنستغرام",
+    ],
+    mockName: "Café Sonnenhof",
+    mockMeta: "مقهى · زيورخ · مفتوح حتى 18:00",
+    mockOrder: "اطلب",
+    mockMenu: "القائمة",
+    note: "بتكتب فقط المدينة والعنوان، وZelloo بيشرح لك الباقي خطوة بخطوة.",
+  },
+  tr: {
+    badge: "Yeni · Google'da bulunun",
+    title: "Restoranınız veya kafeniz Google'da hızlıca bulunsun.",
+    paragraph:
+      "Yakınınızdaki kişiler sizi Google Haritalar'da görür ve doğrudan sizden sipariş verir. Komisyon yok.",
+    points: [
+      "Google Haritalar için sipariş bağlantısı, kopyalamaya hazır",
+      "Şehrinizin Zelloo rehberinde kendi sayfanız",
+      "Logo ve QR kodlu pazarlama şablonları: masa standı, poster, Instagram",
+    ],
+    mockName: "Café Sonnenhof",
+    mockMeta: "Kafe · Zürih · 18:00'e kadar açık",
+    mockOrder: "Sipariş ver",
+    mockMenu: "Menü",
+    note: "Sadece şehir ve adresi girersiniz, gerisini Zelloo adım adım anlatır.",
+  },
+}
+
 const LangContext = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
   lang: "de",
   setLang: () => {},
