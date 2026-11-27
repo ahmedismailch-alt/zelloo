@@ -12,6 +12,7 @@ export type RestaurantSettings = {
   deliveryFeeCents: number;
   deliveryMinCents: number;
   deliveryZones: string;
+  waitMinutes: number | null;
 };
 
 export const DAY_LABELS_DE = [
@@ -31,7 +32,15 @@ export const DEFAULT_SETTINGS: RestaurantSettings = {
   deliveryFeeCents: 0,
   deliveryMinCents: 0,
   deliveryZones: "",
+  waitMinutes: null,
 };
+
+export const WAIT_MINUTES_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
+
+export function parseWaitMinutes(value: unknown): number | null {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 && number <= 240 ? number : null;
+}
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 

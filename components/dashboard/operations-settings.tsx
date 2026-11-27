@@ -6,6 +6,8 @@ import {
   DAY_LABELS_DE,
   defaultOpeningHours,
   parseOpeningHours,
+  parseWaitMinutes,
+  WAIT_MINUTES_OPTIONS,
   type OpeningHours,
 } from "../../lib/restaurant-settings";
 
@@ -28,6 +30,8 @@ export function OperationsSettings({ restaurantId }: { restaurantId: number | st
   const [reservationsEnabled, setReservationsEnabled] = useState(false);
   const [maxParty, setMaxParty] = useState("12");
   const [reservationsAvailable, setReservationsAvailable] = useState(false);
+  const [waitAvailable, setWaitAvailable] = useState(false);
+  const [waitMinutes, setWaitMinutes] = useState("");
   const [unavailable, setUnavailable] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -54,6 +58,17 @@ export function OperationsSettings({ restaurantId }: { restaurantId: number | st
       setFee(centsToInput(data?.delivery_fee_cents));
       setMinOrder(centsToInput(data?.delivery_min_order_cents));
       setZones(typeof data?.delivery_zones === "string" ? data.delivery_zones : "");
+
+      const { data: waitData, error: waitError } = await supabase
+        .from("restaurants")
+        .select("wait_minutes")
+        .eq("id", restaurantId)
+        .maybeSingle();
+      if (!cancelled && !waitError && waitData) {
+        setWaitAvailable(true);
+        const savedWait = parseWaitMinutes(waitData.wait_minutes);
+        setWaitMinutes(savedWait ? String(savedWait) : "");
+      }
 
       const { data: reservationData, error: reservationError } = await supabase
         .from("restaurants")
@@ -95,7 +110,14 @@ export function OperationsSettings({ restaurantId }: { restaurantId: number | st
       .eq("id", restaurantId);
 
     let reservationSaveError = null;
-    if (!updateError && reservationsAvailable) {
+    if (!updateError && waitAvailable) {
+      const result = await supabase
+        .from("restaurants")
+        .update({ wait_minutes: parseWaitMinutes(waitMinutes) })
+        .eq("id", restaurantId);
+      reservationSaveError = result.error;
+    }
+    if (!updateError && !reservationSaveError && reservationsAvailable) {
       const party = Math.min(50, Math.max(1, Math.round(Number(maxParty)) || 12));
       setMaxParty(String(party));
       const result = await supabase
@@ -123,6 +145,36 @@ export function OperationsSettings({ restaurantId }: { restaurantId: number | st
       onSubmit={handleSave}
       className="bg-white border rounded-2xl p-4 flex flex-col gap-5 mt-4"
     >
+      {waitAvailable && (
+        <section className="flex flex-col gap-3" aria-labelledby="wait-title">
+          <div>
+            <h2 id="wait-title" className="text-base font-bold">
+              Wartezeit
+            </h2>
+            <p className="text-xs text-gray-500">
+              Gäste sehen vor der Bestellung &quot;Wartezeit: ca. X Min.&quot;. Bei viel Betrieb
+              einfach erhöhen. Leer lassen, um nichts anzuzeigen.
+            </p>
+          </div>
+          <select
+            value={waitMinutes}
+            onChange={(e) => {
+              setWaitMinutes(e.target.value);
+              setSaved(false);
+            }}
+            aria-labelledby="wait-title"
+            className="min-h-12 rounded-xl border border-gray-300 bg-white px-4 text-base"
+          >
+            <option value="">Keine Anzeige</option>
+            {WAIT_MINUTES_OPTIONS.map((minutes) => (
+              <option key={minutes} value={minutes}>
+                ca. {minutes} Min.
+              </option>
+            ))}
+          </select>
+        </section>
+      )}
+
       <section className="flex flex-col gap-3" aria-labelledby="hours-title">
         <div className="flex items-center justify-between gap-3">
           <div>

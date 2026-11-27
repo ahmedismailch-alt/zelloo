@@ -155,6 +155,7 @@ export default async function RestaurantOrderPage({
       themeText={branding.themeText}
       googleReviewUrl={googleReviewUrl}
       popularItemNames={popularItemNames}
+      waitMinutes={settings.waitMinutes}
       reservation={
         isDemo
           ? { maxParty: DEMO_MAX_PARTY, openingHours: settings.openingHours }
