@@ -25,26 +25,26 @@ export type DietKey = (typeof DIET_KEYS)[number];
 type Labels = Record<OrderLang, string>;
 
 export const ALLERGEN_LABELS: Record<AllergenKey, Labels> = {
-  gluten: { de: "Gluten", fr: "Gluten", it: "Glutine", en: "Gluten", ar: "الغلوتين" },
-  crustaceans: { de: "Krebstiere", fr: "Crustacés", it: "Crostacei", en: "Crustaceans", ar: "القشريات" },
-  eggs: { de: "Eier", fr: "Œufs", it: "Uova", en: "Eggs", ar: "البيض" },
-  fish: { de: "Fisch", fr: "Poisson", it: "Pesce", en: "Fish", ar: "السمك" },
-  peanuts: { de: "Erdnüsse", fr: "Arachides", it: "Arachidi", en: "Peanuts", ar: "الفول السوداني" },
-  soy: { de: "Soja", fr: "Soja", it: "Soia", en: "Soy", ar: "الصويا" },
-  milk: { de: "Milch", fr: "Lait", it: "Latte", en: "Milk", ar: "الحليب" },
-  nuts: { de: "Schalenfrüchte", fr: "Fruits à coque", it: "Frutta a guscio", en: "Tree nuts", ar: "المكسرات" },
-  celery: { de: "Sellerie", fr: "Céleri", it: "Sedano", en: "Celery", ar: "الكرفس" },
-  mustard: { de: "Senf", fr: "Moutarde", it: "Senape", en: "Mustard", ar: "الخردل" },
-  sesame: { de: "Sesam", fr: "Sésame", it: "Sesamo", en: "Sesame", ar: "السمسم" },
-  sulphites: { de: "Sulfite", fr: "Sulfites", it: "Solfiti", en: "Sulphites", ar: "الكبريتيت" },
-  lupin: { de: "Lupinen", fr: "Lupin", it: "Lupini", en: "Lupin", ar: "الترمس" },
-  molluscs: { de: "Weichtiere", fr: "Mollusques", it: "Molluschi", en: "Molluscs", ar: "الرخويات" },
+  gluten: { de: "Gluten", fr: "Gluten", it: "Glutine", en: "Gluten", ar: "الغلوتين", tr: "Gluten" },
+  crustaceans: { de: "Krebstiere", fr: "Crustacés", it: "Crostacei", en: "Crustaceans", ar: "القشريات", tr: "Kabuklular" },
+  eggs: { de: "Eier", fr: "Œufs", it: "Uova", en: "Eggs", ar: "البيض", tr: "Yumurta" },
+  fish: { de: "Fisch", fr: "Poisson", it: "Pesce", en: "Fish", ar: "السمك", tr: "Balık" },
+  peanuts: { de: "Erdnüsse", fr: "Arachides", it: "Arachidi", en: "Peanuts", ar: "الفول السوداني", tr: "Yer fıstığı" },
+  soy: { de: "Soja", fr: "Soja", it: "Soia", en: "Soy", ar: "الصويا", tr: "Soya" },
+  milk: { de: "Milch", fr: "Lait", it: "Latte", en: "Milk", ar: "الحليب", tr: "Süt" },
+  nuts: { de: "Schalenfrüchte", fr: "Fruits à coque", it: "Frutta a guscio", en: "Tree nuts", ar: "المكسرات", tr: "Sert kabuklu yemişler" },
+  celery: { de: "Sellerie", fr: "Céleri", it: "Sedano", en: "Celery", ar: "الكرفس", tr: "Kereviz" },
+  mustard: { de: "Senf", fr: "Moutarde", it: "Senape", en: "Mustard", ar: "الخردل", tr: "Hardal" },
+  sesame: { de: "Sesam", fr: "Sésame", it: "Sesamo", en: "Sesame", ar: "السمسم", tr: "Susam" },
+  sulphites: { de: "Sulfite", fr: "Sulfites", it: "Solfiti", en: "Sulphites", ar: "الكبريتيت", tr: "Sülfitler" },
+  lupin: { de: "Lupinen", fr: "Lupin", it: "Lupini", en: "Lupin", ar: "الترمس", tr: "Acı bakla" },
+  molluscs: { de: "Weichtiere", fr: "Mollusques", it: "Molluschi", en: "Molluscs", ar: "الرخويات", tr: "Yumuşakçalar" },
 };
 
 export const DIET_LABELS: Record<DietKey, Labels> = {
-  vegetarian: { de: "Vegetarisch", fr: "Végétarien", it: "Vegetariano", en: "Vegetarian", ar: "نباتي" },
-  vegan: { de: "Vegan", fr: "Végétalien", it: "Vegano", en: "Vegan", ar: "نباتي صرف" },
-  halal: { de: "Halal", fr: "Halal", it: "Halal", en: "Halal", ar: "حلال" },
+  vegetarian: { de: "Vegetarisch", fr: "Végétarien", it: "Vegetariano", en: "Vegetarian", ar: "نباتي", tr: "Vejetaryen" },
+  vegan: { de: "Vegan", fr: "Végétalien", it: "Vegano", en: "Vegan", ar: "نباتي صرف", tr: "Vegan" },
+  halal: { de: "Halal", fr: "Halal", it: "Halal", en: "Halal", ar: "حلال", tr: "Helal" },
 };
 
 export type FilterStrings = {
@@ -96,6 +96,14 @@ export const FILTER_STRINGS: Record<OrderLang, FilterStrings> = {
     contains: "يحتوي على",
     reset: "إعادة ضبط الفلاتر",
     disclaimer: "المعلومات غير مضمونة. إذا عندك حساسية اسأل الموظفين.",
+  },
+  tr: {
+    button: "Alerjenler ve diyet",
+    diet: "Diyet",
+    withoutAllergens: "Bu alerjenler olmadan",
+    contains: "İçerir",
+    reset: "Filtreleri sıfırla",
+    disclaimer: "Bilgiler garanti edilmez. Alerjiniz varsa lütfen personele sorun.",
   },
 };
 

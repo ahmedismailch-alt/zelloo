@@ -25,6 +25,10 @@ const READY_MESSAGES: Record<
     title: "طلبك جاهز",
     body: (n) => (n !== null ? `الطلب رقم ${n} جاهز للاستلام.` : "طلبك جاهز للاستلام."),
   },
+  tr: {
+    title: "Siparişiniz hazır",
+    body: (n) => (n !== null ? `#${n} numaralı sipariş teslim almaya hazır.` : "Siparişiniz teslim almaya hazır."),
+  },
 };
 
 let configured = false;
