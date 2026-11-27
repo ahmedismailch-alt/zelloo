@@ -549,10 +549,10 @@ export function MenuList({
               const label = showArabic && item.nameAr ? item.nameAr : item.name;
               const note = cart[item.id]?.note ?? "";
               const isDeal = isDealCategory(category);
-              const photoSize = isDeal ? "size-20" : "size-16";
+              const photoSize = isDeal ? "size-24" : "size-20";
               const usingRealPhoto = Boolean(item.imageUrl) && !failedImages.has(item.id);
               const imageLoaded = !usingRealPhoto || loadedImages.has(item.id);
-              const canOpenSheet = compact && !hasOptions && usingRealPhoto;
+              const canOpenSheet = !hasOptions && usingRealPhoto;
               const openSheet = () => onPickOptions(item);
               return (
                 <li
