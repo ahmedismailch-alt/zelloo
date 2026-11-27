@@ -46,6 +46,7 @@ type MenuItem = {
   allergens?: unknown;
   dietary_tags?: unknown;
   available_days?: unknown;
+  is_alcohol?: boolean | null;
 };
 
 const SUBCATEGORY_SUGGESTIONS: Record<string, string[]> = {
@@ -174,6 +175,7 @@ export default function MenuPage() {
   const [editAllergens, setEditAllergens] = useState<AllergenKey[]>([]);
   const [editDietTags, setEditDietTags] = useState<DietKey[]>([]);
   const [editDays, setEditDays] = useState<WeekdayKey[]>([]);
+  const [editIsAlcohol, setEditIsAlcohol] = useState(false);
   const [uploadingEditImage, setUploadingEditImage] = useState(false);
   const [generatingArabic, setGeneratingArabic] = useState(false);
   const [categoryAr, setCategoryAr] = useState<Record<string, string>>({});
@@ -899,6 +901,7 @@ export default function MenuPage() {
     setEditAllergens(readAllergens(item.allergens));
     setEditDietTags(readDietTags(item.dietary_tags));
     setEditDays(readAvailableDays(item.available_days) ?? []);
+    setEditIsAlcohol(item.is_alcohol === true);
     setMessage("");
   }
 
@@ -915,6 +918,7 @@ export default function MenuPage() {
     setEditAllergens([]);
     setEditDietTags([]);
     setEditDays([]);
+    setEditIsAlcohol(false);
   }
 
   async function saveEdit(item: MenuItem) {
@@ -996,6 +1000,7 @@ export default function MenuPage() {
     const daysChanged =
       JSON.stringify(nextDays) !==
       JSON.stringify(readAvailableDays(item.available_days));
+    const alcoholChanged = editIsAlcohol !== (item.is_alcohol === true);
 
     const { data, error } = await supabase
       .from("menu_items")
@@ -1006,10 +1011,19 @@ export default function MenuPage() {
         ...(allergensChanged ? { allergens: editAllergens } : {}),
         ...(dietChanged ? { dietary_tags: editDietTags } : {}),
         ...(daysChanged ? { available_days: nextDays } : {}),
+        ...(alcoholChanged ? { is_alcohol: editIsAlcohol } : {}),
       })
       .eq("id", item.id)
       .select()
       .single();
+
+    if (error && alcoholChanged) {
+      setMessage(
+        "Die Alkohol-Angabe konnte nicht gespeichert werden. Bitte die Datenbank-Aktualisierung ausführen."
+      );
+      setSaving(false);
+      return;
+    }
 
     if (error && daysChanged) {
       setMessage(
@@ -2198,6 +2212,21 @@ export default function MenuPage() {
                     : "Das Gericht erscheint nur an den gewählten Tagen."}
                 </p>
               </fieldset>
+
+              <label className="flex min-h-11 items-start gap-3 rounded-xl border bg-white p-3">
+                <input
+                  type="checkbox"
+                  checked={editIsAlcohol}
+                  onChange={(event) => setEditIsAlcohol(event.target.checked)}
+                  className="mt-0.5 h-5 w-5 shrink-0"
+                />
+                <span className="flex flex-col gap-0.5">
+                  <span className="text-sm font-bold">Alkoholisches Getränk</span>
+                  <span className="text-xs text-gray-500">
+                    Wird in der MWST-Abrechnung immer mit 8.1% berechnet, auch bei Abholung.
+                  </span>
+                </span>
+              </label>
 
               <OptionsEditor value={editOptions} onChange={setEditOptions} />
 

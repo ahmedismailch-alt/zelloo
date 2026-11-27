@@ -1,4 +1,4 @@
-import { VAT_RATES, vatPartCents, vatRateFor } from "./vat";
+import { VAT_RATES, splitOrderByRate, vatPartCents } from "./vat";
 
 export type StatsPeriod = "today" | "7d" | "30d" | "12m";
 
@@ -9,7 +9,9 @@ export type StatsOrder = {
   paid_at?: string | null;
   table_number?: string | number | null;
   order_type?: string | null;
-  order_items: { item_name: string; quantity: number; unit_price_cents: number }[] | null;
+  order_items:
+    | { item_name: string; quantity: number; unit_price_cents: number; is_alcohol?: boolean | null }[]
+    | null;
 };
 
 export type Bar = { key: string; label: string; value: number };
@@ -210,6 +212,8 @@ export type VatLine = { rate: number; grossCents: number; vatCents: number };
 export type DaySummary = {
   vatLines: VatLine[];
   totalVatCents: number;
+  /** Takeaway orders whose alcohol share is unknown (placed before alcohol flags existed). */
+  estimatedVatOrders: number;
   orderCount: number;
   revenueCents: number;
   averageCents: number;
@@ -278,6 +282,7 @@ export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySumm
   let paidCents = 0;
   let cancelledCount = 0;
   let cancelledCents = 0;
+  let estimatedVatOrders = 0;
   const grossByRate = new Map<number, number>(VAT_RATES.map((rate) => [rate, 0]));
 
   for (const order of orders) {
@@ -293,8 +298,11 @@ export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySumm
 
     orderCount += 1;
     revenueCents += total;
-    const rate = vatRateFor(order);
-    grossByRate.set(rate, (grossByRate.get(rate) ?? 0) + total);
+    const split = splitOrderByRate({ ...order, order_items: order.order_items ?? [] });
+    for (const [rate, gross] of split.byRate) {
+      grossByRate.set(rate, (grossByRate.get(rate) ?? 0) + gross);
+    }
+    if (split.estimated) estimatedVatOrders += 1;
     if (order.paid_at) {
       paidCount += 1;
       paidCents += total;
@@ -322,6 +330,7 @@ export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySumm
   return {
     vatLines,
     totalVatCents: vatLines.reduce((sum, line) => sum + line.vatCents, 0),
+    estimatedVatOrders,
     orderCount,
     revenueCents,
     averageCents: orderCount ? Math.round(revenueCents / orderCount) : 0,

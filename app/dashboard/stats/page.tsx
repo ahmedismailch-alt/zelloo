@@ -16,6 +16,7 @@ import {
   type StatsOrder,
   type StatsPeriod,
 } from "../../../lib/order-stats";
+import { readVatNumber } from "../../../lib/vat";
 
 const PAGE_SIZE = 1000;
 const MAX_ORDERS = 5000;
@@ -32,6 +33,7 @@ type Restaurant = { id: number | string; name: string };
 export default function StatsPage() {
   const router = useRouter();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [vatNumber, setVatNumber] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
   const [period, setPeriod] = useState<StatsPeriod>("7d");
@@ -60,6 +62,16 @@ export default function StatsPage() {
           .maybeSingle();
         if (error) throw error;
         if (!cancelled) setRestaurant(data as Restaurant | null);
+
+        if (data) {
+          // Separate read: a missing vat_number column must not break the page.
+          const { data: vat } = await supabase
+            .from("restaurants")
+            .select("vat_number")
+            .eq("id", data.id)
+            .maybeSingle();
+          if (!cancelled) setVatNumber(readVatNumber(vat?.vat_number));
+        }
       } catch (error) {
         console.error(error);
         if (!cancelled) setPageError("Restaurant konnte nicht geladen werden.");
@@ -167,7 +179,11 @@ export default function StatsPage() {
           </p>
         </div>
 
-        <DayClosing restaurantId={restaurant.id} restaurantName={restaurant.name} />
+        <DayClosing
+          restaurantId={restaurant.id}
+          restaurantName={restaurant.name}
+          vatNumber={vatNumber}
+        />
         <CsvExport restaurantId={restaurant.id} />
 
         <div className="print:hidden">

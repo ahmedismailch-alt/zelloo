@@ -81,6 +81,7 @@ export type PublicMenuItem = {
   options: OptionGroup[];
   allergens: AllergenKey[];
   dietary: DietKey[];
+  isAlcohol: boolean;
 };
 
 export function readArabicName(translations: unknown): string | null {
@@ -460,10 +461,15 @@ export async function getOrderableMenu(
       .order("name", { ascending: true });
   }
 
-  // The available_days, allergens, dietary_tags, options and compare_price columns may not exist until their SQL migrations have been run.
+  // The is_alcohol, available_days, allergens, dietary_tags, options and compare_price columns may not exist until their SQL migrations have been run.
   let result = await query(
-    `${baseColumns}, options, compare_price, allergens, dietary_tags, available_days`
+    `${baseColumns}, options, compare_price, allergens, dietary_tags, available_days, is_alcohol`
   );
+  if (result.error) {
+    result = await query(
+      `${baseColumns}, options, compare_price, allergens, dietary_tags, available_days`
+    );
+  }
   if (result.error) {
     result = await query(
       `${baseColumns}, options, compare_price, allergens, dietary_tags`
@@ -502,6 +508,7 @@ export async function getOrderableMenu(
       options: parseOptionGroups(item.options),
       allergens: readAllergens(item.allergens),
       dietary: readDietTags(item.dietary_tags),
+      isAlcohol: item.is_alcohol === true,
       };
     });
 }

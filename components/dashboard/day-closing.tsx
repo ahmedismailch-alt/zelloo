@@ -20,7 +20,15 @@ async function fetchDayOrders([, restaurantId, dayKey]: [string, number | string
   const collected: StatsOrder[] = [];
 
   const itemColumns = "order_items (item_name, quantity, unit_price_cents)";
-  let columns = `status, total_cents, created_at, paid_at, table_number, order_type, ${itemColumns}`;
+  const itemColumnsWithAlcohol =
+    "order_items (item_name, quantity, unit_price_cents, is_alcohol)";
+  // Older databases may lack is_alcohol and/or paid_at; fall back step by step.
+  const columnCandidates = [
+    `status, total_cents, created_at, paid_at, table_number, order_type, ${itemColumnsWithAlcohol}`,
+    `status, total_cents, created_at, paid_at, table_number, order_type, ${itemColumns}`,
+    `status, total_cents, created_at, table_number, order_type, ${itemColumns}`,
+  ];
+  let level = 0;
 
   for (let from = 0; from < MAX_ORDERS; from += PAGE_SIZE) {
     const fetchPage = (select: string) =>
@@ -33,11 +41,10 @@ async function fetchDayOrders([, restaurantId, dayKey]: [string, number | string
         .order("created_at", { ascending: false })
         .range(from, from + PAGE_SIZE - 1);
 
-    let { data, error } = await fetchPage(columns);
-    if (error) {
-      // paid_at column may not exist yet.
-      columns = `status, total_cents, created_at, table_number, order_type, ${itemColumns}`;
-      ({ data, error } = await fetchPage(columns));
+    let { data, error } = await fetchPage(columnCandidates[level]);
+    while (error && level < columnCandidates.length - 1) {
+      level += 1;
+      ({ data, error } = await fetchPage(columnCandidates[level]));
     }
     if (error) throw error;
     collected.push(...((data || []) as unknown as StatsOrder[]));
@@ -58,9 +65,11 @@ function formatPrintedAt() {
 export function DayClosing({
   restaurantId,
   restaurantName,
+  vatNumber,
 }: {
   restaurantId: number | string;
   restaurantName: string;
+  vatNumber?: string | null;
 }) {
   const options = useMemo(() => dayOptions(30), []);
   const [open, setOpen] = useState(false);
@@ -143,6 +152,7 @@ export function DayClosing({
       >
         <header className="border-b pb-4">
           <p className="text-sm text-gray-500">{restaurantName}</p>
+          {vatNumber && <p className="text-sm text-gray-500">{vatNumber}</p>}
           <h2 className="text-2xl font-black mt-1">Tagesabschluss</h2>
           <p className="font-semibold mt-1">{dayLabel}</p>
         </header>
@@ -206,8 +216,11 @@ export function DayClosing({
               </div>
             </dl>
             <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-              Richtwert: Bestellungen am Tisch 8.1%, alle anderen 2.6%. Alkohol zum Mitnehmen (8.1%) wird nicht
-              getrennt. Bitte mit Ihrer Buchhaltung abstimmen.
+              Bestellungen am Tisch: 8.1%. Abholung und Lieferung: 2.6%, alkoholische Getränke (im Menü markiert)
+              8.1%.
+              {summary.estimatedVatOrders > 0 &&
+                ` Bei ${summary.estimatedVatOrders} älteren Bestellungen ist der Alkoholanteil unbekannt, dort wurde 2.6% angenommen.`}{" "}
+              Bitte mit Ihrer Buchhaltung abstimmen.
             </p>
 
             <h3 className="font-black mt-5">Meistverkaufte Artikel</h3>
