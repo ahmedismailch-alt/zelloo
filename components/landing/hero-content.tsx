@@ -1,6 +1,24 @@
 "use client"
 
+import Image from "next/image"
 import { heroCopy, reservationCopy, useLang } from "./language-switcher"
+
+function FoodThumbs({ sources }: { sources: string[] }) {
+  return (
+    <div className="flex shrink-0 -space-x-2">
+      {sources.map((src) => (
+        <Image
+          key={src}
+          src={src}
+          alt=""
+          width={40}
+          height={40}
+          className="size-10 rounded-full object-cover ring-2 ring-white"
+        />
+      ))}
+    </div>
+  )
+}
 
 export function HeroContent() {
   const { lang } = useLang()
@@ -68,7 +86,7 @@ export function HeroContent() {
           <div className="absolute -inset-8 bg-[#c41e24]/10 rounded-[56px] blur-3xl -z-10" />
 
           {/* Floating live notification chip */}
-          <div className="absolute -left-8 top-24 z-20 bg-white rounded-xl shadow-xl border border-black/5 px-3.5 py-2.5 flex items-center gap-2.5 animate-bounce [animation-duration:2.5s]">
+          <div className="absolute -left-8 -top-3 z-20 bg-white rounded-xl shadow-xl border border-black/5 px-3.5 py-2.5 flex items-center gap-2.5 animate-bounce [animation-duration:2.5s]">
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c41e24] opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#c41e24]" />
@@ -102,25 +120,40 @@ export function HeroContent() {
                     <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Neu</span>
                     <span className="text-[11px] text-gray-400">vor 12 Sek.</span>
                   </div>
-                  <div className="font-black mt-1.5">Tisch 4 · #1024</div>
-                  <div className="text-sm text-gray-600">2x Margherita, 1x Caesar</div>
-                  <div className="text-sm font-bold mt-1">CHF 34.50</div>
+                  <div className="mt-1.5 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-black">Tisch 4 · #1024</div>
+                      <div className="text-sm text-gray-600">2x Dürüm Döner, 1x Caesar</div>
+                      <div className="text-sm font-bold mt-1">CHF 34.50</div>
+                    </div>
+                    <FoodThumbs sources={["/landing/food-doener.jpg", "/landing/food-salat.jpg"]} />
+                  </div>
                 </div>
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-black/5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">In Arbeit</span>
                     <span className="text-[11px] text-gray-400">vor 3 Min.</span>
                   </div>
-                  <div className="font-black mt-1.5">Abholung · #1023</div>
-                  <div className="text-sm text-gray-600">1x Prosciutto, 2x Cola</div>
+                  <div className="mt-1.5 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-black">Abholung · #1023</div>
+                      <div className="text-sm text-gray-600">1x Cheeseburger, 2x Cola</div>
+                    </div>
+                    <FoodThumbs sources={["/landing/food-burger.jpg", "/landing/food-cola.jpg"]} />
+                  </div>
                 </div>
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-black/5 opacity-60">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Fertig</span>
                     <span className="text-[11px] text-gray-400">vor 6 Min.</span>
                   </div>
-                  <div className="font-black mt-1.5">Tisch 2 · #1022</div>
-                  <div className="text-sm text-gray-600">3x Pizza Calzone</div>
+                  <div className="mt-1.5 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-black">Tisch 2 · #1022</div>
+                      <div className="text-sm text-gray-600">3x Pizza Margherita</div>
+                    </div>
+                    <FoodThumbs sources={["/landing/food-pizza.jpg"]} />
+                  </div>
                 </div>
               </div>
             </div>

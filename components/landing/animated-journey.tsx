@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 
 const STEP_DURATION_MS = 3200
 
@@ -102,33 +103,42 @@ export function AnimatedJourney({
             }`}
           >
             <div className="bg-[#c41e24] px-4 py-3">
-              <span className="text-white font-bold text-sm">Zelloo Pizzeria</span>
+              <span className="text-white font-bold text-sm">Zelloo Grill</span>
             </div>
             <div className="p-4 space-y-2.5">
               {[
-                { name: "Pizza Margherita", price: "16.00", checked: true },
-                { name: "Caesar Salat", price: "14.50", checked: true },
-                { name: "Tiramisu", price: "7.50", checked: false },
+                { name: "Dürüm Döner", price: "14.00", checked: true, image: "/landing/food-doener.jpg" },
+                { name: "Cheeseburger", price: "16.50", checked: true, image: "/landing/food-burger.jpg" },
+                { name: "Pizza Margherita", price: "16.00", checked: false, image: "/landing/food-pizza.jpg" },
               ].map((item) => (
                 <div
                   key={item.name}
-                  className="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2.5"
+                  className="flex items-center justify-between gap-2 rounded-xl border border-gray-100 p-2"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                        item.checked ? "bg-[#c41e24]" : "border border-gray-300"
-                      }`}
-                    >
-                      {item.checked && (
-                        <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" />
-                        </svg>
-                      )}
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Image
+                      src={item.image}
+                      alt=""
+                      width={44}
+                      height={44}
+                      className="size-11 rounded-lg object-cover shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-gray-800 truncate">{item.name}</div>
+                      <div className="text-xs text-gray-500">CHF {item.price}</div>
                     </div>
-                    <span className="text-sm font-medium text-gray-800">{item.name}</span>
                   </div>
-                  <span className="text-sm text-gray-500">CHF {item.price}</span>
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                      item.checked ? "bg-[#c41e24]" : "border border-gray-300"
+                    }`}
+                  >
+                    {item.checked && (
+                      <svg className="w-3 h-3 text-white" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" />
+                      </svg>
+                    )}
+                  </div>
                 </div>
               ))}
               <div className="bg-[#c41e24] text-white text-center font-bold text-sm rounded-xl py-2.5 mt-3">
@@ -155,13 +165,24 @@ export function AnimatedJourney({
                   </span>
                   <span className="text-[11px] text-gray-400">vor 2 Sek.</span>
                 </div>
-                <div className="font-black mt-2">Tisch 4 · #1031</div>
-                <div className="text-sm text-gray-600 mt-0.5">1x Margherita, 1x Caesar Salat</div>
-                <div className="text-sm font-bold mt-2">CHF 30.50</div>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-black">Tisch 4 · #1031</div>
+                    <div className="text-sm text-gray-600 mt-0.5">1x Dürüm Döner, 1x Cheeseburger</div>
+                    <div className="text-sm font-bold mt-2">CHF 30.50</div>
+                  </div>
+                  <div className="flex shrink-0 -space-x-2">
+                    <Image src="/landing/food-doener.jpg" alt="" width={40} height={40} className="size-10 rounded-full object-cover ring-2 ring-white" />
+                    <Image src="/landing/food-burger.jpg" alt="" width={40} height={40} className="size-10 rounded-full object-cover ring-2 ring-white" />
+                  </div>
+                </div>
               </div>
-              <div className="bg-white/5 rounded-2xl p-4 mt-3 opacity-50">
-                <div className="font-black mt-1 text-white text-sm">Tisch 2 · #1030</div>
-                <div className="text-xs text-gray-500 mt-0.5">2x Pizza Calzone</div>
+              <div className="bg-white/5 rounded-2xl p-4 mt-3 opacity-50 flex items-center justify-between gap-2">
+                <div>
+                  <div className="font-black mt-1 text-white text-sm">Tisch 2 · #1030</div>
+                  <div className="text-xs text-gray-500 mt-0.5">2x Pizza Margherita</div>
+                </div>
+                <Image src="/landing/food-pizza.jpg" alt="" width={40} height={40} className="size-10 rounded-full object-cover" />
               </div>
             </div>
           </div>
