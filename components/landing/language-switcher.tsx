@@ -699,6 +699,131 @@ export const googleCopy: Record<
   },
 }
 
+export const mwstCopy: Record<
+  Lang,
+  {
+    badge: string
+    title: string
+    paragraph: string
+    points: [string, string, string, string]
+    cardTitle: string
+    cardInHouse: string
+    cardTakeaway: string
+    cardTotal: string
+    cardExport: string
+    note: string
+  }
+> = {
+  de: {
+    badge: "Neu · Schweizer MWST",
+    title: "MWST und Buchhaltung, fertig für Ihren Treuhänder.",
+    paragraph:
+      "Zelloo trennt jede Bestellung automatisch nach Steuersatz: 8.1% im Lokal, 2.6% bei Take-away und Lieferung. Am Abend sehen Sie den Tagesabschluss, am Monatsende laden Sie alles als CSV herunter.",
+    points: [
+      "Tagesabschluss mit MWST pro Steuersatz",
+      "Monatsexport als CSV (Excel) für die Buchhaltung",
+      "Alkoholische Getränke korrekt mit 8.1%",
+      "Im Abo enthalten, ohne Zusatzkosten",
+    ],
+    cardTitle: "Tagesabschluss",
+    cardInHouse: "Im Lokal · 8.1%",
+    cardTakeaway: "Take-away · 2.6%",
+    cardTotal: "MWST total",
+    cardExport: "CSV exportieren",
+    note: "Richtwerte auf Basis der aktuellen Schweizer Sätze. Bitte mit Ihrer Treuhandstelle abstimmen.",
+  },
+  fr: {
+    badge: "Nouveau · TVA suisse",
+    title: "TVA et comptabilité, prêtes pour votre fiduciaire.",
+    paragraph:
+      "Zelloo sépare automatiquement chaque commande par taux : 8.1% sur place, 2.6% à emporter et en livraison. Le soir, vous voyez la clôture du jour ; en fin de mois, vous téléchargez tout en CSV.",
+    points: [
+      "Clôture du jour avec la TVA par taux",
+      "Export mensuel en CSV (Excel) pour la comptabilité",
+      "Boissons alcoolisées correctement à 8.1%",
+      "Inclus dans l'abonnement, sans frais supplémentaires",
+    ],
+    cardTitle: "Clôture du jour",
+    cardInHouse: "Sur place · 8.1%",
+    cardTakeaway: "À emporter · 2.6%",
+    cardTotal: "TVA totale",
+    cardExport: "Exporter en CSV",
+    note: "Valeurs indicatives basées sur les taux suisses actuels. À valider avec votre fiduciaire.",
+  },
+  it: {
+    badge: "Novità · IVA svizzera",
+    title: "IVA e contabilità, pronte per il tuo fiduciario.",
+    paragraph:
+      "Zelloo separa automaticamente ogni ordine per aliquota: 8.1% al tavolo, 2.6% per asporto e consegna. La sera vedi la chiusura giornaliera, a fine mese scarichi tutto in CSV.",
+    points: [
+      "Chiusura giornaliera con IVA per aliquota",
+      "Esportazione mensile in CSV (Excel) per la contabilità",
+      "Bevande alcoliche correttamente all'8.1%",
+      "Incluso nell'abbonamento, senza costi aggiuntivi",
+    ],
+    cardTitle: "Chiusura giornaliera",
+    cardInHouse: "Al tavolo · 8.1%",
+    cardTakeaway: "Asporto · 2.6%",
+    cardTotal: "IVA totale",
+    cardExport: "Esporta in CSV",
+    note: "Valori indicativi basati sulle aliquote svizzere attuali. Da verificare con il tuo fiduciario.",
+  },
+  en: {
+    badge: "New · Swiss VAT",
+    title: "VAT and bookkeeping, ready for your accountant.",
+    paragraph:
+      "Zelloo automatically splits every order by tax rate: 8.1% dine-in, 2.6% takeaway and delivery. In the evening you see the daily closing, at month end you download everything as CSV.",
+    points: [
+      "Daily closing with VAT per tax rate",
+      "Monthly CSV (Excel) export for your bookkeeping",
+      "Alcoholic drinks correctly at 8.1%",
+      "Included in your plan, no extra cost",
+    ],
+    cardTitle: "Daily closing",
+    cardInHouse: "Dine-in · 8.1%",
+    cardTakeaway: "Takeaway · 2.6%",
+    cardTotal: "VAT total",
+    cardExport: "Export CSV",
+    note: "Indicative values based on current Swiss rates. Please confirm with your accountant.",
+  },
+  ar: {
+    badge: "جديد · ضريبة القيمة المضافة السويسرية",
+    title: "الضريبة والمحاسبة، جاهزة للمحاسب تبعك.",
+    paragraph:
+      "Zelloo بيفصل كل طلب تلقائياً حسب نسبة الضريبة: 8.1% للأكل بالمطعم، و2.6% للاستلام والتوصيل. بالمساء بتشوف إغلاق اليوم، وبآخر الشهر بتنزّل كل شي بملف CSV.",
+    points: [
+      "إغلاق يومي مع الضريبة لكل نسبة",
+      "تصدير شهري بملف CSV (Excel) للمحاسبة",
+      "المشروبات الكحولية بنسبة 8.1% بشكل صحيح",
+      "مشمول بالاشتراك، بدون تكلفة إضافية",
+    ],
+    cardTitle: "إغلاق اليوم",
+    cardInHouse: "بالمطعم · 8.1%",
+    cardTakeaway: "استلام · 2.6%",
+    cardTotal: "إجمالي الضريبة",
+    cardExport: "تصدير CSV",
+    note: "أرقام تقريبية حسب النسب السويسرية الحالية. يرجى مراجعتها مع المحاسب.",
+  },
+  tr: {
+    badge: "Yeni · İsviçre KDV'si",
+    title: "KDV ve muhasebe, mali müşavirinize hazır.",
+    paragraph:
+      "Zelloo her siparişi otomatik olarak vergi oranına göre ayırır: salonda %8.1, paket ve teslimatta %2.6. Akşam gün sonu raporunu görür, ay sonunda her şeyi CSV olarak indirirsiniz.",
+    points: [
+      "Vergi oranına göre KDV'li gün sonu raporu",
+      "Muhasebe için aylık CSV (Excel) dışa aktarma",
+      "Alkollü içecekler doğru şekilde %8.1",
+      "Aboneliğe dahil, ek maliyet yok",
+    ],
+    cardTitle: "Gün sonu",
+    cardInHouse: "Salonda · %8.1",
+    cardTakeaway: "Paket · %2.6",
+    cardTotal: "Toplam KDV",
+    cardExport: "CSV dışa aktar",
+    note: "Güncel İsviçre oranlarına dayalı yaklaşık değerlerdir. Lütfen mali müşavirinizle doğrulayın.",
+  },
+}
+
 const LangContext = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
   lang: "de",
   setLang: () => {},
