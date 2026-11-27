@@ -20,6 +20,7 @@ import {
   canOrder,
   getAvailability,
   parseOpeningHours,
+  parseWaitMinutes,
   type Availability,
   type RestaurantSettings,
 } from "./restaurant-settings";
@@ -326,7 +327,14 @@ export async function getRestaurantSettings(
 
   if (!full.error) {
     const row = full.data;
+    // Separate query so the site keeps working until the wait_minutes column exists.
+    const wait = await supabase
+      .from("restaurants")
+      .select("wait_minutes")
+      .eq("id", restaurantId)
+      .maybeSingle();
     return {
+      waitMinutes: wait.error ? null : parseWaitMinutes(wait.data?.wait_minutes),
       accepting: row?.accepting_orders !== false,
       busy: row?.busy === true,
       openingHours: parseOpeningHours(row?.opening_hours),

@@ -77,6 +77,7 @@ type Props = {
   themeText?: string | null;
   googleReviewUrl?: string | null;
   popularItemNames?: string[];
+  waitMinutes?: number | null;
   reservation?: { maxParty: number; openingHours: OpeningHours | null } | null;
 };
 
@@ -99,6 +100,7 @@ export function OrderApp({
   themeText = null,
   googleReviewUrl = null,
   popularItemNames = [],
+  waitMinutes = null,
   reservation = null,
 }: Props) {
   const themed = Boolean(themeBg && themeText);
@@ -475,6 +477,15 @@ export function OrderApp({
               <p className="text-sm font-bold text-amber-900 mt-2">{opensLabel}</p>
             )}
           </div>
+        )}
+
+        {acceptingOrders && waitMinutes && (
+          <p
+            role="status"
+            className="self-start rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-900"
+          >
+            {t.waitTime(waitMinutes)}
+          </p>
         )}
 
         {availability === "busy" && (

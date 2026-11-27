@@ -97,6 +97,7 @@ export type OrderStrings = {
   unavailableTitle: string;
   unavailableText: string;
   prepTime: (minutes: number) => string;
+  waitTime: (minutes: number) => string;
   busyNotice: string;
   closedTitle: string;
   closedText: string;
@@ -225,6 +226,7 @@ const de: OrderStrings = {
   unavailableText:
     "Online-Bestellungen sind bei diesem Restaurant im Moment nicht möglich. Bitte bestellen Sie direkt vor Ort oder telefonisch.",
   prepTime: (minutes) => `Fertig in ca. ${minutes} Min.`,
+  waitTime: (minutes) => `Wartezeit: ca. ${minutes} Min.`,
   busyNotice: "Aktuell viel los – die Zubereitung kann etwas länger dauern.",
   closedTitle: "Restaurant derzeit geschlossen",
     closedText: "Das Restaurant ist gerade ausserhalb der Öffnungszeiten. Bitte versuchen Sie es später erneut.",
@@ -354,6 +356,7 @@ const fr: OrderStrings = {
   unavailableText:
     "Les commandes en ligne ne sont pas possibles pour ce restaurant pour le moment. Veuillez commander directement sur place ou par téléphone.",
   prepTime: (minutes) => `Prête dans environ ${minutes} min`,
+  waitTime: (minutes) => `Attente : environ ${minutes} min`,
   busyNotice: "Beaucoup de monde en ce moment – la préparation peut prendre un peu plus de temps.",
   closedTitle: "Restaurant actuellement fermé",
     closedText: "Le restaurant est en dehors de ses heures d'ouverture. Veuillez réessayer plus tard.",
@@ -483,6 +486,7 @@ const it: OrderStrings = {
   unavailableText:
     "Gli ordini online non sono al momento possibili per questo ristorante. Ordini direttamente sul posto o per telefono.",
   prepTime: (minutes) => `Pronto tra circa ${minutes} min`,
+  waitTime: (minutes) => `Attesa: circa ${minutes} min`,
   busyNotice: "Molto lavoro in questo momento – la preparazione potrebbe richiedere più tempo.",
   closedTitle: "Ristorante attualmente chiuso",
     closedText: "Il ristorante è fuori orario di apertura. Riprova più tardi.",
@@ -612,6 +616,7 @@ const en: OrderStrings = {
   unavailableText:
     "Online orders are currently not possible at this restaurant. Please order directly on site or by phone.",
   prepTime: (minutes) => `Ready in about ${minutes} min`,
+  waitTime: (minutes) => `Wait time: about ${minutes} min`,
   busyNotice: "We are very busy right now – preparation may take a little longer.",
   closedTitle: "Restaurant currently closed",
     closedText: "The restaurant is outside its opening hours. Please try again later.",
@@ -739,6 +744,7 @@ const ar: OrderStrings = {
   unavailableText:
     "الطلبات ��بر الإنترنت غير متاحة في هذا المطعم حالياً. يرجى الطلب مباشرة في المطعم أو عبر الهاتف.",
   prepTime: (minutes) => `جاهز خلال حوالي ${minutes} دقيقة`,
+  waitTime: (minutes) => `وقت الانتظار: حوالي ${minutes} دقيقة`,
   busyNotice: "المطعم مزدحم حالياً، وقد يستغرق التحضير وقتاً أط��ل.",
   closedTitle: "المطعم مغلق حالياً",
     closedText: "المطعم خارج ساعات العمل. يرجى المحاولة لاحقاً.",
