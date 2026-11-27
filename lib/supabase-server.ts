@@ -7,6 +7,11 @@ import {
   type AllergenKey,
   type DietKey,
 } from "./allergens";
+import {
+  currentZurichWeekday,
+  isAvailableOnWeekday,
+  readAvailableDays,
+} from "./weekdays";
 import { computeAccess, type Access } from "./subscription";
 import {
   readBrandColor,
@@ -455,23 +460,30 @@ export async function getOrderableMenu(
       .order("name", { ascending: true });
   }
 
-  // The allergens, dietary_tags, options and compare_price columns may not exist until their SQL migrations have been run.
+  // The available_days, allergens, dietary_tags, options and compare_price columns may not exist until their SQL migrations have been run.
   let result = await query(
-    `${baseColumns}, options, compare_price, allergens, dietary_tags`
+    `${baseColumns}, options, compare_price, allergens, dietary_tags, available_days`
   );
+  if (result.error) {
+    result = await query(
+      `${baseColumns}, options, compare_price, allergens, dietary_tags`
+    );
+  }
   if (result.error) result = await query(`${baseColumns}, options, compare_price`);
   if (result.error) result = await query(`${baseColumns}, options`);
   if (result.error) result = await query(baseColumns);
   if (result.error) throw result.error;
 
   const rows = (result.data || []) as unknown as Record<string, unknown>[];
+  const today = currentZurichWeekday();
 
   return rows
     .filter(
       (item) =>
         item.is_available !== false &&
         typeof item.price === "number" &&
-        item.price > 0
+        item.price > 0 &&
+        isAvailableOnWeekday(readAvailableDays(item.available_days), today)
     )
     .map((item) => {
       const priceCents = Math.round(Number(item.price) * 100);
