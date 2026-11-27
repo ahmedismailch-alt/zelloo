@@ -94,6 +94,7 @@ export function AiOrderBox({ restaurantId, t, lang, showArabic, onItems }: Props
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [micState, setMicState] = useState<MicState>("idle");
   const [seconds, setSeconds] = useState(0);
+  const [expanded, setExpanded] = useState(false);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -150,6 +151,7 @@ export function AiOrderBox({ restaurantId, t, lang, showArabic, onItems }: Props
   }
 
   async function startRecording() {
+    setExpanded(true);
     setError("");
     setMessage("");
     setSuggestions([]);
@@ -283,14 +285,89 @@ export function AiOrderBox({ restaurantId, t, lang, showArabic, onItems }: Props
     }
   }
 
+  const canCollapse =
+    suggestions.length === 0 && !loading && micState === "idle";
+
+  if (!expanded) {
+    return (
+      <section className="flex items-center gap-2 rounded-2xl border-2 border-black bg-white p-2">
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          aria-expanded={false}
+          aria-controls="ai-order-panel"
+          className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 text-start"
+        >
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="shrink-0"
+          >
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+          <span className="truncate font-black" dir="auto">
+            {t.aiTitle}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => void startRecording()}
+          className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-black text-white"
+        >
+          <MicIcon />
+          <span className="sr-only">{t.micStart}</span>
+        </button>
+      </section>
+    );
+  }
+
   return (
-    <section className="bg-white border-2 border-black rounded-2xl p-4 flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
-        <h2 className="font-black">{t.aiTitle}</h2>
-        <p className="text-sm text-gray-500 leading-relaxed">
-          {t.aiExample}
-        </p>
-      </div>
+    <section
+      id="ai-order-panel"
+      className="bg-white border-2 border-black rounded-2xl p-4 flex flex-col gap-3"
+    >
+      <button
+        type="button"
+        onClick={() => {
+          if (canCollapse) setExpanded(false);
+        }}
+        aria-expanded={true}
+        aria-controls="ai-order-panel"
+        className="flex min-h-11 items-start justify-between gap-3 text-start"
+      >
+        <span className="flex flex-col gap-1">
+          <span className="font-black" dir="auto">
+            {t.aiTitle}
+          </span>
+          <span className="text-sm text-gray-500 leading-relaxed" dir="auto">
+            {t.aiExample}
+          </span>
+        </span>
+        {canCollapse && (
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mt-0.5 shrink-0 text-gray-500"
+          >
+            <path d="m18 15-6-6-6 6" />
+          </svg>
+        )}
+      </button>
 
       <form onSubmit={submit} className="flex flex-col gap-3">
         <label htmlFor="ai-order" className="sr-only">
