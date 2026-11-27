@@ -145,6 +145,28 @@ const COPY: Record<OrderLang, Copy> = {
     again: "جرّب مرة ثانية",
     note: "تجريبي: مو حجز حقيقي، ما بينحفظ شي وما بيتبعت إيميل.",
   },
+  tr: {
+    title: "Rezervasyonunuz restorana böyle ulaşır",
+    intro: "Bu, restoranınızın ekranı. Ekibinizin yapacağı gibi onaylayın veya reddedin.",
+    restaurantSide: "Restoranda",
+    customerSide: "Misafiriniz görür",
+    panelTitle: "Rezervasyonlar",
+    badges: { new: "Yeni", confirmed: "Onaylandı", declined: "Reddedildi" },
+    confirm: "Onayla",
+    decline: "Reddet",
+    customerSees: {
+      new: "Talep gönderildi, restoran kısa süre içinde onaylayacak.",
+      confirmed: "Onaylandı. Sizi bekliyoruz!",
+      declined: "Maalesef mümkün değil. Lütfen başka bir saat seçin.",
+    },
+    tryAction: "Misafirinizin ne aldığını görmek için Onayla veya Reddet'e dokunun.",
+    persons: (count) => `${count} kişi`,
+    guestLabel: "Misafir",
+    noteLabel: "Not",
+    cta: "Hemen kaydolun - 15 gün ücretsiz",
+    again: "Tekrar dene",
+    note: "Demo: gerçek rezervasyon değil, hiçbir şey kaydedilmez ve e-posta gönderilmez.",
+  },
 };
 
 const BADGE_CLASS: Record<Stage, string> = {

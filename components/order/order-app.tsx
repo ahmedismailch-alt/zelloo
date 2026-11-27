@@ -41,6 +41,7 @@ const DEMO_BANNER: Record<OrderLang, string> = {
   it: "Demo: nessun ordine reale",
   en: "Demo: not a real order",
   ar: "تجريبي: مو طلب حقيقي",
+  tr: "Demo: gerçek sipariş değil",
 };
 
 const DRINK_KEYWORDS = [
