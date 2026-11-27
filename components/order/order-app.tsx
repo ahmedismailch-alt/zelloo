@@ -32,6 +32,7 @@ import {
 } from "../../lib/restaurant-settings";
 import { RESERVATION_STRINGS } from "../../lib/reservation-i18n";
 import { ReservationSheet } from "./reservation-sheet";
+import { RestaurantInfo, type RestaurantInfoData } from "./restaurant-info";
 
 const MAX_QUANTITY = 20;
 
@@ -80,6 +81,7 @@ type Props = {
   popularItemNames?: string[];
   waitMinutes?: number | null;
   reservation?: { maxParty: number; openingHours: OpeningHours | null } | null;
+  info?: RestaurantInfoData | null;
 };
 
 export function OrderApp({
@@ -103,6 +105,7 @@ export function OrderApp({
   popularItemNames = [],
   waitMinutes = null,
   reservation = null,
+  info = null,
 }: Props) {
   const themed = Boolean(themeBg && themeText);
   const brandStyle =
@@ -582,6 +585,15 @@ export function OrderApp({
               })}
             </ul>
           </div>
+        )}
+
+        {info && (
+          <RestaurantInfo
+            lang={lang}
+            restaurantName={restaurantName}
+            phone={restaurantPhone}
+            info={info}
+          />
         )}
       </div>
 

@@ -34,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       pages.push({ url: `${BASE_URL}/restaurants/${slug}`, changeFrequency: "daily", priority: 0.7 })
     }
     for (const restaurant of restaurants) {
-      pages.push({ url: `${BASE_URL}/r/${restaurant.id}`, changeFrequency: "weekly", priority: 0.6 })
+      pages.push({ url: `${BASE_URL}/r/${restaurant.slug ?? restaurant.id}`, changeFrequency: "weekly", priority: 0.6 })
     }
   } catch {
     return pages

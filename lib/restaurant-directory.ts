@@ -13,7 +13,26 @@ export type DirectoryRestaurant = {
   city: string;
   citySlug: string;
   address: string | null;
+  slug: string | null;
 };
+
+// Separate query so the directory keeps working before the slug column exists.
+async function readSlugs(): Promise<Map<string, string>> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("restaurants")
+    .select("id, slug")
+    .not("slug", "is", null)
+    .limit(1000);
+
+  const slugs = new Map<string, string>();
+  if (error || !data) return slugs;
+  for (const row of data) {
+    if (typeof row.slug === "string" && row.slug.trim()) {
+      slugs.set(String(row.id), row.slug.trim());
+    }
+  }
+  return slugs;
+}
 
 // Returns empty values if the city / address columns do not exist yet.
 export async function getRestaurantLocation(
@@ -42,6 +61,7 @@ export async function listDirectoryRestaurants(): Promise<DirectoryRestaurant[]>
 
   if (error || !data) return [];
 
+  const slugs = await readSlugs();
   const restaurants: DirectoryRestaurant[] = [];
   for (const row of data) {
     const city = readCity(row.city);
@@ -57,6 +77,7 @@ export async function listDirectoryRestaurants(): Promise<DirectoryRestaurant[]>
       city,
       citySlug: citySlug(city),
       address: readAddress(row.address),
+      slug: slugs.get(String(row.id)) ?? null,
     });
   }
   return restaurants;
