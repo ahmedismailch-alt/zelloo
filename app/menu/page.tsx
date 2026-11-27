@@ -19,6 +19,14 @@ import {
   type AllergenKey,
   type DietKey,
 } from "../../lib/allergens";
+import {
+  WEEKDAY_KEYS,
+  WEEKDAY_LONG_DE,
+  WEEKDAY_SHORT_DE,
+  describeAvailableDays,
+  readAvailableDays,
+  type WeekdayKey,
+} from "../../lib/weekdays";
 
 type MenuItem = {
   id: string;
@@ -37,6 +45,7 @@ type MenuItem = {
   options?: unknown;
   allergens?: unknown;
   dietary_tags?: unknown;
+  available_days?: unknown;
 };
 
 const SUBCATEGORY_SUGGESTIONS: Record<string, string[]> = {
@@ -164,6 +173,7 @@ export default function MenuPage() {
   const [editOptions, setEditOptions] = useState<OptionGroup[]>([]);
   const [editAllergens, setEditAllergens] = useState<AllergenKey[]>([]);
   const [editDietTags, setEditDietTags] = useState<DietKey[]>([]);
+  const [editDays, setEditDays] = useState<WeekdayKey[]>([]);
   const [uploadingEditImage, setUploadingEditImage] = useState(false);
   const [generatingArabic, setGeneratingArabic] = useState(false);
   const [categoryAr, setCategoryAr] = useState<Record<string, string>>({});
@@ -888,6 +898,7 @@ export default function MenuPage() {
     setEditOptions(parseOptionGroups(item.options));
     setEditAllergens(readAllergens(item.allergens));
     setEditDietTags(readDietTags(item.dietary_tags));
+    setEditDays(readAvailableDays(item.available_days) ?? []);
     setMessage("");
   }
 
@@ -903,6 +914,7 @@ export default function MenuPage() {
     setEditOptions([]);
     setEditAllergens([]);
     setEditDietTags([]);
+    setEditDays([]);
   }
 
   async function saveEdit(item: MenuItem) {
@@ -980,6 +992,10 @@ export default function MenuPage() {
     const dietChanged =
       JSON.stringify([...editDietTags].sort()) !==
       JSON.stringify([...readDietTags(item.dietary_tags)].sort());
+    const nextDays = readAvailableDays(editDays);
+    const daysChanged =
+      JSON.stringify(nextDays) !==
+      JSON.stringify(readAvailableDays(item.available_days));
 
     const { data, error } = await supabase
       .from("menu_items")
@@ -989,10 +1005,19 @@ export default function MenuPage() {
         ...(optionsChanged ? { options: cleanedOptions } : {}),
         ...(allergensChanged ? { allergens: editAllergens } : {}),
         ...(dietChanged ? { dietary_tags: editDietTags } : {}),
+        ...(daysChanged ? { available_days: nextDays } : {}),
       })
       .eq("id", item.id)
       .select()
       .single();
+
+    if (error && daysChanged) {
+      setMessage(
+        "Die Wochentage konnten nicht gespeichert werden. Bitte die Datenbank-Aktualisierung ausführen."
+      );
+      setSaving(false);
+      return;
+    }
 
     if (error && (allergensChanged || dietChanged)) {
       setMessage(
@@ -2140,6 +2165,40 @@ export default function MenuPage() {
                 </p>
               </fieldset>
 
+              <fieldset className="flex flex-col gap-2 rounded-xl border bg-white p-3">
+                <legend className="px-1 text-sm font-bold">Verfügbare Tage</legend>
+                <div className="flex flex-wrap gap-2">
+                  {WEEKDAY_KEYS.map((day) => {
+                    const active = editDays.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        aria-pressed={active}
+                        aria-label={WEEKDAY_LONG_DE[day]}
+                        onClick={() =>
+                          setEditDays((list) =>
+                            active
+                              ? list.filter((entry) => entry !== day)
+                              : [...list, day]
+                          )
+                        }
+                        className={`min-h-11 min-w-11 rounded-full px-3 text-sm font-bold ${
+                          active ? "bg-black text-white" : "border bg-white text-gray-600"
+                        }`}
+                      >
+                        {WEEKDAY_SHORT_DE[day]}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500">
+                  {editDays.length === 0
+                    ? "Keine Auswahl: das Gericht ist jeden Tag verfügbar."
+                    : "Das Gericht erscheint nur an den gewählten Tagen."}
+                </p>
+              </fieldset>
+
               <OptionsEditor value={editOptions} onChange={setEditOptions} />
 
                       <div className="flex gap-2">
@@ -2189,6 +2248,12 @@ export default function MenuPage() {
                               {item.description}
                             </p>
                           )}
+
+                          {describeAvailableDays(readAvailableDays(item.available_days)) ? (
+                            <p className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700">
+                              Nur {describeAvailableDays(readAvailableDays(item.available_days))}
+                            </p>
+                          ) : null}
 
                           {priceEditingId === item.id ? (
                             <form
