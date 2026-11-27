@@ -1,3 +1,5 @@
+import { VAT_RATES, vatPartCents, vatRateFor } from "./vat";
+
 export type StatsPeriod = "today" | "7d" | "30d" | "12m";
 
 export type StatsOrder = {
@@ -5,6 +7,8 @@ export type StatsOrder = {
   total_cents: number;
   created_at: string;
   paid_at?: string | null;
+  table_number?: string | number | null;
+  order_type?: string | null;
   order_items: { item_name: string; quantity: number; unit_price_cents: number }[] | null;
 };
 
@@ -201,7 +205,11 @@ export function computeStats(orders: StatsOrder[], period: StatsPeriod, now = ne
 
 export type DayOption = { key: string; label: string };
 
+export type VatLine = { rate: number; grossCents: number; vatCents: number };
+
 export type DaySummary = {
+  vatLines: VatLine[];
+  totalVatCents: number;
   orderCount: number;
   revenueCents: number;
   averageCents: number;
@@ -234,6 +242,34 @@ export function dayFetchWindow(dayKey: string) {
   };
 }
 
+/** Zurich calendar day (YYYY-MM-DD) of a timestamp. */
+export function zurichDayKey(iso: string) {
+  return dayKeyFromUtc(calendarDate(toZurich(new Date(iso))));
+}
+
+/** The last `count` Zurich months, newest first, as `YYYY-MM` keys with German labels. */
+export function monthOptions(count = 12, now = new Date()): DayOption[] {
+  const today = calendarDate(toZurich(now));
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - index, 1));
+    return {
+      key: `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}`,
+      label: `${MONTH_LABELS[date.getUTCMonth()]} ${date.getUTCFullYear()}`,
+    };
+  });
+}
+
+/** UTC window that safely contains the whole Zurich month `monthKey` (YYYY-MM). */
+export function monthFetchWindow(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const start = Date.UTC(year, month - 1, 1);
+  const end = Date.UTC(year, month, 1);
+  return {
+    fromIso: new Date(start - DAY_MS).toISOString(),
+    toIso: new Date(end + DAY_MS).toISOString(),
+  };
+}
+
 export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySummary {
   const items = new Map<string, TopItem>();
   let orderCount = 0;
@@ -242,6 +278,7 @@ export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySumm
   let paidCents = 0;
   let cancelledCount = 0;
   let cancelledCents = 0;
+  const grossByRate = new Map<number, number>(VAT_RATES.map((rate) => [rate, 0]));
 
   for (const order of orders) {
     const key = dayKeyFromUtc(calendarDate(toZurich(new Date(order.created_at))));
@@ -256,6 +293,8 @@ export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySumm
 
     orderCount += 1;
     revenueCents += total;
+    const rate = vatRateFor(order);
+    grossByRate.set(rate, (grossByRate.get(rate) ?? 0) + total);
     if (order.paid_at) {
       paidCount += 1;
       paidCents += total;
@@ -275,7 +314,14 @@ export function computeDaySummary(orders: StatsOrder[], dayKey: string): DaySumm
     .sort((a, b) => b.quantity - a.quantity || b.revenueCents - a.revenueCents)
     .slice(0, 5);
 
+  const vatLines: VatLine[] = VAT_RATES.map((rate) => {
+    const grossCents = grossByRate.get(rate) ?? 0;
+    return { rate, grossCents, vatCents: vatPartCents(grossCents, rate) };
+  });
+
   return {
+    vatLines,
+    totalVatCents: vatLines.reduce((sum, line) => sum + line.vatCents, 0),
     orderCount,
     revenueCents,
     averageCents: orderCount ? Math.round(revenueCents / orderCount) : 0,

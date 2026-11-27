@@ -10,6 +10,7 @@ import {
   formatChf,
   type StatsOrder,
 } from "@/lib/order-stats";
+import { VAT_DINE_IN } from "@/lib/vat";
 
 const PAGE_SIZE = 1000;
 const MAX_ORDERS = 5000;
@@ -19,7 +20,7 @@ async function fetchDayOrders([, restaurantId, dayKey]: [string, number | string
   const collected: StatsOrder[] = [];
 
   const itemColumns = "order_items (item_name, quantity, unit_price_cents)";
-  let columns = `status, total_cents, created_at, paid_at, ${itemColumns}`;
+  let columns = `status, total_cents, created_at, paid_at, table_number, order_type, ${itemColumns}`;
 
   for (let from = 0; from < MAX_ORDERS; from += PAGE_SIZE) {
     const fetchPage = (select: string) =>
@@ -35,7 +36,7 @@ async function fetchDayOrders([, restaurantId, dayKey]: [string, number | string
     let { data, error } = await fetchPage(columns);
     if (error) {
       // paid_at column may not exist yet.
-      columns = `status, total_cents, created_at, ${itemColumns}`;
+      columns = `status, total_cents, created_at, table_number, order_type, ${itemColumns}`;
       ({ data, error } = await fetchPage(columns));
     }
     if (error) throw error;
@@ -187,6 +188,27 @@ export function DayClosing({
                 </dd>
               </div>
             </dl>
+
+            <h3 className="font-black mt-5">MWST (im Umsatz enthalten)</h3>
+            <dl className="mt-2 flex flex-col">
+              {summary.vatLines.map((line) => (
+                <div key={line.rate} className="flex items-baseline justify-between gap-3 py-2 border-b">
+                  <dt className="text-gray-600">
+                    {line.rate === VAT_DINE_IN ? "Im Lokal" : "Take-away / Lieferung"} · {line.rate}%
+                    <span className="block text-xs text-gray-500">Umsatz {formatChf(line.grossCents)}</span>
+                  </dt>
+                  <dd className="font-black">{formatChf(line.vatCents)}</dd>
+                </div>
+              ))}
+              <div className="flex items-baseline justify-between gap-3 py-2 border-b">
+                <dt className="font-semibold">MWST total</dt>
+                <dd className="font-black">{formatChf(summary.totalVatCents)}</dd>
+              </div>
+            </dl>
+            <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+              Richtwert: Bestellungen am Tisch 8.1%, alle anderen 2.6%. Alkohol zum Mitnehmen (8.1%) wird nicht
+              getrennt. Bitte mit Ihrer Buchhaltung abstimmen.
+            </p>
 
             <h3 className="font-black mt-5">Meistverkaufte Artikel</h3>
             {summary.topItems.length === 0 ? (
