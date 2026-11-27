@@ -8,6 +8,7 @@ import { supabase } from "../../../lib/supabase";
 import { StatsBars } from "../../../components/dashboard/stats-bars";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { DayClosing } from "../../../components/dashboard/day-closing";
+import { CsvExport } from "../../../components/dashboard/csv-export";
 import {
   computeStats,
   formatChf,
@@ -167,6 +168,7 @@ export default function StatsPage() {
         </div>
 
         <DayClosing restaurantId={restaurant.id} restaurantName={restaurant.name} />
+        <CsvExport restaurantId={restaurant.id} />
 
         <div className="print:hidden">
         <div className="grid grid-cols-4 gap-2 mt-5" role="group" aria-label="Zeitraum">
