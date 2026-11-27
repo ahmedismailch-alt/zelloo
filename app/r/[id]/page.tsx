@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { OrderApp } from "../../../components/order/order-app";
+import {
+  ensureRestaurantSlug,
+  findRestaurantIdBySlug,
+  isNumericRestaurantId,
+} from "../../../lib/restaurant-slug";
 import {
   getNextOpening,
   type OpeningHours,
@@ -27,13 +32,28 @@ export const dynamic = "force-dynamic";
 
 const DEMO_MAX_PARTY = 12;
 
+const WEEKDAYS_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+function zurichWeekdayIndex() {
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    timeZone: "Europe/Zurich",
+  }).format(new Date());
+  return WEEKDAYS_EN.indexOf(weekday);
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
-  if (!isValidRestaurantId(id)) return {};
+  const { id: param } = await params;
+  if (!isValidRestaurantId(param)) return {};
+
+  const isSlug = !isNumericRestaurantId(param);
+  const id = isSlug ? await findRestaurantIdBySlug(param) : param;
+  if (!id) return {};
+  const urlKey = isSlug ? param : id;
 
   const [restaurant, location] = await Promise.all([
     getRestaurant(id).catch(() => null),
@@ -50,11 +70,11 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: { canonical: restaurantUrl(id) },
+    alternates: { canonical: restaurantUrl(urlKey) },
     openGraph: {
       title,
       description,
-      url: restaurantUrl(id),
+      url: restaurantUrl(urlKey),
       type: "website",
       siteName: restaurant.name,
       locale: "de_CH",
@@ -68,12 +88,34 @@ export default async function RestaurantOrderPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ table?: string | string[] }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { id } = await params;
-  const { table } = await searchParams;
+  const { id: param } = await params;
+  const query = await searchParams;
+  const table = query.table;
 
-  if (!isValidRestaurantId(id)) notFound();
+  if (!isValidRestaurantId(param)) notFound();
+
+  let id = param;
+  let slug: string | null = null;
+  if (isNumericRestaurantId(param)) {
+    slug = await ensureRestaurantSlug(param).catch(() => null);
+    if (slug) {
+      const forwarded = new URLSearchParams();
+      for (const [key, value] of Object.entries(query)) {
+        for (const entry of Array.isArray(value) ? value : value ? [value] : []) {
+          forwarded.append(key, entry);
+        }
+      }
+      const suffix = forwarded.size > 0 ? `?${forwarded.toString()}` : "";
+      redirect(`/r/${slug}${suffix}`);
+    }
+  } else {
+    const resolved = await findRestaurantIdBySlug(param).catch(() => null);
+    if (!resolved) notFound();
+    id = resolved;
+    slug = param;
+  }
 
   const isDemoPromise = isDemoRestaurant(id);
 
@@ -112,7 +154,7 @@ export default async function RestaurantOrderPage({
   const structuredData = isDemo
     ? null
     : buildRestaurantJsonLd({
-        id,
+        id: slug ?? id,
         name: restaurant.name,
         phone: restaurant.phone,
         city: location.city,
@@ -156,6 +198,16 @@ export default async function RestaurantOrderPage({
       googleReviewUrl={googleReviewUrl}
       popularItemNames={popularItemNames}
       waitMinutes={settings.waitMinutes}
+      info={
+        isDemo
+          ? null
+          : {
+              address: location.address,
+              city: location.city,
+              openingHours: settings.openingHours,
+              todayIndex: zurichWeekdayIndex(),
+            }
+      }
       reservation={
         isDemo
           ? { maxParty: DEMO_MAX_PARTY, openingHours: settings.openingHours }

@@ -65,7 +65,7 @@ export default async function RestaurantsPage() {
               {restaurants.map((restaurant) => (
                 <li key={restaurant.id}>
                   <Link
-                    href={`/r/${restaurant.id}`}
+                    href={`/r/${restaurant.slug ?? restaurant.id}`}
                     className="flex items-center justify-between gap-4 min-h-14 py-3 hover:bg-gray-50"
                   >
                     <span className="min-w-0">
