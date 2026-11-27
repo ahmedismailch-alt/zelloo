@@ -180,13 +180,7 @@ export function MenuList({
 
   return (
     <section aria-label={t.menuLabel} className="flex flex-col gap-4">
-      <div
-        className={
-          compact
-            ? "order-first sticky top-0 z-10 -mx-4 flex flex-col gap-3 bg-[#f8f9fb] px-4 py-2"
-            : "order-first flex flex-col gap-3"
-        }
-      >
+      <div className="order-first sticky top-0 z-10 -mx-4 flex flex-col gap-3 bg-[#f8f9fb] px-4 py-2">
         <label className="relative block">
           <span className="sr-only">{t.searchPlaceholder}</span>
           <svg
@@ -250,9 +244,10 @@ export function MenuList({
             })}
           </ul>
         )}
+      </div>
 
         {hasFilters && (
-          <div className="flex flex-col gap-2">
+          <div className="order-first flex flex-col gap-2">
             <button
               type="button"
               onClick={() => setFilterOpen((open) => !open)}
@@ -364,7 +359,6 @@ export function MenuList({
             )}
           </div>
         )}
-      </div>
 
       {showPopularRow && (
         <div className="flex flex-col gap-2">
