@@ -5,6 +5,7 @@ import {
   readGoogleReviewUrl,
   readHexColor,
 } from "../../../lib/branding";
+import { readVatNumber } from "../../../lib/vat";
 
 export const runtime = "nodejs";
 
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
       themeBg?: unknown;
       themeText?: unknown;
       googleReviewUrl?: unknown;
+      vatNumber?: unknown;
     } | null;
 
     const update: Record<string, string | null> = {};
@@ -104,6 +106,21 @@ export async function POST(request: Request) {
           );
         }
         update.google_review_url = reviewUrl;
+      }
+    }
+
+    if (body && "vatNumber" in body) {
+      if (body.vatNumber === null) {
+        update.vat_number = null;
+      } else {
+        const vatNumber = readVatNumber(body.vatNumber);
+        if (!vatNumber) {
+          return NextResponse.json(
+            { error: "Bitte eine gültige MWST-Nummer eingeben (z. B. CHE-123.456.789 MWST)." },
+            { status: 400 }
+          );
+        }
+        update.vat_number = vatNumber;
       }
     }
 

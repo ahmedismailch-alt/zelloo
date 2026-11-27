@@ -180,6 +180,7 @@ export async function POST(request: Request) {
         quantity: line.quantity,
         unit_price_cents: menuItem.priceCents + selection.extraCents,
         notes: line.note,
+        is_alcohol: menuItem.isAlcohol,
       });
     }
 
@@ -242,9 +243,18 @@ export async function POST(request: Request) {
 
     if (orderError || !order) throw orderError;
 
-    const { error: itemsError } = await supabase
+    let { error: itemsError } = await supabase
       .from("order_items")
       .insert(lines.map((line) => ({ ...line, order_id: order.id })));
+
+    // is_alcohol may not exist until the SQL migration has been run.
+    if (itemsError) {
+      ({ error: itemsError } = await supabase
+        .from("order_items")
+        .insert(
+          lines.map(({ is_alcohol: _isAlcohol, ...line }) => ({ ...line, order_id: order.id }))
+        ));
+    }
 
     if (itemsError) {
       await supabase.from("orders").delete().eq("id", order.id);

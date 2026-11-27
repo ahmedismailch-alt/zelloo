@@ -3,7 +3,14 @@
 import { useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { monthFetchWindow, monthOptions, zurichDayKey } from "@/lib/order-stats";
-import { orderTypeLabel, vatPartCents, vatRateFor } from "@/lib/vat";
+import {
+  VAT_DINE_IN,
+  VAT_TAKEAWAY,
+  orderTypeLabel,
+  splitOrderByRate,
+  vatPartCents,
+  type VatItemFields,
+} from "@/lib/vat";
 
 const PAGE_SIZE = 1000;
 const MAX_ORDERS = 10000;
@@ -16,6 +23,7 @@ type ExportOrder = {
   paid_at?: string | null;
   table_number: string | number | null;
   order_type: string | null;
+  order_items?: VatItemFields[] | null;
 };
 
 const zurichTime = new Intl.DateTimeFormat("de-CH", {
@@ -42,7 +50,13 @@ function germanDate(dayKey: string) {
 async function fetchMonthOrders(restaurantId: number | string, monthKey: string) {
   const { fromIso, toIso } = monthFetchWindow(monthKey);
   const collected: ExportOrder[] = [];
-  let columns = "order_number, status, total_cents, created_at, paid_at, table_number, order_type";
+  // Older databases may lack is_alcohol, order_number or paid_at; fall back step by step.
+  const columnCandidates = [
+    "order_number, status, total_cents, created_at, paid_at, table_number, order_type, order_items (quantity, unit_price_cents, is_alcohol)",
+    "order_number, status, total_cents, created_at, paid_at, table_number, order_type, order_items (quantity, unit_price_cents)",
+    "status, total_cents, created_at, table_number, order_type, order_items (quantity, unit_price_cents)",
+  ];
+  let level = 0;
 
   for (let from = 0; from < MAX_ORDERS; from += PAGE_SIZE) {
     const fetchPage = (select: string) =>
@@ -55,11 +69,10 @@ async function fetchMonthOrders(restaurantId: number | string, monthKey: string)
         .order("created_at", { ascending: true })
         .range(from, from + PAGE_SIZE - 1);
 
-    let { data, error } = await fetchPage(columns);
-    if (error) {
-      // order_number / paid_at may not exist on older databases.
-      columns = "status, total_cents, created_at, table_number, order_type";
-      ({ data, error } = await fetchPage(columns));
+    let { data, error } = await fetchPage(columnCandidates[level]);
+    while (error && level < columnCandidates.length - 1) {
+      level += 1;
+      ({ data, error } = await fetchPage(columnCandidates[level]));
     }
     if (error) throw error;
     collected.push(...((data || []) as unknown as ExportOrder[]));
@@ -79,22 +92,30 @@ function buildCsv(orders: ExportOrder[]) {
     "Status",
     "Bezahlt",
     "Brutto CHF",
-    "MWST-Satz %",
-    "MWST CHF",
+    `Umsatz ${VAT_DINE_IN}% CHF`,
+    `Umsatz ${VAT_TAKEAWAY}% CHF`,
+    `MWST ${VAT_DINE_IN}% CHF`,
+    `MWST ${VAT_TAKEAWAY}% CHF`,
+    "MWST total CHF",
     "Netto CHF",
   ];
 
   let grossTotal = 0;
-  let vatTotal = 0;
+  let grossHighTotal = 0;
+  let grossLowTotal = 0;
 
   const rows = orders.map((order) => {
     const cancelled = order.status === "cancelled";
     const gross = Number(order.total_cents) || 0;
-    const rate = vatRateFor(order);
-    const vat = vatPartCents(gross, rate);
+    const split = splitOrderByRate({ ...order, total_cents: gross });
+    const grossHigh = split.byRate.get(VAT_DINE_IN) ?? 0;
+    const grossLow = split.byRate.get(VAT_TAKEAWAY) ?? 0;
+    const vatHigh = vatPartCents(grossHigh, VAT_DINE_IN);
+    const vatLow = vatPartCents(grossLow, VAT_TAKEAWAY);
     if (!cancelled) {
       grossTotal += gross;
-      vatTotal += vat;
+      grossHighTotal += grossHigh;
+      grossLowTotal += grossLow;
     }
     return [
       germanDate(zurichDayKey(order.created_at)),
@@ -105,11 +126,17 @@ function buildCsv(orders: ExportOrder[]) {
       cancelled ? "storniert" : order.status,
       order.paid_at ? "ja" : "nein",
       chf(gross),
-      rate,
-      chf(vat),
-      chf(gross - vat),
+      chf(grossHigh),
+      chf(grossLow),
+      chf(vatHigh),
+      chf(vatLow),
+      chf(vatHigh + vatLow),
+      chf(gross - vatHigh - vatLow),
     ];
   });
+
+  const vatHighTotal = vatPartCents(grossHighTotal, VAT_DINE_IN);
+  const vatLowTotal = vatPartCents(grossLowTotal, VAT_TAKEAWAY);
 
   const totalRow = [
     "Total (ohne stornierte)",
@@ -120,9 +147,12 @@ function buildCsv(orders: ExportOrder[]) {
     "",
     "",
     chf(grossTotal),
-    "",
-    chf(vatTotal),
-    chf(grossTotal - vatTotal),
+    chf(grossHighTotal),
+    chf(grossLowTotal),
+    chf(vatHighTotal),
+    chf(vatLowTotal),
+    chf(vatHighTotal + vatLowTotal),
+    chf(grossTotal - vatHighTotal - vatLowTotal),
   ];
 
   const lines = [header, ...rows, totalRow].map((row) => row.map(csvCell).join(";"));

@@ -12,6 +12,7 @@ import {
   readLogoUrl,
   readableTextColor,
 } from "../../lib/branding";
+import { readVatNumber } from "../../lib/vat";
 
 type ThemeColors = {
   bg: string | null;
@@ -53,6 +54,9 @@ export function BrandingSettings({
   const [googleAvailable, setGoogleAvailable] = useState(false);
   const [googleSaved, setGoogleSaved] = useState("");
   const [googleDraft, setGoogleDraft] = useState("");
+  const [vatAvailable, setVatAvailable] = useState(false);
+  const [vatSaved, setVatSaved] = useState("");
+  const [vatDraft, setVatDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -98,11 +102,25 @@ export function BrandingSettings({
         .eq("id", restaurantId)
         .maybeSingle();
 
-      if (cancelled || googleError || !google) return;
-      const url = readGoogleReviewUrl(google.google_review_url) ?? "";
-      setGoogleSaved(url);
-      setGoogleDraft(url);
-      setGoogleAvailable(true);
+      if (!cancelled && !googleError && google) {
+        const url = readGoogleReviewUrl(google.google_review_url) ?? "";
+        setGoogleSaved(url);
+        setGoogleDraft(url);
+        setGoogleAvailable(true);
+      }
+
+      // Separate read: a missing vat_number column must not hide the card.
+      const { data: vat, error: vatError } = await supabase
+        .from("restaurants")
+        .select("vat_number")
+        .eq("id", restaurantId)
+        .maybeSingle();
+
+      if (cancelled || vatError || !vat) return;
+      const number = readVatNumber(vat.vat_number) ?? "";
+      setVatSaved(number);
+      setVatDraft(number);
+      setVatAvailable(true);
     }
 
     void load();
@@ -118,6 +136,7 @@ export function BrandingSettings({
     themeBg?: string | null;
     themeText?: string | null;
     googleReviewUrl?: string | null;
+    vatNumber?: string | null;
   }) {
     const {
       data: { session },
@@ -226,6 +245,19 @@ export function BrandingSettings({
       await save({ googleReviewUrl: value || null });
       setGoogleSaved(value);
       setGoogleDraft(value);
+    });
+  }
+
+  function handleVatSave(next: string) {
+    void run(async () => {
+      const value = next.trim();
+      const normalized = value ? readVatNumber(value) : null;
+      if (value && !normalized) {
+        throw new Error("Bitte eine gültige MWST-Nummer eingeben (z. B. CHE-123.456.789 MWST).");
+      }
+      await save({ vatNumber: normalized });
+      setVatSaved(normalized ?? "");
+      setVatDraft(normalized ?? "");
     });
   }
 
@@ -497,6 +529,46 @@ export function BrandingSettings({
                 type="button"
                 disabled={busy}
                 onClick={() => handleGoogleSave("")}
+                className="min-h-11 rounded-xl border border-red-200 bg-white px-4 text-sm font-bold text-red-600 disabled:opacity-60"
+              >
+                Entfernen
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {vatAvailable && (
+        <div className="flex flex-col gap-2">
+          <label htmlFor="vat-number" className="text-sm font-semibold">
+            MWST-Nummer
+          </label>
+          <p className="text-xs text-gray-500">
+            Optional. Erscheint auf dem Tagesabschluss (Format: CHE-123.456.789 MWST).
+          </p>
+          <input
+            id="vat-number"
+            type="text"
+            autoComplete="off"
+            placeholder="CHE-123.456.789 MWST"
+            value={vatDraft}
+            onChange={(e) => setVatDraft(e.target.value)}
+            className="min-h-11 rounded-xl border border-gray-300 bg-white px-4 text-base"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={busy || vatDraft.trim() === vatSaved}
+              onClick={() => handleVatSave(vatDraft)}
+              className="min-h-11 flex-1 rounded-xl bg-black px-4 text-sm font-bold text-white disabled:opacity-40"
+            >
+              Nummer speichern
+            </button>
+            {vatSaved && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => handleVatSave("")}
                 className="min-h-11 rounded-xl border border-red-200 bg-white px-4 text-sm font-bold text-red-600 disabled:opacity-60"
               >
                 Entfernen

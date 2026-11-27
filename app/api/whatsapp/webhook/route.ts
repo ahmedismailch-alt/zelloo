@@ -23,6 +23,7 @@ type CartLine = {
   priceCents: number;
   quantity: number;
   note: string | null;
+  isAlcohol?: boolean;
 };
 
 type Session = {
@@ -246,6 +247,7 @@ export async function POST(request: Request) {
             priceCents: menuItem.priceCents,
             quantity: item.quantity,
             note: item.note,
+            isAlcohol: menuItem.isAlcohol,
           });
         }
       }
@@ -360,15 +362,21 @@ export async function POST(request: Request) {
           return new NextResponse(null, { status: 200 });
         }
 
-        const { error: itemsError } = await supabase.from("order_items").insert(
-          session.cart.map((line) => ({
-            order_id: order.id,
-            item_name: line.name,
-            quantity: line.quantity,
-            unit_price_cents: line.priceCents,
-            notes: line.note,
-          }))
+        const itemRows = session.cart.map((line) => ({
+          order_id: order.id,
+          item_name: line.name,
+          quantity: line.quantity,
+          unit_price_cents: line.priceCents,
+          notes: line.note,
+        }));
+        let { error: itemsError } = await supabase.from("order_items").insert(
+          itemRows.map((row, index) => ({ ...row, is_alcohol: session.cart[index].isAlcohol === true }))
         );
+
+        // is_alcohol may not exist until the SQL migration has been run.
+        if (itemsError) {
+          ({ error: itemsError } = await supabase.from("order_items").insert(itemRows));
+        }
 
         if (itemsError) {
           await supabase.from("orders").delete().eq("id", order.id);
