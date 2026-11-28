@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { OrderLang, OrderStrings } from "../../lib/order-i18n";
+import { pickupSlotsToday } from "../../lib/pickup-slots";
+import type { OpeningHours } from "../../lib/restaurant-settings";
 import { playReadyChime, unlockReadyChime } from "../../lib/ready-chime";
 import { DemoResult, type DemoSummary } from "./demo-result";
 import { NotifyReadyButton } from "./notify-ready-button";
@@ -65,6 +67,8 @@ type Props = {
   isDemo?: boolean;
   quickOrder?: boolean;
   googleReviewUrl?: string | null;
+  openingHours?: OpeningHours | null;
+  waitMinutes?: number | null;
   onSetQuantity: (key: string, quantity: number) => void;
   onOrdered: () => void;
 };
@@ -82,6 +86,8 @@ export function Cart({
   isDemo = false,
   quickOrder = false,
   googleReviewUrl = null,
+  openingHours = null,
+  waitMinutes = null,
   onSetQuantity,
   onOrdered,
 }: Props) {
@@ -96,10 +102,12 @@ export function Cart({
   const [notes, setNotes] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
   const [confirmed, setConfirmed] = useState<{
     id: string;
     orderNumber: number | null;
     totalCents: number;
+    pickupTime: string | null;
   } | null>(null);
   const [orderStatus, setOrderStatus] = useState<OrderStatus>("new");
   const lastStatusRef = useRef<OrderStatus>("new");
@@ -242,6 +250,13 @@ export function Cart({
   const estimatedCents = subtotalCents + deliveryFeeCents;
   const belowMinimum =
     isDelivery && delivery.minCents > 0 && subtotalCents < delivery.minCents;
+  const pickupSlots = useMemo(
+    () => (open ? pickupSlotsToday(openingHours, waitMinutes) : []),
+    [open, openingHours, waitMinutes]
+  );
+  const showPickupTime = !table && !isDelivery && pickupSlots.length > 0;
+  const chosenPickupTime =
+    showPickupTime && pickupSlots.includes(pickupTime) ? pickupTime : "";
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -278,6 +293,7 @@ export function Cart({
           orderType: pickupOnly ? "pickup" : orderType,
           customerAddress: isDelivery ? address : "",
           notes,
+          pickupTime: chosenPickupTime || undefined,
           items: lines.map((line) => ({
             menuItemId: line.menuItemId,
             quantity: line.quantity,
@@ -292,6 +308,7 @@ export function Cart({
           paused: t.pausedError,
           closed: t.closedError,
           zone: t.zoneError,
+          pickup_time: t.pickupTimeError,
           min_order: t.minOrderError(formatChf(delivery.minCents)),
         };
         throw new Error(messages[data?.code as string] ?? t.sendError);
@@ -336,8 +353,10 @@ export function Cart({
         orderNumber:
           typeof data.orderNumber === "number" ? data.orderNumber : null,
         totalCents: data.totalCents,
+        pickupTime: chosenPickupTime || null,
       });
       setNotes("");
+      setPickupTime("");
       onOrdered();
     } catch (err) {
       setError(err instanceof Error ? err.message : t.sendError);
@@ -432,6 +451,12 @@ export function Cart({
                 #{confirmed.orderNumber}
               </span>
             </div>
+          )}
+
+          {confirmed.pickupTime && !isCancelled && (
+            <p className="text-lg font-black text-orange-400" dir="auto">
+              {t.pickupAt(confirmed.pickupTime)}
+            </p>
           )}
 
           <p className="text-sm text-white/70 mt-1">
@@ -616,6 +641,25 @@ export function Cart({
                   </button>
                 </div>
               </div>
+            )}
+
+            {showPickupTime && (
+              <label className="flex flex-col gap-1 text-sm font-semibold">
+                {t.pickupTimeLabel}
+                <select
+                  value={chosenPickupTime}
+                  onChange={(event) => setPickupTime(event.target.value)}
+                  dir="ltr"
+                  className="min-h-12 rounded-xl border bg-white p-3 text-base font-normal"
+                >
+                  <option value="">{t.pickupAsap}</option>
+                  {pickupSlots.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
+                </select>
+              </label>
             )}
 
             {isDelivery && delivery.minCents > 0 && (

@@ -198,6 +198,7 @@ export default async function RestaurantOrderPage({
       googleReviewUrl={googleReviewUrl}
       popularItemNames={popularItemNames}
       waitMinutes={settings.waitMinutes}
+      openingHours={settings.openingHours}
       info={
         isDemo
           ? null

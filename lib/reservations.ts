@@ -44,7 +44,7 @@ function zurichOffsetMs(utcMs: number) {
 }
 
 // Converts a wall-clock time in Europe/Zurich to a UTC timestamp, DST included.
-function zurichToUtcMs(date: string, time: string) {
+export function zurichToUtcMs(date: string, time: string) {
   const [year, month, day] = date.split("-").map(Number);
   const [hour, minute] = time.split(":").map(Number);
   const naive = Date.UTC(year, month - 1, day, hour, minute);

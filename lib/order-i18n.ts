@@ -122,6 +122,10 @@ export type OrderStrings = {
   deliveryMinInfo: (min: string) => string;
   minOrderError: (min: string) => string;
   zoneError: string;
+  pickupTimeLabel: string;
+  pickupAsap: string;
+  pickupAt: (time: string) => string;
+  pickupTimeError: string;
   reorderButton: string;
   reorderAdded: string;
   reorderUnavailable: string;
@@ -251,6 +255,10 @@ const de: OrderStrings = {
   deliveryMinInfo: (m) => `Mindestbestellwert für Lieferung: ${m}`,
   minOrderError: (m) => `Mindestbestellwert für Lieferung: ${m}`,
   zoneError: "Wir liefern leider nicht an diese Adresse.",
+  pickupTimeLabel: "Abholzeit",
+  pickupAsap: "So schnell wie möglich",
+  pickupAt: (time) => `Abholung um ${time} Uhr`,
+  pickupTimeError: "Diese Abholzeit ist nicht mehr verfügbar. Bitte eine andere wählen.",
   reorderButton: "Letzte Bestellung wiederholen",
   reorderAdded: "Letzte Bestellung wurde in den Warenkorb gelegt.",
   reorderUnavailable: "Einige Artikel der letzten Bestellung sind nicht mehr verfügbar.",
@@ -381,6 +389,10 @@ const fr: OrderStrings = {
   deliveryMinInfo: (m) => `Commande minimum pour la livraison : ${m}`,
   minOrderError: (m) => `Commande minimum pour la livraison : ${m}`,
   zoneError: "Nous ne livrons malheureusement pas à cette adresse.",
+  pickupTimeLabel: "Heure de retrait",
+  pickupAsap: "Dès que possible",
+  pickupAt: (time) => `Retrait à ${time}`,
+  pickupTimeError: "Cette heure de retrait n'est plus disponible. Veuillez en choisir une autre.",
   reorderButton: "Répéter la dernière commande",
   reorderAdded: "La dernière commande a été ajoutée au panier.",
   reorderUnavailable: "Certains articles de la dernière commande ne sont plus disponibles.",
@@ -511,6 +523,10 @@ const it: OrderStrings = {
   deliveryMinInfo: (m) => `Ordine minimo per la consegna: ${m}`,
   minOrderError: (m) => `Ordine minimo per la consegna: ${m}`,
   zoneError: "Purtroppo non consegniamo a questo indirizzo.",
+  pickupTimeLabel: "Orario di ritiro",
+  pickupAsap: "Il prima possibile",
+  pickupAt: (time) => `Ritiro alle ${time}`,
+  pickupTimeError: "Questo orario di ritiro non è più disponibile. Scegline un altro.",
   reorderButton: "Ripeti l'ultimo ordine",
   reorderAdded: "L'ultimo ordine è stato aggiunto al carrello.",
   reorderUnavailable: "Alcuni articoli dell'ultimo ordine non sono più disponibili.",
@@ -641,6 +657,10 @@ const en: OrderStrings = {
   deliveryMinInfo: (m) => `Minimum order for delivery: ${m}`,
   minOrderError: (m) => `Minimum order for delivery: ${m}`,
   zoneError: "Sorry, we do not deliver to this address.",
+  pickupTimeLabel: "Pickup time",
+  pickupAsap: "As soon as possible",
+  pickupAt: (time) => `Pickup at ${time}`,
+  pickupTimeError: "This pickup time is no longer available. Please choose another one.",
   reorderButton: "Repeat last order",
   reorderAdded: "Your last order was added to the cart.",
   reorderUnavailable: "Some items from your last order are no longer available.",
@@ -769,6 +789,10 @@ const ar: OrderStrings = {
   deliveryMinInfo: (m) => `الحد الأدنى للط��ب للتوصيل: ${m}`,
   minOrderError: (m) => `الحد الأدنى للطلب للتوصيل: ${m}`,
   zoneError: "للأسف لا نوصّل إلى هذا العنوان.",
+  pickupTimeLabel: "وقت الاستلام",
+  pickupAsap: "في أقرب وقت ممكن",
+  pickupAt: (time) => `الاستلام الساعة ${time}`,
+  pickupTimeError: "وقت الاستلام هذا لم يعد متاحاً. يرجى اختيار وقت آخر.",
   reorderButton: "إعادة الطلب السابق",
   reorderAdded: "تمت إضافة طلبك السابق إلى السلة.",
   reorderUnavailable: "بعض أصناف طلبك السابق لم تعد متوفرة.",
@@ -898,6 +922,10 @@ const tr: OrderStrings = {
   deliveryMinInfo: (m) => `Teslimat için minimum sipariş tutarı: ${m}`,
   minOrderError: (m) => `Teslimat için minimum sipariş tutarı: ${m}`,
   zoneError: "Maalesef bu adrese teslimat yapmıyoruz.",
+  pickupTimeLabel: "Teslim alma saati",
+  pickupAsap: "En kısa sürede",
+  pickupAt: (time) => `Saat ${time} teslim alma`,
+  pickupTimeError: "Bu teslim alma saati artık uygun değil. Lütfen başka bir saat seçin.",
   reorderButton: "Son siparişi tekrarla",
   reorderAdded: "Son siparişiniz sepete eklendi.",
   reorderUnavailable: "Son siparişinizdeki bazı ürünler artık mevcut değil.",
