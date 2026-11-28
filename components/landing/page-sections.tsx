@@ -31,6 +31,71 @@ export function PageSections() {
         </div>
       </div>
 
+      {/* Direct ordering without commission */}
+      <div className="py-16">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-black text-center text-balance">{p.directTitle}</h2>
+          <p className="text-gray-500 text-center mt-3 max-w-2xl mx-auto leading-relaxed text-pretty">
+            {p.directParagraph}
+          </p>
+          <div className="grid md:grid-cols-3 gap-4 mt-10">
+            {p.directPoints.map((point) => (
+              <div key={point} className="flex items-start gap-3 border rounded-2xl p-5">
+                <svg
+                  className="w-5 h-5 text-[#c41e24] shrink-0 mt-0.5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" />
+                </svg>
+                <span className="font-semibold leading-snug">{point}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-gray-500 text-center mt-5">{p.directNote}</p>
+
+          <div className="mt-12 max-w-3xl mx-auto">
+            <h3 className="text-2xl font-black text-center text-balance">{cv.compareTitle}</h3>
+            <p className="text-gray-500 text-center mt-1">{cv.compareExample}</p>
+            <div className="grid sm:grid-cols-2 gap-4 mt-6">
+              <div className="border rounded-2xl p-6 text-center">
+                <p className="text-sm font-semibold text-gray-500">{cv.platformName}</p>
+                <p className="text-3xl font-black mt-2 text-gray-500" dir="ltr">
+                  {cv.platformValue}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">{cv.platformSub}</p>
+              </div>
+              <div className="bg-black text-white rounded-2xl p-6 text-center">
+                <p className="text-sm font-semibold text-gray-300">Zelloo</p>
+                <p className="text-3xl font-black mt-2" dir="ltr">
+                  {cv.zellooValue}
+                </p>
+                <p className="text-sm text-gray-300 mt-1">{cv.zellooSub}</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 text-center mt-3">{cv.compareNote}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Features */}
+      <div className="py-16">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-black text-center text-balance">{p.featuresTitle}</h2>
+          <p className="text-gray-500 text-center mt-2">{p.featuresSubtitle}</p>
+
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5 mt-10">
+            {p.features.map((feature) => (
+              <div key={feature.title} className="border rounded-2xl p-5">
+                <h3 className="font-bold">{feature.title}</h3>
+                <p className="text-gray-500 text-sm mt-1.5 leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Table reservation */}
       <div className="py-16">
         <div className="max-w-[1200px] mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
@@ -82,112 +147,6 @@ export function PageSections() {
                     {rv.decline}
                   </span>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Direct ordering without commission */}
-      <div className="py-16">
-        <div className="max-w-[1200px] mx-auto px-6">
-          <h2 className="text-3xl md:text-4xl font-black text-center text-balance">{p.directTitle}</h2>
-          <p className="text-gray-500 text-center mt-3 max-w-2xl mx-auto leading-relaxed text-pretty">
-            {p.directParagraph}
-          </p>
-          <div className="grid md:grid-cols-3 gap-4 mt-10">
-            {p.directPoints.map((point) => (
-              <div key={point} className="flex items-start gap-3 border rounded-2xl p-5">
-                <svg
-                  className="w-5 h-5 text-[#c41e24] shrink-0 mt-0.5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" />
-                </svg>
-                <span className="font-semibold leading-snug">{point}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-sm text-gray-500 text-center mt-5">{p.directNote}</p>
-
-          <div className="mt-12 max-w-3xl mx-auto">
-            <h3 className="text-2xl font-black text-center text-balance">{cv.compareTitle}</h3>
-            <p className="text-gray-500 text-center mt-1">{cv.compareExample}</p>
-            <div className="grid sm:grid-cols-2 gap-4 mt-6">
-              <div className="border rounded-2xl p-6 text-center">
-                <p className="text-sm font-semibold text-gray-500">{cv.platformName}</p>
-                <p className="text-3xl font-black mt-2 text-gray-500" dir="ltr">
-                  {cv.platformValue}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">{cv.platformSub}</p>
-              </div>
-              <div className="bg-black text-white rounded-2xl p-6 text-center">
-                <p className="text-sm font-semibold text-gray-300">Zelloo</p>
-                <p className="text-3xl font-black mt-2" dir="ltr">
-                  {cv.zellooValue}
-                </p>
-                <p className="text-sm text-gray-300 mt-1">{cv.zellooSub}</p>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 text-center mt-3">{cv.compareNote}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Swiss VAT */}
-      <div className="py-16">
-        <div className="max-w-[1200px] mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
-          <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-orange-50 text-orange-800 px-3 py-1.5 rounded-full">
-              {m.badge}
-            </span>
-            <h2 className="text-3xl md:text-4xl font-black mt-4 text-balance">{m.title}</h2>
-            <p className="text-gray-500 mt-3 leading-relaxed text-pretty">{m.paragraph}</p>
-            <ul className="mt-6 space-y-3">
-              {m.points.map((point) => (
-                <li key={point} className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-[#c41e24] shrink-0 mt-0.5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" />
-                  </svg>
-                  <span className="font-semibold leading-snug">{point}</span>
-                </li>
-              ))}
-            </ul>
-            <a
-              href="/dashboard"
-              className="inline-flex items-center bg-[#c41e24] text-white font-bold px-8 py-3 rounded-lg mt-6 min-h-11"
-            >
-              {h.cta}
-            </a>
-            <p className="text-sm text-gray-500 mt-3">{m.note}</p>
-          </div>
-
-          <div className="flex justify-center" dir="ltr">
-            <div className="w-full max-w-[320px] rounded-3xl border bg-white shadow-xl overflow-hidden">
-              <div className="bg-black text-white px-5 py-4 font-bold">{m.cardTitle}</div>
-              <div className="p-5">
-                <div className="flex items-baseline justify-between py-3 border-b">
-                  <span className="text-sm text-gray-600">{m.cardInHouse}</span>
-                  <span className="font-black">CHF 1.50</span>
-                </div>
-                <div className="flex items-baseline justify-between py-3 border-b">
-                  <span className="text-sm text-gray-600">{m.cardTakeaway}</span>
-                  <span className="font-black">CHF 0.51</span>
-                </div>
-                <div className="flex items-baseline justify-between py-3">
-                  <span className="text-sm font-bold">{m.cardTotal}</span>
-                  <span className="text-xl font-black">CHF 2.01</span>
-                </div>
-                <span className="mt-2 min-h-11 rounded-xl bg-black text-white font-black flex items-center justify-center">
-                  {m.cardExport}
-                </span>
               </div>
             </div>
           </div>
@@ -303,19 +262,60 @@ export function PageSections() {
         </div>
       </div>
 
-      {/* Features */}
+      {/* Swiss VAT */}
       <div className="py-16">
-        <div className="max-w-[1200px] mx-auto px-6">
-          <h2 className="text-3xl md:text-4xl font-black text-center text-balance">{p.featuresTitle}</h2>
-          <p className="text-gray-500 text-center mt-2">{p.featuresSubtitle}</p>
+        <div className="max-w-[1200px] mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-orange-50 text-orange-800 px-3 py-1.5 rounded-full">
+              {m.badge}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black mt-4 text-balance">{m.title}</h2>
+            <p className="text-gray-500 mt-3 leading-relaxed text-pretty">{m.paragraph}</p>
+            <ul className="mt-6 space-y-3">
+              {m.points.map((point) => (
+                <li key={point} className="flex items-start gap-3">
+                  <svg
+                    className="w-5 h-5 text-[#c41e24] shrink-0 mt-0.5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" />
+                  </svg>
+                  <span className="font-semibold leading-snug">{point}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href="/dashboard"
+              className="inline-flex items-center bg-[#c41e24] text-white font-bold px-8 py-3 rounded-lg mt-6 min-h-11"
+            >
+              {h.cta}
+            </a>
+            <p className="text-sm text-gray-500 mt-3">{m.note}</p>
+          </div>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5 mt-10">
-            {p.features.map((feature) => (
-              <div key={feature.title} className="border rounded-2xl p-5">
-                <h3 className="font-bold">{feature.title}</h3>
-                <p className="text-gray-500 text-sm mt-1.5 leading-relaxed">{feature.desc}</p>
+          <div className="flex justify-center" dir="ltr">
+            <div className="w-full max-w-[320px] rounded-3xl border bg-white shadow-xl overflow-hidden">
+              <div className="bg-black text-white px-5 py-4 font-bold">{m.cardTitle}</div>
+              <div className="p-5">
+                <div className="flex items-baseline justify-between py-3 border-b">
+                  <span className="text-sm text-gray-600">{m.cardInHouse}</span>
+                  <span className="font-black">CHF 1.50</span>
+                </div>
+                <div className="flex items-baseline justify-between py-3 border-b">
+                  <span className="text-sm text-gray-600">{m.cardTakeaway}</span>
+                  <span className="font-black">CHF 0.51</span>
+                </div>
+                <div className="flex items-baseline justify-between py-3">
+                  <span className="text-sm font-bold">{m.cardTotal}</span>
+                  <span className="text-xl font-black">CHF 2.01</span>
+                </div>
+                <span className="mt-2 min-h-11 rounded-xl bg-black text-white font-black flex items-center justify-center">
+                  {m.cardExport}
+                </span>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
