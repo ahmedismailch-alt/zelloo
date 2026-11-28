@@ -80,6 +80,7 @@ type Props = {
   googleReviewUrl?: string | null;
   popularItemNames?: string[];
   waitMinutes?: number | null;
+  openingHours?: OpeningHours | null;
   reservation?: { maxParty: number; openingHours: OpeningHours | null } | null;
   info?: RestaurantInfoData | null;
 };
@@ -104,6 +105,7 @@ export function OrderApp({
   googleReviewUrl = null,
   popularItemNames = [],
   waitMinutes = null,
+  openingHours = null,
   reservation = null,
   info = null,
 }: Props) {
@@ -610,6 +612,8 @@ export function OrderApp({
         isDemo={isDemo}
   quickOrder={venueType !== "restaurant"}
   googleReviewUrl={googleReviewUrl}
+  openingHours={openingHours}
+  waitMinutes={waitMinutes}
   onSetQuantity={setQuantity}
         onOrdered={() => {
           setCart({});

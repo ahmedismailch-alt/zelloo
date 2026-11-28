@@ -16,6 +16,7 @@ import {
   resolveSelection,
 } from "../../../lib/menu-options";
 import { addressInZones, canOrder } from "../../../lib/restaurant-settings";
+import { resolvePickupTime } from "../../../lib/pickup-slots";
 
 export const runtime = "nodejs";
 
@@ -162,6 +163,19 @@ export async function POST(request: Request) {
       );
     }
 
+    const requestedPickup =
+      typeof body.pickupTime === "string" ? body.pickupTime.trim() : "";
+    let pickupAt: string | null = null;
+    if (requestedPickup && orderType === "pickup" && !table) {
+      pickupAt = resolvePickupTime(settings.openingHours, requestedPickup);
+      if (!pickupAt) {
+        return NextResponse.json(
+          { error: "Diese Abholzeit ist nicht mehr verfügbar.", code: "pickup_time" },
+          { status: 400 }
+        );
+      }
+    }
+
     const menu = await getOrderableMenu(restaurantId);
     const menuById = new Map(menu.map((item) => [item.id, item]));
 
@@ -224,19 +238,24 @@ export async function POST(request: Request) {
 
     let { data: order, error: orderError } = await supabase
       .from("orders")
-      .insert(
-        deliveryFeeCents > 0
-          ? { ...orderRow, delivery_fee_cents: deliveryFeeCents }
-          : orderRow
-      )
+      .insert({
+        ...orderRow,
+        ...(deliveryFeeCents > 0 ? { delivery_fee_cents: deliveryFeeCents } : {}),
+        ...(pickupAt ? { pickup_at: pickupAt } : {}),
+      })
       .select("id")
       .single();
 
-    // delivery_fee_cents may not exist until the SQL migration has been run.
-    if (orderError && deliveryFeeCents > 0) {
+    // delivery_fee_cents / pickup_at may not exist until the SQL migration has
+    // been run. The pickup time is kept in the notes so it is never lost.
+    if (orderError && (deliveryFeeCents > 0 || pickupAt)) {
+      const pickupLabel = pickupAt ? `Abholung um ${requestedPickup} Uhr` : "";
       ({ data: order, error: orderError } = await supabase
         .from("orders")
-        .insert(orderRow)
+        .insert({
+          ...orderRow,
+          notes: [pickupLabel, orderNote].filter(Boolean).join(" · ") || null,
+        })
         .select("id")
         .single());
     }

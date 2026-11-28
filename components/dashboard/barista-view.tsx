@@ -17,8 +17,17 @@ export type BaristaOrder = {
   notes: string | null;
   table_number: string | null;
   created_at: string;
+  pickup_at?: string | null;
   order_items: { id: string; item_name: string; quantity: number; notes: string | null }[];
 };
+
+function pickupLabel(iso: string) {
+  return new Intl.DateTimeFormat("de-CH", {
+    timeZone: "Europe/Zurich",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(iso));
+}
 
 const nextStep: Partial<Record<BaristaStatus, { status: BaristaStatus; label: string }>> = {
   new: { status: "accepted", label: "Annehmen" },
@@ -91,6 +100,11 @@ export function BaristaView<T extends BaristaOrder>({
                 <p className="text-sm text-gray-600 mt-2 truncate">
                   {order.customer_name} · {where}
                 </p>
+                {order.pickup_at && (
+                  <p className="mt-2 inline-block rounded-full bg-black px-3 py-1 text-base font-black text-white">
+                    Abholung {pickupLabel(order.pickup_at)} Uhr
+                  </p>
+                )}
               </div>
               <span
                 className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${

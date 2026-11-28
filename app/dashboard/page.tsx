@@ -53,6 +53,7 @@ type Order = {
   table_number: string | null;
   created_at: string;
   paid_at?: string | null;
+  pickup_at?: string | null;
   order_items: OrderItem[];
 };
 
@@ -64,7 +65,7 @@ const paidFilterOptions: { value: PaidFilter; label: string }[] = [
   { value: "paid", label: "Bezahlt" },
 ];
 
-function orderColumns(withPaid: boolean) {
+function orderColumns(withPaid: boolean, withPickup = false) {
   return `
     id,
     order_number,
@@ -78,6 +79,7 @@ function orderColumns(withPaid: boolean) {
     table_number,
     created_at,
     ${withPaid ? "paid_at," : ""}
+    ${withPickup ? "pickup_at," : ""}
     order_items (
       id,
       item_name,
@@ -640,10 +642,10 @@ export default function DashboardPage() {
       setOrdersLoading(true);
 
       try {
-        const fetchOrders = (withPaid: boolean) =>
+        const fetchOrders = (withPaid: boolean, withPickup = false) =>
           supabase
             .from("orders")
-            .select(orderColumns(withPaid))
+            .select(orderColumns(withPaid, withPickup))
             .eq("restaurant_id", restaurantId)
             .order("created_at", { ascending: false })
             .limit(50);
@@ -654,13 +656,13 @@ export default function DashboardPage() {
               p_restaurant_id: restaurantId,
             })
             .single(),
-          fetchOrders(true),
+          fetchOrders(true, true),
         ]);
 
-        // paid_at column may not exist yet; load orders without it.
-        const ordersResult = firstOrdersResult.error
-          ? await fetchOrders(false)
-          : firstOrdersResult;
+        // paid_at / pickup_at columns may not exist yet; step back one at a time.
+        let ordersResult = firstOrdersResult;
+        if (ordersResult.error) ordersResult = await fetchOrders(true);
+        if (ordersResult.error) ordersResult = await fetchOrders(false);
 
         if (statsResult.error) throw statsResult.error;
         if (ordersResult.error) throw ordersResult.error;
@@ -1757,6 +1759,12 @@ export default function DashboardPage() {
                           ? "Lieferung"
                           : "Abholung"}
                     </p>
+
+                    {order.pickup_at && (
+                      <p className="mt-2 inline-block rounded-full bg-black px-3 py-1 text-sm font-black text-white">
+                        Abholung um {formatTime(order.pickup_at)} Uhr
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex flex-col items-end gap-2">
@@ -2130,6 +2138,11 @@ export default function DashboardPage() {
                 ? "Lieferung"
                 : "Abholung"}
           </p>
+          {printingOrder.pickup_at && (
+            <p className="text-lg font-bold m-0">
+              Abholung um {formatTime(printingOrder.pickup_at)} Uhr
+            </p>
+          )}
           {printingOrder.customer_phone && (
             <p className="text-sm m-0">Telefon: {printingOrder.customer_phone}</p>
           )}
