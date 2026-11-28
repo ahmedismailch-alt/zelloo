@@ -337,6 +337,9 @@ export function PageSections() {
               <a href="/pricing" className="hover:text-black">
                 {p.footerPricing}
               </a>
+              <a href="/restaurants" className="hover:text-black">
+                {p.footerRestaurants}
+              </a>
               <a href="/login" className="hover:text-black">
                 {p.footerLogin}
               </a>
