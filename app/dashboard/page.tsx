@@ -219,6 +219,7 @@ export default function DashboardPage() {
   const [onboarding, setOnboarding] = useState<{
     menuItemsCount: number;
     totalOrders: number;
+    hasCity: boolean | null;
   } | null>(null);
   const [checklistDismissed, setChecklistDismissed] = useState(false);
 
@@ -535,7 +536,7 @@ export default function DashboardPage() {
 
     async function loadOnboardingStatus() {
       try {
-        const [menuItemsResult, ordersResult] = await Promise.all([
+        const [menuItemsResult, ordersResult, cityResult] = await Promise.all([
           supabase
             .from("menu_items")
             .select("id", { count: "exact", head: true })
@@ -545,13 +546,25 @@ export default function DashboardPage() {
             .from("orders")
             .select("id", { count: "exact", head: true })
             .eq("restaurant_id", restaurantId),
+          supabase
+            .from("restaurants")
+            .select("city")
+            .eq("id", restaurantId)
+            .maybeSingle(),
         ]);
 
         if (cancelled) return;
 
+        // If the city column is missing or unreadable, don't nag the owner.
+        const hasCity =
+          cityResult.error || !cityResult.data
+            ? null
+            : Boolean(String(cityResult.data.city ?? "").trim());
+
         setOnboarding({
           menuItemsCount: menuItemsResult.count ?? 0,
           totalOrders: ordersResult.count ?? 0,
+          hasCity,
         });
       } catch (error) {
         console.error(error);
@@ -1246,7 +1259,8 @@ export default function DashboardPage() {
         {onboarding &&
           !checklistDismissed &&
           (onboarding.menuItemsCount === 0 ||
-            onboarding.totalOrders === 0) && (
+            onboarding.totalOrders === 0 ||
+            onboarding.hasCity === false) && (
             <div className="mb-6 bg-white border rounded-2xl p-4">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
@@ -1280,6 +1294,17 @@ export default function DashboardPage() {
                     cta: "QR-Codes ansehen",
                     optional: true,
                   },
+                  ...(onboarding.hasCity === null
+                    ? []
+                    : [
+                        {
+                          done: onboarding.hasCity,
+                          label: "Stadt für das Zelloo-Verzeichnis eintragen",
+                          href: "/dashboard/settings",
+                          cta: "Stadt eintragen",
+                          optional: true,
+                        },
+                      ]),
                   {
                     done: onboarding.totalOrders > 0,
                     label: "Erste Bestellung erhalten",
