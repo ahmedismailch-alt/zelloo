@@ -136,6 +136,7 @@ export const pageCopy: Record<
   footerLogin: string
   footerPrivacy: string
   footerTerms: string
+  footerRestaurants: string
   }
   > = {
   de: {
@@ -186,7 +187,9 @@ export const pageCopy: Record<
   footerPricing: "Preise",
   footerLogin: "Login",
   footerPrivacy: "Datenschutz",
-  footerTerms: "AGB",
+    footerTerms: "AGB",
+    footerRestaurants: "Restaurants",
+
   },
   fr: {
     howItWorksTitle: "Comment ça marche",
@@ -236,7 +239,9 @@ export const pageCopy: Record<
   footerPricing: "Tarifs",
   footerLogin: "Connexion",
   footerPrivacy: "Confidentialité",
-  footerTerms: "CGV",
+    footerTerms: "CGV",
+    footerRestaurants: "Restaurants",
+
   },
   it: {
     howItWorksTitle: "Come funziona",
@@ -286,7 +291,9 @@ export const pageCopy: Record<
   footerPricing: "Prezzi",
   footerLogin: "Accedi",
   footerPrivacy: "Privacy",
-  footerTerms: "Termini",
+    footerTerms: "Termini",
+    footerRestaurants: "Ristoranti",
+
   },
   en: {
     howItWorksTitle: "How it works",
@@ -336,7 +343,9 @@ export const pageCopy: Record<
   footerPricing: "Pricing",
   footerLogin: "Login",
   footerPrivacy: "Privacy",
-  footerTerms: "Terms",
+    footerTerms: "Terms",
+    footerRestaurants: "Restaurants",
+
   },
   ar: {
     howItWorksTitle: "كيف يعمل",
@@ -386,7 +395,9 @@ export const pageCopy: Record<
   footerPricing: "الأسعار",
   footerLogin: "تسجيل الدخول",
   footerPrivacy: "الخصوصية",
-  footerTerms: "الشروط",
+    footerTerms: "الشروط",
+    footerRestaurants: "المطاعم",
+
   },
   tr: {
     howItWorksTitle: "Nasıl çalışır",
@@ -436,7 +447,9 @@ export const pageCopy: Record<
   footerPricing: "Fiyatlandırma",
   footerLogin: "Giriş",
   footerPrivacy: "Gizlilik",
-  footerTerms: "Koşullar",
+    footerTerms: "Koşullar",
+    footerRestaurants: "Restoranlar",
+
   },
   }
 
