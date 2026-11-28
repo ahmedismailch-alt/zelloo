@@ -621,7 +621,7 @@ export const googleCopy: Record<
       "Gäste in Ihrer Nähe sehen Sie auf Google Maps und bestellen direkt bei Ihnen. Ohne Provision.",
     points: [
       "Bestell-Link für Google Maps, fertig zum Kopieren",
-      "Eigene Seite im Zelloo-Verzeichnis Ihrer Stadt",
+      "Eintrag im Zelloo-Verzeichnis Ihrer Stadt",
       "Marketing-Vorlagen mit Logo und QR-Code: Tischaufsteller, Poster, Instagram",
     ],
     mockName: "Café Sonnenhof",
@@ -637,7 +637,7 @@ export const googleCopy: Record<
       "Les clients près de chez vous vous voient sur Google Maps et commandent directement chez vous. Sans commission.",
     points: [
       "Lien de commande pour Google Maps, prêt à copier",
-      "Votre propre page dans l'annuaire Zelloo de votre ville",
+      "Une fiche dans l'annuaire Zelloo de votre ville",
       "Modèles marketing avec logo et code QR : chevalet de table, affiche, Instagram",
     ],
     mockName: "Café Sonnenhof",
@@ -653,7 +653,7 @@ export const googleCopy: Record<
       "I clienti vicino a te ti vedono su Google Maps e ordinano direttamente da te. Senza commissioni.",
     points: [
       "Link per ordinare su Google Maps, pronto da copiare",
-      "Una tua pagina nell'elenco Zelloo della tua città",
+      "Una scheda nell'elenco Zelloo della tua città",
       "Modelli marketing con logo e codice QR: segnatavolo, poster, Instagram",
     ],
     mockName: "Café Sonnenhof",
@@ -669,7 +669,7 @@ export const googleCopy: Record<
       "People nearby see you on Google Maps and order straight from you. No commission.",
     points: [
       "Order link for Google Maps, ready to copy",
-      "Your own page in the Zelloo directory for your city",
+      "A listing in the Zelloo directory for your city",
       "Marketing templates with your logo and QR code: table stand, poster, Instagram",
     ],
     mockName: "Café Sonnenhof",
@@ -685,7 +685,7 @@ export const googleCopy: Record<
       "الناس القريبة منك يشوفوك على خرائط غوغل ويطلبوا مباشرة منك. بدون عمولة.",
     points: [
       "رابط طلب لخرائط غوغل، جاهز للنسخ",
-      "صفحة خاصة فيك في دليل Zelloo لمدينتك",
+      "إدراج مطعمك في دليل Zelloo لمدينتك",
       "قوالب تسويق بلوغو ورمز QR: ملصق للطاولة وبوستر وإنستغرام",
     ],
     mockName: "Café Sonnenhof",
@@ -701,7 +701,7 @@ export const googleCopy: Record<
       "Yakınınızdaki kişiler sizi Google Haritalar'da görür ve doğrudan sizden sipariş verir. Komisyon yok.",
     points: [
       "Google Haritalar için sipariş bağlantısı, kopyalamaya hazır",
-      "Şehrinizin Zelloo rehberinde kendi sayfanız",
+      "Şehrinizin Zelloo rehberinde bir kayıt",
       "Logo ve QR kodlu pazarlama şablonları: masa standı, poster, Instagram",
     ],
     mockName: "Café Sonnenhof",
