@@ -837,6 +837,102 @@ export const mwstCopy: Record<
   },
 }
 
+export const conversionCopy: Record<
+  Lang,
+  {
+    trustLine: string
+    compareTitle: string
+    compareExample: string
+    platformName: string
+    platformValue: string
+    platformSub: string
+    zellooValue: string
+    zellooSub: string
+    compareNote: string
+    pricingPoints: [string, string, string]
+    pricingDetails: string
+  }
+> = {
+  de: {
+    trustLine: "Für die Schweiz entwickelt · Preise in CHF und MWST · Gästeseite in 5 Sprachen",
+    compareTitle: "Provision oder fixer Preis?",
+    compareExample: "Beispiel: 100 Bestellungen à CHF 30 pro Monat",
+    platformName: "Lieferplattform",
+    platformValue: "bis CHF 900",
+    platformSub: "bei bis zu 30% Provision",
+    zellooValue: "CHF 39",
+    zellooSub: "fixer Monatspreis, 0% Kommission",
+    compareNote: "Illustrative Beispielrechnung. Die Provisionen der Plattformen variieren.",
+    pricingPoints: ["15 Tage gratis", "Ohne Kreditkarte", "Jederzeit kündbar"],
+    pricingDetails: "Alle Preisdetails ansehen",
+  },
+  fr: {
+    trustLine: "Conçu pour la Suisse · Prix en CHF et TVA · Page client en 5 langues",
+    compareTitle: "Commission ou prix fixe ?",
+    compareExample: "Exemple : 100 commandes à CHF 30 par mois",
+    platformName: "Plateforme de livraison",
+    platformValue: "jusqu'à CHF 900",
+    platformSub: "avec jusqu'à 30% de commission",
+    zellooValue: "CHF 39",
+    zellooSub: "prix mensuel fixe, 0% de commission",
+    compareNote: "Calcul d'exemple à titre indicatif. Les commissions des plateformes varient.",
+    pricingPoints: ["15 jours gratuits", "Sans carte de crédit", "Annulable à tout moment"],
+    pricingDetails: "Voir tous les détails des prix",
+  },
+  it: {
+    trustLine: "Pensato per la Svizzera · Prezzi in CHF e IVA · Pagina clienti in 5 lingue",
+    compareTitle: "Commissione o prezzo fisso?",
+    compareExample: "Esempio: 100 ordini da CHF 30 al mese",
+    platformName: "Piattaforma di consegna",
+    platformValue: "fino a CHF 900",
+    platformSub: "con fino al 30% di commissione",
+    zellooValue: "CHF 39",
+    zellooSub: "prezzo mensile fisso, 0% di commissione",
+    compareNote: "Calcolo di esempio a scopo illustrativo. Le commissioni delle piattaforme variano.",
+    pricingPoints: ["15 giorni gratis", "Senza carta di credito", "Annullabile in ogni momento"],
+    pricingDetails: "Vedi tutti i dettagli dei prezzi",
+  },
+  en: {
+    trustLine: "Built for Switzerland · Prices in CHF and VAT · Guest page in 5 languages",
+    compareTitle: "Commission or fixed price?",
+    compareExample: "Example: 100 orders at CHF 30 per month",
+    platformName: "Delivery platform",
+    platformValue: "up to CHF 900",
+    platformSub: "at up to 30% commission",
+    zellooValue: "CHF 39",
+    zellooSub: "fixed monthly price, 0% commission",
+    compareNote: "Illustrative example only. Platform commissions vary.",
+    pricingPoints: ["15 days free", "No credit card", "Cancel anytime"],
+    pricingDetails: "See full pricing details",
+  },
+  ar: {
+    trustLine: "مصمم لسويسرا · أسعار بالفرنك السويسري مع ضريبة MWST · صفحة الضيوف بـ 5 لغات",
+    compareTitle: "عمولة أم سعر ثابت؟",
+    compareExample: "مثال: 100 طلب بقيمة 30 فرنك للطلب شهرياً",
+    platformName: "منصة التوصيل",
+    platformValue: "حتى 900 فرنك",
+    platformSub: "بعمولة تصل إلى 30%",
+    zellooValue: "39 فرنك",
+    zellooSub: "سعر شهري ثابت، بدون عمولة",
+    compareNote: "مثال توضيحي فقط. عمولات المنصات تختلف.",
+    pricingPoints: ["15 يوماً مجاناً", "بدون بطاقة ائتمان", "إلغاء في أي وقت"],
+    pricingDetails: "عرض تفاصيل الأسعار كاملة",
+  },
+  tr: {
+    trustLine: "İsviçre için geliştirildi · CHF fiyatlar ve KDV · 5 dilde misafir sayfası",
+    compareTitle: "Komisyon mu, sabit fiyat mı?",
+    compareExample: "Örnek: ayda CHF 30'luk 100 sipariş",
+    platformName: "Teslimat platformu",
+    platformValue: "CHF 900'e kadar",
+    platformSub: "%30'a varan komisyonla",
+    zellooValue: "CHF 39",
+    zellooSub: "sabit aylık ücret, %0 komisyon",
+    compareNote: "Yalnızca örnek hesaptır. Platform komisyonları değişir.",
+    pricingPoints: ["15 gün ücretsiz", "Kredi kartı gerekmez", "Her zaman iptal edilebilir"],
+    pricingDetails: "Tüm fiyat ayrıntılarını gör",
+  },
+}
+
 const LangContext = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
   lang: "de",
   setLang: () => {},

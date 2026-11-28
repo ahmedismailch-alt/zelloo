@@ -3,7 +3,8 @@
 import { Logo } from "@/components/logo";
 import { AnimatedJourney } from "@/components/landing/animated-journey"
 import { Faq } from "./faq"
-import { googleCopy, heroCopy, mwstCopy, pageCopy, reservationCopy, useLang } from "./language-switcher"
+import { conversionCopy, googleCopy, heroCopy, mwstCopy, pageCopy, reservationCopy, useLang } from "./language-switcher"
+import { StickyCta } from "./sticky-cta"
 
 export function PageSections() {
   const { lang } = useLang()
@@ -12,10 +13,12 @@ export function PageSections() {
   const rv = reservationCopy[lang]
   const m = mwstCopy[lang]
   const h = heroCopy[lang]
+  const cv = conversionCopy[lang]
   const isRtl = lang === "ar"
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"}>
+      <StickyCta hideNearId="final-cta" />
       {/* How it works */}
       <div className="bg-[#f7f7f7] mt-16 py-16">
         <div className="max-w-[1200px] mx-auto px-6">
@@ -108,6 +111,28 @@ export function PageSections() {
             ))}
           </div>
           <p className="text-sm text-gray-500 text-center mt-5">{p.directNote}</p>
+
+          <div className="mt-12 max-w-3xl mx-auto">
+            <h3 className="text-2xl font-black text-center text-balance">{cv.compareTitle}</h3>
+            <p className="text-gray-500 text-center mt-1">{cv.compareExample}</p>
+            <div className="grid sm:grid-cols-2 gap-4 mt-6">
+              <div className="border rounded-2xl p-6 text-center">
+                <p className="text-sm font-semibold text-gray-500">{cv.platformName}</p>
+                <p className="text-3xl font-black mt-2 text-gray-500" dir="ltr">
+                  {cv.platformValue}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">{cv.platformSub}</p>
+              </div>
+              <div className="bg-black text-white rounded-2xl p-6 text-center">
+                <p className="text-sm font-semibold text-gray-300">Zelloo</p>
+                <p className="text-3xl font-black mt-2" dir="ltr">
+                  {cv.zellooValue}
+                </p>
+                <p className="text-sm text-gray-300 mt-1">{cv.zellooSub}</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 text-center mt-3">{cv.compareNote}</p>
+          </div>
         </div>
       </div>
 
@@ -306,13 +331,34 @@ export function PageSections() {
             </span>
             <span className="text-sm text-gray-400 mt-2">{p.priceNote}</span>
           </div>
+          <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-semibold">
+            {cv.pricingPoints.map((point) => (
+              <li key={point} className="flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-white shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z" />
+                </svg>
+                {point}
+              </li>
+            ))}
+          </ul>
+          <a
+            href="/dashboard"
+            className="inline-flex items-center bg-[#c41e24] text-white font-bold px-8 py-3 rounded-lg mt-8 min-h-11"
+          >
+            {h.cta}
+          </a>
+          <div className="mt-4">
+            <a href="/pricing" className="text-sm text-gray-400 underline underline-offset-4 hover:text-white">
+              {cv.pricingDetails}
+            </a>
+          </div>
         </div>
       </div>
 
       <Faq />
 
       {/* Final CTA */}
-      <div className="py-16">
+      <div id="final-cta" className="py-16">
         <div className="max-w-[1200px] mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-black text-balance">{p.finalCtaTitle}</h2>
           <p className="text-gray-500 mt-2">{p.finalCtaSubtitle}</p>
