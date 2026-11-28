@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { heroCopy, reservationCopy, useLang } from "./language-switcher"
+import { conversionCopy, heroCopy, reservationCopy, useLang } from "./language-switcher"
 
 function FoodThumbs({ sources }: { sources: string[] }) {
   return (
@@ -24,6 +24,7 @@ export function HeroContent() {
   const { lang } = useLang()
   const t = heroCopy[lang]
   const r = reservationCopy[lang]
+  const c = conversionCopy[lang]
   const isRtl = lang === "ar"
 
   return (
@@ -79,6 +80,7 @@ export function HeroContent() {
             <span className="text-sm text-gray-600">{t.check2}</span>
           </div>
         </div>
+        <p className="mt-4 border-t border-black/5 pt-4 text-sm text-gray-500 text-pretty">{c.trustLine}</p>
       </div>
 
       <div className="flex justify-center pt-2" dir="ltr">
