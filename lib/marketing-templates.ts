@@ -229,9 +229,17 @@ function drawPrintTemplate(
   cursor += nameHeight + h * 0.025;
 
   const tableLabelReserve = opts.tableNumber !== null ? 74 * u * 1.2 + h * 0.008 : 0;
-  const footerReserve = h * 0.15 + tableLabelReserve;
-  const available = h - cursor - footerReserve;
-  const boxSize = Math.min(w * 0.64, available);
+  const subSize = 42 * u;
+  ctx.font = `500 ${subSize}px ${font}`;
+  const subHeight = wrapLines(ctx, copy.sub, w * 0.78).length * subSize * 1.25;
+  const footerTop = isPoster
+    ? h - h * (opts.poweredBy ? 0.062 : 0.035) - 34 * u
+    : opts.poweredBy
+      ? h - h * 0.028 - 28 * u
+      : h;
+  const textBelowQr = h * 0.025 + tableLabelReserve + subHeight;
+  const available = footerTop - h * 0.015 - cursor - textBelowQr;
+  const boxSize = Math.max(w * 0.3, Math.min(w * 0.64, available));
   const boxX = (w - boxSize) / 2;
   drawQrBox(ctx, opts.qr, boxX, cursor, boxSize, opts.brandColor, 10 * u);
   cursor += boxSize + h * 0.025;
